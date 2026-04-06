@@ -49,6 +49,16 @@ class CrmController extends Controller
         return $request->only($this->allowedCrmFields());
     }
 
+    protected function crmNotificationPayload(array $source, int|string|null $id = null): array
+    {
+        $payload = ['id' => $id];
+        foreach ($this->allowedCrmFields() as $field) {
+            $payload[$field] = $source[$field] ?? null;
+        }
+
+        return $payload;
+    }
+
     protected function findCrm(int|string $id): ?Crm
     {
         return Crm::find($id);
@@ -181,7 +191,8 @@ class CrmController extends Controller
         }
         $crm = Crm::create($data);
 
-        $this->syncExternalSystems($crm);
+        $this->syncExternalSystems($crm, false);
+        $this->safeNotifyScheduleChangesFromPayload([], $this->crmNotificationPayload($crm->toArray(), $crm->id));
 
         return response()->json($crm, 201);
     }
@@ -239,20 +250,16 @@ class CrmController extends Controller
                 return response()->json(['message' => 'Failed to update contact in Firestore'], 502);
             }
 
-            try {
-                $this->calendarReminder->notifyScheduleChangesFromPayload($existingRemote, $updatedRemote);
-            } catch (\Throwable $e) {
-                Log::warning('Calendar reminder notification failed for Firestore-only CRM update.', [
-                    'crm_id' => $id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            $this->safeNotifyScheduleChangesFromPayload($existingRemote, $updatedRemote, $id);
 
             return response()->json($updatedRemote);
         }
 
+        $before = $this->crmNotificationPayload($crm->toArray(), $crm->id);
         $crm->update($data);
-        $this->syncExternalSystems($crm);
+        $this->syncExternalSystems($crm, false);
+        $freshCrm = $crm->fresh() ?? $crm;
+        $this->safeNotifyScheduleChangesFromPayload($before, $this->crmNotificationPayload($freshCrm->toArray(), $crm->id));
 
         return response()->json($crm);
     }
@@ -346,19 +353,31 @@ class CrmController extends Controller
         ], 200);
     }
 
-    protected function syncExternalSystems(Crm $crm): void
+    protected function syncExternalSystems(Crm $crm, bool $sendScheduleNotifications = true): void
     {
-        $this->safeSyncCalendarReminders($crm);
+        $this->safeSyncCalendarReminders($crm, $sendScheduleNotifications);
         $this->safeSyncToFirestore($crm);
     }
 
-    protected function safeSyncCalendarReminders(Crm $crm): void
+    protected function safeSyncCalendarReminders(Crm $crm, bool $sendScheduleNotifications = true): void
     {
         try {
-            $this->calendarReminder->syncForCrm($crm);
+            $this->calendarReminder->syncForCrm($crm, $sendScheduleNotifications);
         } catch (\Throwable $e) {
             Log::warning('Calendar reminder sync failed but CRM data was saved.', [
                 'crm_id' => $crm->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function safeNotifyScheduleChangesFromPayload(array $before, array $after, int|string|null $crmId = null): void
+    {
+        try {
+            $this->calendarReminder->notifyScheduleChangesFromPayload($before, $after);
+        } catch (\Throwable $e) {
+            Log::warning('Calendar reminder notification failed after CRM save.', [
+                'crm_id' => $crmId ?? ($after['id'] ?? null),
                 'error' => $e->getMessage(),
             ]);
         }

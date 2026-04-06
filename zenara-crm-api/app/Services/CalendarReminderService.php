@@ -22,7 +22,7 @@ class CalendarReminderService
     ) {
     }
 
-    public function syncForCrm(Crm $crm): void
+    public function syncForCrm(Crm $crm, bool $sendScheduleNotifications = true): void
     {
         $calendarSyncEnabled = (bool) config('services.calendar_reminders.enabled');
 
@@ -64,8 +64,10 @@ class CalendarReminderService
             $this->persistEventIds($crm, $updates);
         }
 
-        $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $crm->appointment, $appointmentChanged);
-        $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
+        if ($sendScheduleNotifications) {
+            $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $crm->appointment, $appointmentChanged);
+            $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
+        }
         $this->resetTimedReminderMarkersIfScheduleChanged($crm, $appointmentChanged, $followUpChanged);
     }
 
