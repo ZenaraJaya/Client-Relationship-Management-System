@@ -467,6 +467,14 @@ class CalendarReminderService
         $body = $this->buildPlainNotificationBody($summary, $details);
         $html = $this->buildNotificationHtml($subject, $summary, $details);
 
+        Log::info('Dispatching schedule notification email.', [
+            'crm_id' => $crm->id,
+            'type' => $type,
+            'recipients_count' => count($recipients),
+            'recipients' => $recipients,
+            'delivery_mode' => $this->outboundEmail->deliveryMode(),
+        ]);
+
         foreach ($recipients as $recipient) {
             try {
                 $this->outboundEmail->send($recipient, $subject, $body, $html);
@@ -601,6 +609,15 @@ class CalendarReminderService
     ): void {
         $textBody = $this->buildPlainNotificationBody($summary, $details);
         $htmlBody = $this->buildNotificationHtml($subject, $summary, $details);
+
+        Log::info('Dispatching timed reminder email.', [
+            'crm_id' => $crm->id,
+            'type' => $type,
+            'stage' => $stage,
+            'recipients_count' => count($recipients),
+            'recipients' => $recipients,
+            'delivery_mode' => $this->outboundEmail->deliveryMode(),
+        ]);
 
         foreach ($recipients as $recipient) {
             try {

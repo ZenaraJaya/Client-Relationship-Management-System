@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 
@@ -54,11 +55,16 @@ class OutboundEmailService
             throw new RuntimeException('RESEND_API_KEY is not configured.');
         }
 
-        $fromAddress = trim((string) env('RESEND_FROM_ADDRESS', (string) config('mail.from.address')));
+        $configuredFromAddress = trim((string) env('RESEND_FROM_ADDRESS', ''));
+        $fallbackFromAddress = trim((string) config('mail.from.address'));
+        $fromAddress = $configuredFromAddress !== '' ? $configuredFromAddress : $fallbackFromAddress;
         $fromName = trim((string) env('RESEND_FROM_NAME', (string) config('mail.from.name')));
 
         if ($fromAddress === '' || !filter_var($fromAddress, FILTER_VALIDATE_EMAIL)) {
-            throw new RuntimeException('RESEND_FROM_ADDRESS is missing or invalid.');
+            // Keep a working sender in non-production setups where RESEND_FROM_ADDRESS
+            // is often forgotten.
+            $fromAddress = 'onboarding@resend.dev';
+            Log::warning('Invalid RESEND_FROM_ADDRESS and MAIL_FROM_ADDRESS. Falling back to onboarding@resend.dev.');
         }
 
         $from = $fromName !== ''
@@ -78,10 +84,11 @@ class OutboundEmailService
             ]);
 
         if (!$response->successful()) {
+            $message = trim((string) ($response->json('message') ?? $response->body()));
             throw new RuntimeException(sprintf(
                 'Resend API failed (%s): %s',
                 $response->status(),
-                trim((string) $response->body())
+                $message
             ));
         }
     }

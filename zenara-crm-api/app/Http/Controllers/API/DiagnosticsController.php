@@ -56,6 +56,9 @@ class DiagnosticsController extends Controller
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
                 'delivery_mode' => $this->outboundEmail->deliveryMode(),
+                'resend_key_configured' => trim((string) config('services.resend.key')) !== '',
+                'resend_from_address' => trim((string) env('RESEND_FROM_ADDRESS', '')),
+                'mail_from_address' => (string) config('mail.from.address'),
             ]);
 
             return response()->json([
@@ -66,6 +69,11 @@ class DiagnosticsController extends Controller
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
                 'scheme' => (string) config('mail.mailers.smtp.scheme'),
+                'resend_key_configured' => trim((string) config('services.resend.key')) !== '',
+                'resend_from_address' => trim((string) env('RESEND_FROM_ADDRESS', '')),
+                'mail_from_address' => (string) config('mail.from.address'),
+                'calendar_email_notifications_enabled' => (bool) config('services.calendar_reminders.email_notifications_enabled', true),
+                'calendar_admin_emails' => (string) config('services.calendar_reminders.admin_emails', ''),
                 'sent_at' => $sentAt,
             ]);
         } catch (\Throwable $e) {
@@ -75,6 +83,9 @@ class DiagnosticsController extends Controller
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
                 'delivery_mode' => $this->outboundEmail->deliveryMode(),
+                'resend_key_configured' => trim((string) config('services.resend.key')) !== '',
+                'resend_from_address' => trim((string) env('RESEND_FROM_ADDRESS', '')),
+                'mail_from_address' => (string) config('mail.from.address'),
                 'error' => $e->getMessage(),
             ]);
 
@@ -87,6 +98,11 @@ class DiagnosticsController extends Controller
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
                 'scheme' => (string) config('mail.mailers.smtp.scheme'),
+                'resend_key_configured' => trim((string) config('services.resend.key')) !== '',
+                'resend_from_address' => trim((string) env('RESEND_FROM_ADDRESS', '')),
+                'mail_from_address' => (string) config('mail.from.address'),
+                'calendar_email_notifications_enabled' => (bool) config('services.calendar_reminders.email_notifications_enabled', true),
+                'calendar_admin_emails' => (string) config('services.calendar_reminders.admin_emails', ''),
             ], 500);
         }
     }
