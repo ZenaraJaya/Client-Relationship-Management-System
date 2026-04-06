@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CrmController;
+use App\Http\Controllers\API\DiagnosticsController;
 use App\Http\Controllers\API\FirestoreWebhookController;
 
 /**
@@ -17,6 +18,7 @@ Route::post('webhooks/firestore/delete', [FirestoreWebhookController::class, 'ha
 Route::middleware('auth.token')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::post('test-email', [DiagnosticsController::class, 'testEmail'])->middleware('throttle:10,1');
 
     Route::post('crms/sync-all', [CrmController::class, 'syncAll'])->middleware('throttle:15,1');
     Route::post('crms/bulk-delete', [CrmController::class, 'bulkDestroy'])->middleware('throttle:30,1');
