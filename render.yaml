@@ -1,0 +1,58 @@
+services:
+  - type: web
+    name: zenara-crm-api
+    env: php
+    plan: free
+    rootDir: zenara-crm-api
+    buildCommand: composer install --no-dev --optimize-autoloader
+    startCommand: php -S 0.0.0.0:$PORT -t public
+    healthCheckPath: /up
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://zenara-crm-api.onrender.com
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: zenara-crm-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: zenara-crm-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: zenara-crm-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: zenara-crm-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: zenara-crm-db
+          property: password
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-vercel-app.vercel.app
+
+databases:
+  - name: zenara-crm-db
+    databaseName: zenara_crm
+    user: zenara_crm_user
+    plan: free

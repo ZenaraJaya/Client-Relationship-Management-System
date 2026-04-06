@@ -1,0 +1,40 @@
+type User @table {
+  displayName: String!
+  email: String!
+  createdAt: Timestamp!
+  photoUrl: String
+}
+
+type Event @table {
+  organizer: User!
+  name: String!
+  createdAt: Timestamp!
+  description: String
+  date: Date
+  time: String
+  location: String
+  votingDeadline: Timestamp
+}
+
+type EventIdea @table {
+  event: Event!
+  proposer: User!
+  title: String!
+  createdAt: Timestamp!
+  description: String
+}
+
+type Vote @table {
+  eventIdea: EventIdea!
+  user: User!
+  createdAt: Timestamp!
+}
+
+type Participation @table(key: ["user", "event"]) {
+  user: User!
+  event: Event!
+  role: String!
+  status: String!
+  createdAt: Timestamp!
+  respondedAt: Timestamp
+}

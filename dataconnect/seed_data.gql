@@ -1,0 +1,79 @@
+mutation CreateDemoData @transaction {
+  users_insertMany(data: [
+    {
+      id: "user1",
+      username: "Alice",
+      email: "alice@example.com",
+      createdAt: "2023-01-01T10:00:00Z"
+    },
+    {
+      id: "user2",
+      username: "Bob",
+      email: "bob@example.com",
+      createdAt: "2023-01-01T10:05:00Z"
+    }
+  ])
+  products_insertMany(data: [
+    {
+      id: "product1",
+      name: "Laptop",
+      description: "Powerful laptop for work and gaming",
+      price: 1200.00,
+      createdAt: "2023-01-01T10:10:00Z",
+      createdByUserId: "user1"
+    },
+    {
+      id: "product2",
+      name: "Mouse",
+      description: "Ergonomic wireless mouse",
+      price: 25.00,
+      createdAt: "2023-01-01T10:15:00Z",
+      createdByUserId: "user1"
+    },
+    {
+      id: "product3",
+      name: "Keyboard",
+      description: "Mechanical keyboard with RGB lighting",
+      price: 75.00,
+      createdAt: "2023-01-01T10:20:00Z",
+      createdByUserId: "user2"
+    }
+  ])
+  orders_insertMany(data: [
+    {
+      id: "order1",
+      userId: "user1",
+      totalAmount: 1225.00,
+      orderDate: "2023-01-02T11:00:00Z"
+    },
+    {
+      id: "order2",
+      userId: "user2",
+      totalAmount: 75.00,
+      orderDate: "2023-01-03T12:00:00Z"
+    }
+  ])
+  orderItems_insertMany(data: [
+    {
+      id: "orderitem1",
+      orderId: "order1",
+      productId: "product1",
+      quantity: 1,
+      price: 1200.00
+    },
+    {
+      id: "orderitem2",
+      orderId: "order1",
+      productId: "product2",
+      quantity: 1,
+      price: 25.00
+    },
+    {
+      id: "orderitem3",
+      orderId: "order2",
+      productId: "product3",
+      quantity: 1,
+      price: 75.00
+    }
+  ])
+}
