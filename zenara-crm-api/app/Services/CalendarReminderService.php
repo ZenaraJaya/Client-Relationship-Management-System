@@ -467,7 +467,16 @@ class CalendarReminderService
         }
 
         $body = $this->buildPlainNotificationBody($summary, $details);
-        $html = $this->buildNotificationHtml($subject, $summary, $details);
+        $html = null;
+        try {
+            $html = $this->buildNotificationHtml($subject, $summary, $details);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to render reminder HTML template. Falling back to plain text email.', [
+                'crm_id' => $crm->id,
+                'type' => $type,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         Log::info('Dispatching schedule notification email.', [
             'crm_id' => $crm->id,
@@ -610,7 +619,17 @@ class CalendarReminderService
         string $stage
     ): void {
         $textBody = $this->buildPlainNotificationBody($summary, $details);
-        $htmlBody = $this->buildNotificationHtml($subject, $summary, $details);
+        $htmlBody = null;
+        try {
+            $htmlBody = $this->buildNotificationHtml($subject, $summary, $details);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to render timed reminder HTML template. Falling back to plain text email.', [
+                'crm_id' => $crm->id,
+                'type' => $type,
+                'stage' => $stage,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         Log::info('Dispatching timed reminder email.', [
             'crm_id' => $crm->id,
