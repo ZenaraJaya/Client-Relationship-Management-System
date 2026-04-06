@@ -1,5 +1,17 @@
 <?php
 
+use Illuminate\Support\Str;
+
+$corsOrigins = array_values(array_filter(array_map(
+    fn ($origin) => trim($origin),
+    explode(',', (string) env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000'))
+)));
+
+$corsOriginPatterns = array_values(array_filter(array_map(
+    fn ($pattern) => trim($pattern),
+    explode(',', (string) env('CORS_ALLOWED_ORIGIN_PATTERNS', '/^https:\\/\\/.*\\.vercel\\.app$/'))
+)));
+
 return [
 
     /*
@@ -18,12 +30,9 @@ return [
 
     'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => array_values(array_filter(array_map(
-        fn ($origin) => trim($origin),
-        explode(',', (string) env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', 'http://localhost:3000')))
-    ))),
+    'allowed_origins' => $corsOrigins,
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => $corsOriginPatterns,
 
     'allowed_headers' => ['Accept', 'Authorization', 'Content-Type', 'Origin', 'X-Requested-With'],
 
