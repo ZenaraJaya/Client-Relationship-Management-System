@@ -49,14 +49,14 @@ Artisan::command('users:sync-firestore', function () {
 })->purpose('Backfill existing users into Firestore users collection');
 
 Artisan::command('reminders:send-due', function () {
-    $result = app(CalendarReminderService::class)->sendSameDayReminders();
+    $result = app(CalendarReminderService::class)->sendTimedReminders();
     $this->info(sprintf(
-        'Same-day reminders processed. Checked: %d, Sent: %d',
+        'Timed reminders processed. Checked: %d, Sent: %d',
         (int) ($result['checked'] ?? 0),
         (int) ($result['sent'] ?? 0)
     ));
-})->purpose('Send same-day appointment/follow-up reminders by email');
+})->purpose('Send 15-minute and at-time appointment/follow-up reminders by email');
 
 Schedule::command('reminders:send-due')
-    ->everyTenMinutes()
+    ->everyMinute()
     ->withoutOverlapping();

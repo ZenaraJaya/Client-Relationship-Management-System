@@ -62,6 +62,7 @@ class CalendarReminderService
             $this->persistEventIds($crm, $updates);
         }
 
+        $this->resetTimedReminderMarkersIfScheduleChanged($crm, $appointmentChanged, $followUpChanged);
         $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $crm->appointment, $appointmentChanged);
         $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
     }
@@ -93,23 +94,28 @@ class CalendarReminderService
     }
 
     /**
-     * Send day-of reminders for appointments/follow-ups scheduled today.
-     * Designed to be executed by a scheduler every few minutes.
+     * Send time-based reminders:
+     * - X minutes before schedule (default 15)
+     * - At schedule time (with a short grace window)
      */
-    public function sendSameDayReminders(): array
+    public function sendTimedReminders(): array
     {
         if (!config('services.calendar_reminders.email_notifications_enabled', true)) {
             return ['checked' => 0, 'sent' => 0];
         }
 
         $tz = config('app.timezone', 'UTC');
-        $todayStart = Carbon::now($tz)->startOfDay();
-        $todayEnd = $todayStart->copy()->endOfDay();
+        $now = Carbon::now($tz);
+        $preMinutes = max(1, (int) config('services.calendar_reminders.pre_reminder_minutes', 15));
+        $dueGraceMinutes = max(1, (int) config('services.calendar_reminders.due_reminder_grace_minutes', 5));
+
+        $queryStart = $now->copy()->subMinutes($dueGraceMinutes);
+        $queryEnd = $now->copy()->addMinutes($preMinutes + 1);
 
         $crms = Crm::query()
-            ->where(function ($query) use ($todayStart, $todayEnd): void {
-                $query->whereBetween('appointment', [$todayStart, $todayEnd])
-                    ->orWhereBetween('follow_up', [$todayStart, $todayEnd]);
+            ->where(function ($query) use ($queryStart, $queryEnd): void {
+                $query->whereBetween('appointment', [$queryStart, $queryEnd])
+                    ->orWhereBetween('follow_up', [$queryStart, $queryEnd]);
             })
             ->get();
 
@@ -118,11 +124,37 @@ class CalendarReminderService
 
         foreach ($crms as $crm) {
             $checked++;
-            $sent += $this->sendSameDayReminderIfNeeded($crm, 'appointment', $crm->appointment, 'appointment_reminder_sent_on');
-            $sent += $this->sendSameDayReminderIfNeeded($crm, 'follow_up', $crm->follow_up, 'follow_up_reminder_sent_on');
+            $sent += $this->sendTimedReminderIfNeeded(
+                $crm,
+                'appointment',
+                $crm->appointment,
+                'appointment_pre_reminder_for_at',
+                'appointment_due_reminder_for_at',
+                $preMinutes,
+                $dueGraceMinutes,
+                $now
+            );
+            $sent += $this->sendTimedReminderIfNeeded(
+                $crm,
+                'follow_up',
+                $crm->follow_up,
+                'follow_up_pre_reminder_for_at',
+                'follow_up_due_reminder_for_at',
+                $preMinutes,
+                $dueGraceMinutes,
+                $now
+            );
         }
 
         return ['checked' => $checked, 'sent' => $sent];
+    }
+
+    /**
+     * Backward-compatible alias.
+     */
+    public function sendSameDayReminders(): array
+    {
+        return $this->sendTimedReminders();
     }
 
     public function removeForCrm(Crm $crm): void
@@ -442,36 +474,58 @@ class CalendarReminderService
         }
     }
 
-    protected function sendSameDayReminderIfNeeded(Crm $crm, string $type, $dateValue, string $sentColumn): int
-    {
+    protected function sendTimedReminderIfNeeded(
+        Crm $crm,
+        string $type,
+        $dateValue,
+        string $preColumn,
+        string $dueColumn,
+        int $preMinutes,
+        int $dueGraceMinutes,
+        Carbon $now
+    ): int {
         if (!$dateValue) {
             return 0;
         }
 
         [$start, $end] = $this->buildEventWindow($dateValue);
-        $now = Carbon::now($start->timezoneName);
-        $sameDayReminderHour = max(0, min(23, (int) config('services.calendar_reminders.same_day_reminder_hour', 9)));
-        if (!$start->isSameDay($now) || $now->hour < $sameDayReminderHour) {
-            return 0;
-        }
-
-        if ($crm->{$sentColumn}) {
-            $lastSent = Carbon::parse($crm->{$sentColumn});
-            if ($lastSent->isSameDay($start)) {
-                return 0;
-            }
-        }
+        $nowInTz = $now->copy()->setTimezone($start->timezoneName);
 
         $recipients = $this->resolveNotificationRecipients($crm);
         if ($recipients === []) {
             return 0;
         }
 
+        $sent = 0;
+        $sent += $this->sendPreReminderIfNeeded($crm, $type, $start, $end, $recipients, $preColumn, $preMinutes, $nowInTz);
+        $sent += $this->sendDueReminderIfNeeded($crm, $type, $start, $end, $recipients, $dueColumn, $dueGraceMinutes, $nowInTz);
+
+        return $sent;
+    }
+
+    protected function sendPreReminderIfNeeded(
+        Crm $crm,
+        string $type,
+        Carbon $start,
+        Carbon $end,
+        array $recipients,
+        string $preColumn,
+        int $preMinutes,
+        Carbon $now
+    ): int {
+        $preReminderTime = $start->copy()->subMinutes($preMinutes);
+        if ($now->lt($preReminderTime) || $now->gte($start)) {
+            return 0;
+        }
+
+        if ($this->matchesReminderMarker($crm->{$preColumn}, $start)) {
+            return 0;
+        }
+
         $label = $type === 'follow_up' ? 'Follow Up' : 'Appointment';
         $company = $crm->company_name ?: 'CRM Contact';
-
-        $subject = "[Zenara CRM] Reminder Today - {$label} - {$company}";
-        $summary = "Friendly reminder: {$label} is due today.";
+        $subject = "[Zenara CRM] Reminder in {$preMinutes} Minutes - {$label} - {$company}";
+        $summary = "{$label} is scheduled in {$preMinutes} minutes.";
         $details = [
             "Company: {$company}",
             "Contact: " . ($crm->contact_person ?: '-'),
@@ -481,6 +535,63 @@ class CalendarReminderService
             "Status: " . ($crm->status ?: '-'),
         ];
 
+        $this->dispatchTimedReminder($crm, $type, $recipients, $subject, $summary, $details, 'pre-time');
+
+        $crm->{$preColumn} = $this->buildReminderMarker($start);
+        $crm->saveQuietly();
+
+        return 1;
+    }
+
+    protected function sendDueReminderIfNeeded(
+        Crm $crm,
+        string $type,
+        Carbon $start,
+        Carbon $end,
+        array $recipients,
+        string $dueColumn,
+        int $dueGraceMinutes,
+        Carbon $now
+    ): int {
+        $dueWindowEnd = $start->copy()->addMinutes($dueGraceMinutes);
+        if ($now->lt($start) || $now->gt($dueWindowEnd)) {
+            return 0;
+        }
+
+        if ($this->matchesReminderMarker($crm->{$dueColumn}, $start)) {
+            return 0;
+        }
+
+        $label = $type === 'follow_up' ? 'Follow Up' : 'Appointment';
+        $company = $crm->company_name ?: 'CRM Contact';
+        $subject = "[Zenara CRM] Reminder Now - {$label} - {$company}";
+        $summary = "{$label} is due now.";
+        $details = [
+            "Company: {$company}",
+            "Contact: " . ($crm->contact_person ?: '-'),
+            "Start: " . $start->toDayDateTimeString(),
+            "End: " . $end->toDayDateTimeString(),
+            "Timezone: " . $start->timezoneName,
+            "Status: " . ($crm->status ?: '-'),
+        ];
+
+        $this->dispatchTimedReminder($crm, $type, $recipients, $subject, $summary, $details, 'at-time');
+
+        $crm->{$dueColumn} = $this->buildReminderMarker($start);
+        $crm->saveQuietly();
+
+        return 1;
+    }
+
+    protected function dispatchTimedReminder(
+        Crm $crm,
+        string $type,
+        array $recipients,
+        string $subject,
+        string $summary,
+        array $details,
+        string $stage
+    ): void {
         $textBody = $this->buildPlainNotificationBody($summary, $details);
         $htmlBody = $this->buildNotificationHtml($subject, $summary, $details);
 
@@ -488,19 +599,72 @@ class CalendarReminderService
             try {
                 $this->outboundEmail->send($recipient, $subject, $textBody, $htmlBody);
             } catch (\Throwable $e) {
-                Log::warning('Failed to send same-day reminder email.', [
+                Log::warning('Failed to send timed reminder email.', [
                     'crm_id' => $crm->id,
                     'type' => $type,
+                    'stage' => $stage,
                     'recipient' => $recipient,
                     'error' => $e->getMessage(),
                 ]);
             }
         }
+    }
 
-        $crm->{$sentColumn} = $now->toDateString();
-        $crm->saveQuietly();
+    protected function buildReminderMarker(Carbon $eventStart): string
+    {
+        return $eventStart->copy()->utc()->toDateTimeString();
+    }
 
-        return 1;
+    protected function matchesReminderMarker($storedMarker, Carbon $eventStart): bool
+    {
+        if (!$storedMarker) {
+            return false;
+        }
+
+        try {
+            return Carbon::parse($storedMarker)->utc()->toDateTimeString() === $this->buildReminderMarker($eventStart);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function resetTimedReminderMarkersIfScheduleChanged(Crm $crm, bool $appointmentChanged, bool $followUpChanged): void
+    {
+        $dirty = false;
+
+        if ($appointmentChanged) {
+            if ($crm->appointment_pre_reminder_for_at !== null) {
+                $crm->appointment_pre_reminder_for_at = null;
+                $dirty = true;
+            }
+            if ($crm->appointment_due_reminder_for_at !== null) {
+                $crm->appointment_due_reminder_for_at = null;
+                $dirty = true;
+            }
+            if ($crm->appointment_reminder_sent_on !== null) {
+                $crm->appointment_reminder_sent_on = null;
+                $dirty = true;
+            }
+        }
+
+        if ($followUpChanged) {
+            if ($crm->follow_up_pre_reminder_for_at !== null) {
+                $crm->follow_up_pre_reminder_for_at = null;
+                $dirty = true;
+            }
+            if ($crm->follow_up_due_reminder_for_at !== null) {
+                $crm->follow_up_due_reminder_for_at = null;
+                $dirty = true;
+            }
+            if ($crm->follow_up_reminder_sent_on !== null) {
+                $crm->follow_up_reminder_sent_on = null;
+                $dirty = true;
+            }
+        }
+
+        if ($dirty) {
+            $crm->saveQuietly();
+        }
     }
 
     protected function buildPlainNotificationBody(string $summary, array $details): string
