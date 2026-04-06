@@ -42,6 +42,8 @@ return [
         'request_timeout_seconds' => (int) env('CALENDAR_REMINDER_REQUEST_TIMEOUT', 8),
         'connect_timeout_seconds' => (int) env('CALENDAR_REMINDER_CONNECT_TIMEOUT', 4),
         'attendee_email' => env('CALENDAR_REMINDER_ATTENDEE_EMAIL'),
+        'email_notifications_enabled' => env('CALENDAR_EMAIL_NOTIFICATIONS_ENABLED', true),
+        'notification_email' => env('CALENDAR_REMINDER_NOTIFICATION_EMAIL'),
     ],
 
     'google_calendar' => [

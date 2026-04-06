@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\Crm;
+use App\Models\User;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CalendarReminderService
 {
@@ -19,6 +21,13 @@ class CalendarReminderService
         if (!config('services.calendar_reminders.enabled')) {
             return;
         }
+
+        $appointmentChanged = $crm->wasRecentlyCreated
+            ? (bool) $crm->appointment
+            : $crm->wasChanged('appointment');
+        $followUpChanged = $crm->wasRecentlyCreated
+            ? (bool) $crm->follow_up
+            : $crm->wasChanged('follow_up');
 
         $updates = [
             'appointment_google_event_id' => $this->syncGoogleEvent(
@@ -48,6 +57,8 @@ class CalendarReminderService
         ];
 
         $this->persistEventIds($crm, $updates);
+        $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $crm->appointment, $appointmentChanged);
+        $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
     }
 
     public function removeForCrm(Crm $crm): void
@@ -308,6 +319,81 @@ class CalendarReminderService
         ];
 
         return implode("\n", $parts);
+    }
+
+    protected function sendScheduleNotificationIfNeeded(Crm $crm, string $type, $dateValue, bool $changed): void
+    {
+        if (!$changed || !config('services.calendar_reminders.email_notifications_enabled', true)) {
+            return;
+        }
+
+        $recipient = $this->resolveNotificationEmail($crm);
+        if (!$recipient) {
+            return;
+        }
+
+        $label = $type === 'follow_up' ? 'Follow Up' : 'Appointment';
+        $company = $crm->company_name ?: 'CRM Contact';
+
+        if ($dateValue) {
+            [$start, $end] = $this->buildEventWindow($dateValue);
+            $subject = "[Zenara CRM] {$label} Scheduled - {$company}";
+            $body = implode("\n", [
+                "{$label} has been scheduled/updated.",
+                "Company: {$company}",
+                "Contact: " . ($crm->contact_person ?: '-'),
+                "Start: " . $start->toDayDateTimeString(),
+                "End: " . $end->toDayDateTimeString(),
+                "Timezone: " . $start->timezoneName,
+                "Status: " . ($crm->status ?: '-'),
+            ]);
+        } else {
+            $subject = "[Zenara CRM] {$label} Cancelled - {$company}";
+            $body = implode("\n", [
+                "{$label} has been removed/cancelled.",
+                "Company: {$company}",
+                "Contact: " . ($crm->contact_person ?: '-'),
+                "Status: " . ($crm->status ?: '-'),
+            ]);
+        }
+
+        try {
+            Mail::raw($body, function ($message) use ($recipient, $subject): void {
+                $message->to($recipient)->subject($subject);
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send calendar notification email.', [
+                'crm_id' => $crm->id,
+                'type' => $type,
+                'recipient' => $recipient,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function resolveNotificationEmail(Crm $crm): ?string
+    {
+        $userEmail = null;
+        if ($crm->user_id) {
+            $userEmail = User::query()
+                ->whereKey($crm->user_id)
+                ->value('email');
+        }
+
+        $candidates = [
+            config('services.calendar_reminders.notification_email'),
+            $userEmail,
+            config('services.calendar_reminders.attendee_email'),
+        ];
+
+        foreach ($candidates as $candidate) {
+            $email = trim((string) $candidate);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return $email;
+            }
+        }
+
+        return null;
     }
 
     protected function persistEventIds(Crm $crm, array $updates): void
