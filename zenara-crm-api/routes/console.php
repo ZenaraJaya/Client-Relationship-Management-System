@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\User;
+use App\Services\CalendarReminderService;
 use App\Services\FirestoreService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -45,3 +47,16 @@ Artisan::command('users:sync-firestore', function () {
 
     $this->info("Firestore users sync completed. Total: {$total}, Synced: {$synced}, Failed: {$failed}");
 })->purpose('Backfill existing users into Firestore users collection');
+
+Artisan::command('reminders:send-due', function () {
+    $result = app(CalendarReminderService::class)->sendSameDayReminders();
+    $this->info(sprintf(
+        'Same-day reminders processed. Checked: %d, Sent: %d',
+        (int) ($result['checked'] ?? 0),
+        (int) ($result['sent'] ?? 0)
+    ));
+})->purpose('Send same-day appointment/follow-up reminders by email');
+
+Schedule::command('reminders:send-due')
+    ->everyTenMinutes()
+    ->withoutOverlapping();

@@ -38,6 +38,7 @@ return [
     'calendar_reminders' => [
         'enabled' => env('CALENDAR_REMINDERS_ENABLED', false),
         'default_hour' => (int) env('CALENDAR_REMINDER_HOUR', 9),
+        'same_day_reminder_hour' => (int) env('CALENDAR_SAME_DAY_REMINDER_HOUR', 9),
         'default_duration_minutes' => (int) env('CALENDAR_REMINDER_DURATION_MINUTES', 30),
         'request_timeout_seconds' => (int) env('CALENDAR_REMINDER_REQUEST_TIMEOUT', 8),
         'connect_timeout_seconds' => (int) env('CALENDAR_REMINDER_CONNECT_TIMEOUT', 4),

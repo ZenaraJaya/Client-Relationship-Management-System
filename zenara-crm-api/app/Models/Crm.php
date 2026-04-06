@@ -36,6 +36,8 @@ class Crm extends Model
         'last_contact' => 'datetime',
         'appointment' => 'datetime',
         'follow_up' => 'datetime',
+        'appointment_reminder_sent_on' => 'date',
+        'follow_up_reminder_sent_on' => 'date',
     ];
 
     protected $hidden = [
@@ -43,5 +45,7 @@ class Crm extends Model
         'appointment_ms_event_id',
         'follow_up_google_event_id',
         'follow_up_ms_event_id',
+        'appointment_reminder_sent_on',
+        'follow_up_reminder_sent_on',
     ];
 }

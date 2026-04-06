@@ -21,19 +21,33 @@ class OutboundEmailService
 
     public function sendText(string $to, string $subject, string $body): void
     {
+        $this->send($to, $subject, $body, null);
+    }
+
+    public function send(string $to, string $subject, string $textBody, ?string $htmlBody = null): void
+    {
         $mode = $this->deliveryMode();
 
         if ($mode === 'resend_api') {
-            $this->sendTextViaResend($to, $subject, $body);
+            $this->sendViaResend($to, $subject, $textBody, $htmlBody);
             return;
         }
 
-        Mail::raw($body, function ($message) use ($to, $subject): void {
+        if ($htmlBody) {
+            Mail::send([], [], function ($message) use ($to, $subject, $textBody, $htmlBody): void {
+                $message->to($to)->subject($subject);
+                $message->setBody($htmlBody, 'text/html');
+                $message->addPart($textBody, 'text/plain');
+            });
+            return;
+        }
+
+        Mail::raw($textBody, function ($message) use ($to, $subject): void {
             $message->to($to)->subject($subject);
         });
     }
 
-    protected function sendTextViaResend(string $to, string $subject, string $body): void
+    protected function sendViaResend(string $to, string $subject, string $textBody, ?string $htmlBody): void
     {
         $apiKey = (string) config('services.resend.key');
         if ($apiKey === '') {
@@ -59,7 +73,8 @@ class OutboundEmailService
                 'from' => $from,
                 'to' => [$to],
                 'subject' => $subject,
-                'text' => $body,
+                'text' => $textBody,
+                'html' => $htmlBody,
             ]);
 
         if (!$response->successful()) {

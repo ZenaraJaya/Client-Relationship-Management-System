@@ -92,6 +92,39 @@ class CalendarReminderService
         $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $after['follow_up'] ?? null, $followUpChanged);
     }
 
+    /**
+     * Send day-of reminders for appointments/follow-ups scheduled today.
+     * Designed to be executed by a scheduler every few minutes.
+     */
+    public function sendSameDayReminders(): array
+    {
+        if (!config('services.calendar_reminders.email_notifications_enabled', true)) {
+            return ['checked' => 0, 'sent' => 0];
+        }
+
+        $tz = config('app.timezone', 'UTC');
+        $todayStart = Carbon::now($tz)->startOfDay();
+        $todayEnd = $todayStart->copy()->endOfDay();
+
+        $crms = Crm::query()
+            ->where(function ($query) use ($todayStart, $todayEnd): void {
+                $query->whereBetween('appointment', [$todayStart, $todayEnd])
+                    ->orWhereBetween('follow_up', [$todayStart, $todayEnd]);
+            })
+            ->get();
+
+        $checked = 0;
+        $sent = 0;
+
+        foreach ($crms as $crm) {
+            $checked++;
+            $sent += $this->sendSameDayReminderIfNeeded($crm, 'appointment', $crm->appointment, 'appointment_reminder_sent_on');
+            $sent += $this->sendSameDayReminderIfNeeded($crm, 'follow_up', $crm->follow_up, 'follow_up_reminder_sent_on');
+        }
+
+        return ['checked' => $checked, 'sent' => $sent];
+    }
+
     public function removeForCrm(Crm $crm): void
     {
         if (!config('services.calendar_reminders.enabled')) {
@@ -373,28 +406,31 @@ class CalendarReminderService
         if ($dateValue) {
             [$start, $end] = $this->buildEventWindow($dateValue);
             $subject = "[Zenara CRM] {$label} Scheduled - {$company}";
-            $body = implode("\n", [
-                "{$label} has been scheduled/updated.",
+            $summary = "{$label} has been scheduled/updated.";
+            $details = [
                 "Company: {$company}",
                 "Contact: " . ($crm->contact_person ?: '-'),
                 "Start: " . $start->toDayDateTimeString(),
                 "End: " . $end->toDayDateTimeString(),
                 "Timezone: " . $start->timezoneName,
                 "Status: " . ($crm->status ?: '-'),
-            ]);
+            ];
         } else {
             $subject = "[Zenara CRM] {$label} Cancelled - {$company}";
-            $body = implode("\n", [
-                "{$label} has been removed/cancelled.",
+            $summary = "{$label} has been removed/cancelled.";
+            $details = [
                 "Company: {$company}",
                 "Contact: " . ($crm->contact_person ?: '-'),
                 "Status: " . ($crm->status ?: '-'),
-            ]);
+            ];
         }
+
+        $body = $this->buildPlainNotificationBody($summary, $details);
+        $html = $this->buildNotificationHtml($subject, $summary, $details);
 
         foreach ($recipients as $recipient) {
             try {
-                $this->outboundEmail->sendText($recipient, $subject, $body);
+                $this->outboundEmail->send($recipient, $subject, $body, $html);
             } catch (\Throwable $e) {
                 Log::warning('Failed to send calendar notification email.', [
                     'crm_id' => $crm->id,
@@ -404,6 +440,81 @@ class CalendarReminderService
                 ]);
             }
         }
+    }
+
+    protected function sendSameDayReminderIfNeeded(Crm $crm, string $type, $dateValue, string $sentColumn): int
+    {
+        if (!$dateValue) {
+            return 0;
+        }
+
+        [$start, $end] = $this->buildEventWindow($dateValue);
+        $now = Carbon::now($start->timezoneName);
+        $sameDayReminderHour = max(0, min(23, (int) config('services.calendar_reminders.same_day_reminder_hour', 9)));
+        if (!$start->isSameDay($now) || $now->hour < $sameDayReminderHour) {
+            return 0;
+        }
+
+        if ($crm->{$sentColumn}) {
+            $lastSent = Carbon::parse($crm->{$sentColumn});
+            if ($lastSent->isSameDay($start)) {
+                return 0;
+            }
+        }
+
+        $recipients = $this->resolveNotificationRecipients($crm);
+        if ($recipients === []) {
+            return 0;
+        }
+
+        $label = $type === 'follow_up' ? 'Follow Up' : 'Appointment';
+        $company = $crm->company_name ?: 'CRM Contact';
+
+        $subject = "[Zenara CRM] Reminder Today - {$label} - {$company}";
+        $summary = "Friendly reminder: {$label} is due today.";
+        $details = [
+            "Company: {$company}",
+            "Contact: " . ($crm->contact_person ?: '-'),
+            "Start: " . $start->toDayDateTimeString(),
+            "End: " . $end->toDayDateTimeString(),
+            "Timezone: " . $start->timezoneName,
+            "Status: " . ($crm->status ?: '-'),
+        ];
+
+        $textBody = $this->buildPlainNotificationBody($summary, $details);
+        $htmlBody = $this->buildNotificationHtml($subject, $summary, $details);
+
+        foreach ($recipients as $recipient) {
+            try {
+                $this->outboundEmail->send($recipient, $subject, $textBody, $htmlBody);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send same-day reminder email.', [
+                    'crm_id' => $crm->id,
+                    'type' => $type,
+                    'recipient' => $recipient,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $crm->{$sentColumn} = $now->toDateString();
+        $crm->saveQuietly();
+
+        return 1;
+    }
+
+    protected function buildPlainNotificationBody(string $summary, array $details): string
+    {
+        return implode("\n", array_merge([$summary], $details));
+    }
+
+    protected function buildNotificationHtml(string $subject, string $summary, array $details): string
+    {
+        return view('emails.crm-reminder', [
+            'subject' => $subject,
+            'summary' => $summary,
+            'details' => $details,
+        ])->render();
     }
 
     protected function resolveNotificationRecipients(Crm $crm): array
