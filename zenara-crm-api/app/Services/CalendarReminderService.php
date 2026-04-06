@@ -9,11 +9,13 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class CalendarReminderService
 {
     protected ?string $googleAccessToken = null;
     protected ?string $microsoftAccessToken = null;
+    protected ?bool $timedReminderColumnsReady = null;
 
     public function __construct(
         protected OutboundEmailService $outboundEmail
@@ -62,9 +64,9 @@ class CalendarReminderService
             $this->persistEventIds($crm, $updates);
         }
 
-        $this->resetTimedReminderMarkersIfScheduleChanged($crm, $appointmentChanged, $followUpChanged);
         $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $crm->appointment, $appointmentChanged);
         $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
+        $this->resetTimedReminderMarkersIfScheduleChanged($crm, $appointmentChanged, $followUpChanged);
     }
 
     /**
@@ -101,6 +103,11 @@ class CalendarReminderService
     public function sendTimedReminders(): array
     {
         if (!config('services.calendar_reminders.email_notifications_enabled', true)) {
+            return ['checked' => 0, 'sent' => 0];
+        }
+
+        if (!$this->hasTimedReminderColumns()) {
+            Log::warning('Timed reminders skipped: required columns are missing. Run latest migrations.');
             return ['checked' => 0, 'sent' => 0];
         }
 
@@ -630,6 +637,10 @@ class CalendarReminderService
 
     protected function resetTimedReminderMarkersIfScheduleChanged(Crm $crm, bool $appointmentChanged, bool $followUpChanged): void
     {
+        if (!$this->hasTimedReminderColumns()) {
+            return;
+        }
+
         $dirty = false;
 
         if ($appointmentChanged) {
@@ -665,6 +676,26 @@ class CalendarReminderService
         if ($dirty) {
             $crm->saveQuietly();
         }
+    }
+
+    protected function hasTimedReminderColumns(): bool
+    {
+        if ($this->timedReminderColumnsReady !== null) {
+            return $this->timedReminderColumnsReady;
+        }
+
+        try {
+            $this->timedReminderColumnsReady = Schema::hasColumns('crms', [
+                'appointment_pre_reminder_for_at',
+                'appointment_due_reminder_for_at',
+                'follow_up_pre_reminder_for_at',
+                'follow_up_due_reminder_for_at',
+            ]);
+        } catch (\Throwable) {
+            $this->timedReminderColumnsReady = false;
+        }
+
+        return $this->timedReminderColumnsReady;
     }
 
     protected function buildPlainNotificationBody(string $summary, array $details): string
