@@ -239,6 +239,15 @@ class CrmController extends Controller
                 return response()->json(['message' => 'Failed to update contact in Firestore'], 502);
             }
 
+            try {
+                $this->calendarReminder->notifyScheduleChangesFromPayload($existingRemote, $updatedRemote);
+            } catch (\Throwable $e) {
+                Log::warning('Calendar reminder notification failed for Firestore-only CRM update.', [
+                    'crm_id' => $id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             return response()->json($updatedRemote);
         }
 

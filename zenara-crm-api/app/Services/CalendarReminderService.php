@@ -61,6 +61,32 @@ class CalendarReminderService
         $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
     }
 
+    /**
+     * Send notification emails when appointment/follow-up fields change in
+     * payloads that may come from Firestore-only records.
+     */
+    public function notifyScheduleChangesFromPayload(array $before, array $after): void
+    {
+        if (!config('services.calendar_reminders.enabled')) {
+            return;
+        }
+
+        $crm = new Crm();
+        $crm->forceFill($after);
+
+        if (isset($after['id'])) {
+            $crm->id = $after['id'];
+        } elseif (isset($before['id'])) {
+            $crm->id = $before['id'];
+        }
+
+        $appointmentChanged = ($before['appointment'] ?? null) !== ($after['appointment'] ?? null);
+        $followUpChanged = ($before['follow_up'] ?? null) !== ($after['follow_up'] ?? null);
+
+        $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $after['appointment'] ?? null, $appointmentChanged);
+        $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $after['follow_up'] ?? null, $followUpChanged);
+    }
+
     public function removeForCrm(Crm $crm): void
     {
         if (!config('services.calendar_reminders.enabled')) {
