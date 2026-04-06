@@ -327,8 +327,8 @@ class CalendarReminderService
             return;
         }
 
-        $recipient = $this->resolveNotificationEmail($crm);
-        if (!$recipient) {
+        $recipients = $this->resolveNotificationRecipients($crm);
+        if ($recipients === []) {
             return;
         }
 
@@ -357,43 +357,75 @@ class CalendarReminderService
             ]);
         }
 
-        try {
-            Mail::raw($body, function ($message) use ($recipient, $subject): void {
-                $message->to($recipient)->subject($subject);
-            });
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send calendar notification email.', [
-                'crm_id' => $crm->id,
-                'type' => $type,
-                'recipient' => $recipient,
-                'error' => $e->getMessage(),
-            ]);
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::raw($body, function ($message) use ($recipient, $subject): void {
+                    $message->to($recipient)->subject($subject);
+                });
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send calendar notification email.', [
+                    'crm_id' => $crm->id,
+                    'type' => $type,
+                    'recipient' => $recipient,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 
-    protected function resolveNotificationEmail(Crm $crm): ?string
+    protected function resolveNotificationRecipients(Crm $crm): array
     {
-        $userEmail = null;
-        if ($crm->user_id) {
-            $userEmail = User::query()
-                ->whereKey($crm->user_id)
-                ->value('email');
+        $candidates = [];
+
+        // Admin recipients (explicitly configured)
+        $candidates = array_merge(
+            $candidates,
+            $this->parseEmailList((string) config('services.calendar_reminders.admin_emails'))
+        );
+
+        // Backward-compatible single admin recipient setting.
+        $candidates[] = (string) config('services.calendar_reminders.notification_email');
+
+        // Optional fallback: include all admin users from DB.
+        if ((bool) config('services.calendar_reminders.notify_admin_users', true)) {
+            $adminEmails = User::query()
+                ->whereRaw('LOWER(role) = ?', ['admin'])
+                ->pluck('email')
+                ->all();
+            $candidates = array_merge($candidates, $adminEmails);
         }
 
-        $candidates = [
-            config('services.calendar_reminders.notification_email'),
-            $userEmail,
-            config('services.calendar_reminders.attendee_email'),
-        ];
+        // Owner/creator email.
+        if ($crm->user_id) {
+            $ownerEmail = User::query()
+                ->whereKey($crm->user_id)
+                ->value('email');
+            $candidates[] = (string) $ownerEmail;
+        }
 
+        // Client/contact email.
+        if ((bool) config('services.calendar_reminders.notify_client_email', true)) {
+            $candidates[] = (string) $crm->email;
+        }
+
+        // Optional attendee recipient from previous calendar settings.
+        $candidates[] = (string) config('services.calendar_reminders.attendee_email');
+
+        $recipients = [];
         foreach ($candidates as $candidate) {
-            $email = trim((string) $candidate);
+            $email = strtolower(trim((string) $candidate));
             if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return $email;
+                $recipients[$email] = true;
             }
         }
 
-        return null;
+        return array_keys($recipients);
+    }
+
+    protected function parseEmailList(string $value): array
+    {
+        $items = preg_split('/[,;]+/', $value) ?: [];
+        return array_values(array_filter(array_map('trim', $items), fn ($item) => $item !== ''));
     }
 
     protected function persistEventIds(Crm $crm, array $updates): void

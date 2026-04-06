@@ -44,6 +44,9 @@ return [
         'attendee_email' => env('CALENDAR_REMINDER_ATTENDEE_EMAIL'),
         'email_notifications_enabled' => env('CALENDAR_EMAIL_NOTIFICATIONS_ENABLED', true),
         'notification_email' => env('CALENDAR_REMINDER_NOTIFICATION_EMAIL'),
+        'admin_emails' => env('CALENDAR_REMINDER_ADMIN_EMAILS', ''),
+        'notify_client_email' => env('CALENDAR_NOTIFY_CLIENT_EMAIL', true),
+        'notify_admin_users' => env('CALENDAR_NOTIFY_ADMIN_USERS', true),
     ],
 
     'google_calendar' => [
