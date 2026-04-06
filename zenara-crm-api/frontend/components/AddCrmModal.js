@@ -31,6 +31,17 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
     return `${year}-${month}-${day}`
   }
 
+  const formatDateTimeInput = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ''
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
   const toDateInputValue = (value) => {
     if (!value) return ''
 
@@ -55,6 +66,35 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
     if (typeof value === 'object' && typeof value.seconds === 'number') {
       const date = new Date(value.seconds * 1000)
       return formatDateInput(date)
+    }
+
+    return ''
+  }
+
+  const toDateTimeInputValue = (value) => {
+    if (!value) return ''
+
+    if (typeof value === 'string') {
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 16)
+      if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}/.test(value)) return value.replace(' ', 'T').slice(0, 16)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T09:00`
+
+      const parsed = new Date(value)
+      return formatDateTimeInput(parsed)
+    }
+
+    if (value instanceof Date) {
+      return formatDateTimeInput(value)
+    }
+
+    if (value && typeof value.toDate === 'function') {
+      const date = value.toDate()
+      return formatDateTimeInput(date)
+    }
+
+    if (typeof value === 'object' && typeof value.seconds === 'number') {
+      const date = new Date(value.seconds * 1000)
+      return formatDateTimeInput(date)
     }
 
     return ''
@@ -339,11 +379,11 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 500 }}>Appointment</label>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 500 }}>Appointment Date &amp; Time</label>
               <input
-                type="date"
+                type="datetime-local"
                 name="appointment"
-                value={toDateInputValue(form.appointment)}
+                value={toDateTimeInputValue(form.appointment)}
                 onChange={handleChange}
                 onClick={openDatePicker}
                 style={{
@@ -357,11 +397,11 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 500 }}>Follow Up</label>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 500 }}>Follow Up Date &amp; Time</label>
               <input
-                type="date"
+                type="datetime-local"
                 name="follow_up"
-                value={toDateInputValue(form.follow_up)}
+                value={toDateTimeInputValue(form.follow_up)}
                 onChange={handleChange}
                 onClick={openDatePicker}
                 style={{

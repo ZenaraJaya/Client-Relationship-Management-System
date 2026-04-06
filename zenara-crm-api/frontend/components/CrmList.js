@@ -35,6 +35,17 @@ const formatDateInput = (date) => {
   return `${year}-${month}-${day}`
 }
 
+const formatDateTimeInput = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ''
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 const toDateInputValue = (value) => {
   if (!value) return ''
 
@@ -64,6 +75,35 @@ const toDateInputValue = (value) => {
   return ''
 }
 
+const toDateTimeInputValue = (value) => {
+  if (!value) return ''
+
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 16)
+    if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}/.test(value)) return value.replace(' ', 'T').slice(0, 16)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T09:00`
+
+    const parsed = new Date(value)
+    return formatDateTimeInput(parsed)
+  }
+
+  if (value instanceof Date) {
+    return formatDateTimeInput(value)
+  }
+
+  if (value && typeof value.toDate === 'function') {
+    const date = value.toDate()
+    return formatDateTimeInput(date)
+  }
+
+  if (typeof value === 'object' && typeof value.seconds === 'number') {
+    const date = new Date(value.seconds * 1000)
+    return formatDateTimeInput(date)
+  }
+
+  return ''
+}
+
 const openDatePicker = (event) => {
   if (typeof event.target.showPicker === 'function') {
     event.target.showPicker()
@@ -82,13 +122,18 @@ const openDatePickerFromCard = (event) => {
 }
 
 const formatDateCardLabel = (value) => {
-  const dateValue = toDateInputValue(value)
-  if (!dateValue) return 'Pick date'
+  const dateTimeValue = toDateTimeInputValue(value)
+  if (!dateTimeValue) return 'Pick date & time'
 
-  const parsed = new Date(`${dateValue}T00:00:00`)
-  if (Number.isNaN(parsed.getTime())) return dateValue
+  const parsed = new Date(dateTimeValue)
+  if (Number.isNaN(parsed.getTime())) return dateTimeValue
 
-  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return parsed.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 const CustomDropdown = ({ value, options, onChange, badgeStyle, colorClassPrefix = '' }) => {
@@ -250,8 +295,8 @@ export default function CrmList({
             </th>
             <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>No</th>
             <th style={{ padding: '12px 10px', width: 'auto', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Company Name</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Appointment</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Follow Up</th>
+            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Appointment</th>
+            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Follow Up</th>
             <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Priority</th>
             <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Status</th>
             <th style={{ padding: '12px 10px', width: '180px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Remarks</th>
@@ -311,7 +356,7 @@ export default function CrmList({
                       {isExpanded && <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500, marginLeft: 'auto', marginRight: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viewing Details</span>}
                     </div>
                   </td>
-                  <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
                     <div className="date-cell-card" onClick={openDatePickerFromCard}>
                       <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2"></rect>
@@ -319,23 +364,23 @@ export default function CrmList({
                         <line x1="8" y1="2" x2="8" y2="6"></line>
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                       </svg>
-                      <span className={`date-cell-label ${toDateInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
+                      <span className={`date-cell-label ${toDateTimeInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
                         {formatDateCardLabel(row.appointment)}
                       </span>
                       <input
                         className="date-cell-input-overlay"
-                        type="date"
-                        value={toDateInputValue(row.appointment)}
+                        type="datetime-local"
+                        value={toDateTimeInputValue(row.appointment)}
                         onChange={(e) => onUpdate(row, 'appointment', e.target.value)}
                         onClick={(e) => {
                           e.stopPropagation()
                           openDatePicker(e)
                         }}
-                        aria-label="Appointment date"
+                        aria-label="Appointment date and time"
                       />
                     </div>
                   </td>
-                  <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
                     <div className="date-cell-card" onClick={openDatePickerFromCard}>
                       <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2"></rect>
@@ -343,19 +388,19 @@ export default function CrmList({
                         <line x1="8" y1="2" x2="8" y2="6"></line>
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                       </svg>
-                      <span className={`date-cell-label ${toDateInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
+                      <span className={`date-cell-label ${toDateTimeInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
                         {formatDateCardLabel(row.follow_up)}
                       </span>
                       <input
                         className="date-cell-input-overlay"
-                        type="date"
-                        value={toDateInputValue(row.follow_up)}
+                        type="datetime-local"
+                        value={toDateTimeInputValue(row.follow_up)}
                         onChange={(e) => onUpdate(row, 'follow_up', e.target.value)}
                         onClick={(e) => {
                           e.stopPropagation()
                           openDatePicker(e)
                         }}
-                        aria-label="Follow up date"
+                        aria-label="Follow up date and time"
                       />
                     </div>
                   </td>
