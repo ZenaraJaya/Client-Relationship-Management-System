@@ -15,6 +15,10 @@ class CrmSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Crm::query()->exists()) {
+            return;
+        }
+
         // Create 30 sample CRMs
         Crm::factory()->count(30)->create();
     }
