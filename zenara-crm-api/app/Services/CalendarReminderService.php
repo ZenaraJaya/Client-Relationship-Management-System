@@ -18,9 +18,7 @@ class CalendarReminderService
 
     public function syncForCrm(Crm $crm): void
     {
-        if (!config('services.calendar_reminders.enabled')) {
-            return;
-        }
+        $calendarSyncEnabled = (bool) config('services.calendar_reminders.enabled');
 
         $appointmentChanged = $crm->wasRecentlyCreated
             ? (bool) $crm->appointment
@@ -29,34 +27,37 @@ class CalendarReminderService
             ? (bool) $crm->follow_up
             : $crm->wasChanged('follow_up');
 
-        $updates = [
-            'appointment_google_event_id' => $this->syncGoogleEvent(
-                $crm,
-                'appointment',
-                $crm->appointment,
-                $crm->appointment_google_event_id
-            ),
-            'appointment_ms_event_id' => $this->syncMicrosoftEvent(
-                $crm,
-                'appointment',
-                $crm->appointment,
-                $crm->appointment_ms_event_id
-            ),
-            'follow_up_google_event_id' => $this->syncGoogleEvent(
-                $crm,
-                'follow_up',
-                $crm->follow_up,
-                $crm->follow_up_google_event_id
-            ),
-            'follow_up_ms_event_id' => $this->syncMicrosoftEvent(
-                $crm,
-                'follow_up',
-                $crm->follow_up,
-                $crm->follow_up_ms_event_id
-            ),
-        ];
+        if ($calendarSyncEnabled) {
+            $updates = [
+                'appointment_google_event_id' => $this->syncGoogleEvent(
+                    $crm,
+                    'appointment',
+                    $crm->appointment,
+                    $crm->appointment_google_event_id
+                ),
+                'appointment_ms_event_id' => $this->syncMicrosoftEvent(
+                    $crm,
+                    'appointment',
+                    $crm->appointment,
+                    $crm->appointment_ms_event_id
+                ),
+                'follow_up_google_event_id' => $this->syncGoogleEvent(
+                    $crm,
+                    'follow_up',
+                    $crm->follow_up,
+                    $crm->follow_up_google_event_id
+                ),
+                'follow_up_ms_event_id' => $this->syncMicrosoftEvent(
+                    $crm,
+                    'follow_up',
+                    $crm->follow_up,
+                    $crm->follow_up_ms_event_id
+                ),
+            ];
 
-        $this->persistEventIds($crm, $updates);
+            $this->persistEventIds($crm, $updates);
+        }
+
         $this->sendScheduleNotificationIfNeeded($crm, 'appointment', $crm->appointment, $appointmentChanged);
         $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
     }
@@ -67,7 +68,7 @@ class CalendarReminderService
      */
     public function notifyScheduleChangesFromPayload(array $before, array $after): void
     {
-        if (!config('services.calendar_reminders.enabled')) {
+        if (!config('services.calendar_reminders.email_notifications_enabled', true)) {
             return;
         }
 
@@ -355,6 +356,10 @@ class CalendarReminderService
 
         $recipients = $this->resolveNotificationRecipients($crm);
         if ($recipients === []) {
+            Log::warning('Email notification skipped: no valid recipients resolved.', [
+                'crm_id' => $crm->id,
+                'type' => $type,
+            ]);
             return;
         }
 
@@ -436,6 +441,8 @@ class CalendarReminderService
 
         // Optional attendee recipient from previous calendar settings.
         $candidates[] = (string) config('services.calendar_reminders.attendee_email');
+        // Fallback recipient to avoid losing alerts when admin/client fields are missing.
+        $candidates[] = (string) config('mail.from.address');
 
         $recipients = [];
         foreach ($candidates as $candidate) {
