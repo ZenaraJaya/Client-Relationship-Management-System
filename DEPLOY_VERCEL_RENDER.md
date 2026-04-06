@@ -11,6 +11,7 @@ This project is split into:
 3. Render will read `render.yaml` and create:
    - Web service: `zenara-crm-api`
    - Postgres database: `zenara-crm-db`
+   - Runtime: Docker (from `zenara-crm-api/Dockerfile`)
 4. After first deploy, open Render Shell for the web service and run:
 
 ```bash

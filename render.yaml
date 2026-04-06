@@ -1,11 +1,10 @@
 services:
   - type: web
     name: zenara-crm-api
-    env: php
+    env: docker
     plan: free
     rootDir: zenara-crm-api
-    buildCommand: composer install --no-dev --optimize-autoloader
-    startCommand: php -S 0.0.0.0:$PORT -t public
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /up
     envVars:
       - key: APP_ENV
