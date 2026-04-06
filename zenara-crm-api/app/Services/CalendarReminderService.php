@@ -9,12 +9,16 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class CalendarReminderService
 {
     protected ?string $googleAccessToken = null;
     protected ?string $microsoftAccessToken = null;
+
+    public function __construct(
+        protected OutboundEmailService $outboundEmail
+    ) {
+    }
 
     public function syncForCrm(Crm $crm): void
     {
@@ -390,9 +394,7 @@ class CalendarReminderService
 
         foreach ($recipients as $recipient) {
             try {
-                Mail::raw($body, function ($message) use ($recipient, $subject): void {
-                    $message->to($recipient)->subject($subject);
-                });
+                $this->outboundEmail->sendText($recipient, $subject, $body);
             } catch (\Throwable $e) {
                 Log::warning('Failed to send calendar notification email.', [
                     'crm_id' => $crm->id,

@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Services\OutboundEmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class DiagnosticsController extends Controller
 {
+    public function __construct(
+        protected OutboundEmailService $outboundEmail
+    ) {
+    }
+
     public function testEmail(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -43,20 +48,20 @@ class DiagnosticsController extends Controller
         ]);
 
         try {
-            Mail::raw($body, function ($message) use ($to, $subject): void {
-                $message->to($to)->subject($subject);
-            });
+            $this->outboundEmail->sendText($to, $subject, $body);
 
             Log::info('SMTP test email sent.', [
                 'to' => $to,
                 'mailer' => (string) config('mail.default'),
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
+                'delivery_mode' => $this->outboundEmail->deliveryMode(),
             ]);
 
             return response()->json([
                 'message' => 'Test email sent.',
                 'to' => $to,
+                'delivery_mode' => $this->outboundEmail->deliveryMode(),
                 'mailer' => (string) config('mail.default'),
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
@@ -69,6 +74,7 @@ class DiagnosticsController extends Controller
                 'mailer' => (string) config('mail.default'),
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
+                'delivery_mode' => $this->outboundEmail->deliveryMode(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -76,6 +82,7 @@ class DiagnosticsController extends Controller
                 'message' => 'Failed to send test email.',
                 'error' => $e->getMessage(),
                 'to' => $to,
+                'delivery_mode' => $this->outboundEmail->deliveryMode(),
                 'mailer' => (string) config('mail.default'),
                 'host' => (string) config('mail.mailers.smtp.host'),
                 'port' => (string) config('mail.mailers.smtp.port'),
