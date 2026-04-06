@@ -70,9 +70,6 @@ export default function Home() {
     setDeleteConfirm({ open: false, mode: 'single', ids: [], count: 0, isDeleting: false })
   }
 
-  const isLocalDateTimeString = (value) =>
-    typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)
-
   const handleUnauthorized = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem(AUTH_TOKEN_KEY)
@@ -88,17 +85,6 @@ export default function Home() {
     dateFields.forEach((field) => {
       if (normalized[field] === '') {
         normalized[field] = null
-        return
-      }
-
-      if (
-        (field === 'appointment' || field === 'follow_up') &&
-        isLocalDateTimeString(normalized[field])
-      ) {
-        const parsed = new Date(normalized[field])
-        if (!Number.isNaN(parsed.getTime())) {
-          normalized[field] = parsed.toISOString()
-        }
       }
     })
     return normalized
