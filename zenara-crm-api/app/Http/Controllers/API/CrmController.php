@@ -67,11 +67,82 @@ class CrmController extends Controller
         ], 403);
     }
 
+    protected function priorityScore(?string $priority): int
+    {
+        return match (strtolower((string) $priority)) {
+            'high' => 3,
+            'medium' => 2,
+            'low' => 1,
+            default => 0,
+        };
+    }
+
+    protected function paginateFirestoreCrms(array $items, int $page = 1, int $perPage = 10): array
+    {
+        $normalized = array_map(function ($item) {
+            if (!is_array($item)) {
+                return [];
+            }
+
+            $payload = [
+                'id' => $item['id'] ?? null,
+            ];
+
+            foreach ($this->allowedCrmFields() as $field) {
+                $payload[$field] = $item[$field] ?? null;
+            }
+
+            $payload['created_at'] = $item['created_at'] ?? null;
+            $payload['updated_at'] = $item['updated_at'] ?? null;
+
+            return $payload;
+        }, $items);
+
+        usort($normalized, function (array $a, array $b): int {
+            $priorityCompare = $this->priorityScore($b['priority'] ?? null) <=> $this->priorityScore($a['priority'] ?? null);
+            if ($priorityCompare !== 0) {
+                return $priorityCompare;
+            }
+
+            return strcmp((string) ($a['company_name'] ?? ''), (string) ($b['company_name'] ?? ''));
+        });
+
+        $total = count($normalized);
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $currentPage = min(max(1, $page), $lastPage);
+        $offset = ($currentPage - 1) * $perPage;
+        $pageItems = array_slice($normalized, $offset, $perPage);
+
+        return [
+            'current_page' => $currentPage,
+            'data' => array_values($pageItems),
+            'first_page_url' => null,
+            'from' => $total > 0 ? $offset + 1 : null,
+            'last_page' => $lastPage,
+            'last_page_url' => null,
+            'links' => [],
+            'next_page_url' => null,
+            'path' => null,
+            'per_page' => $perPage,
+            'prev_page_url' => null,
+            'to' => $total > 0 ? min($offset + $perPage, $total) : null,
+            'total' => $total,
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse
     {
+        if ($this->firestore->isConfigured()) {
+            $firestoreCrms = $this->firestore->list();
+            if (is_array($firestoreCrms)) {
+                $page = max(1, (int) request()->query('page', 1));
+                return response()->json($this->paginateFirestoreCrms($firestoreCrms, $page, 10));
+            }
+        }
+
         $crms = Crm::query()
             ->orderByRaw("
                 CASE LOWER(priority)
@@ -120,6 +191,13 @@ class CrmController extends Controller
      */
     public function show($id): JsonResponse
     {
+        if ($this->firestore->isConfigured()) {
+            $remote = $this->firestore->find($id);
+            if ($remote !== null) {
+                return response()->json($remote);
+            }
+        }
+
         $crm = $this->findCrm($id);
         if (!$crm) {
             return response()->json(['message' => 'Contact not found'], 404);
@@ -134,10 +212,6 @@ class CrmController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $crm = $this->findCrm($id);
-        if (!$crm) {
-            return response()->json(['message' => 'Contact not found'], 404);
-        }
-
         $data = $this->extractCrmPayload($request);
 
         $validator = Validator::make($data, [
@@ -147,6 +221,25 @@ class CrmController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if (!$crm) {
+            if (!$this->firestore->isConfigured()) {
+                return response()->json(['message' => 'Contact not found'], 404);
+            }
+
+            $existingRemote = $this->firestore->find($id);
+            if ($existingRemote === null) {
+                return response()->json(['message' => 'Contact not found'], 404);
+            }
+
+            $updatedRemote = array_merge($existingRemote, $data, ['id' => $existingRemote['id'] ?? $id]);
+            $ok = $this->firestore->sync($id, $updatedRemote);
+            if (!$ok) {
+                return response()->json(['message' => 'Failed to update contact in Firestore'], 502);
+            }
+
+            return response()->json($updatedRemote);
         }
 
         $crm->update($data);
@@ -167,6 +260,11 @@ class CrmController extends Controller
 
         $crm = $this->findCrm($id);
         if (!$crm) {
+            if ($this->firestore->isConfigured()) {
+                $this->safeDeleteFromFirestore($id);
+                return response()->json(null, 204);
+            }
+
             return response()->json(['message' => 'Contact not found'], 404);
         }
 

@@ -89,6 +89,62 @@ class FirestoreService
         return $value !== '' ? $value : $this->collection;
     }
 
+    public function isConfigured(): bool
+    {
+        return (bool) ($this->token && $this->projectId);
+    }
+
+    public function list(?string $collection = null): ?array
+    {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
+        $targetCollection = $this->getCollection($collection);
+        $baseUrl = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents/{$targetCollection}";
+        $url = "{$baseUrl}?pageSize=1000";
+        $documents = [];
+
+        while ($url) {
+            $result = $this->callJson($url, 'GET');
+            if (!$result['ok']) {
+                return null;
+            }
+
+            $body = $result['body'];
+            foreach (($body['documents'] ?? []) as $document) {
+                $decoded = $this->decodeDocument($document);
+                if ($decoded !== null) {
+                    $documents[] = $decoded;
+                }
+            }
+
+            $nextPageToken = (string) ($body['nextPageToken'] ?? '');
+            $url = $nextPageToken !== ''
+                ? "{$baseUrl}?pageSize=1000&pageToken=" . urlencode($nextPageToken)
+                : null;
+        }
+
+        return $documents;
+    }
+
+    public function find(int|string $id, ?string $collection = null): ?array
+    {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
+        $targetCollection = $this->getCollection($collection);
+        $url = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents/{$targetCollection}/{$id}";
+
+        $result = $this->callJson($url, 'GET');
+        if (!$result['ok']) {
+            return null;
+        }
+
+        return $this->decodeDocument($result['body']);
+    }
+
     public function sync($id, array $data, ?string $collection = null)
     {
         if (!$this->token || !$this->projectId) return false;
@@ -144,6 +200,116 @@ class FirestoreService
         $url = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents/{$targetCollection}/{$id}";
         
         return $this->call($url, 'DELETE');
+    }
+
+    protected function decodeDocument(array $document): ?array
+    {
+        $name = (string) ($document['name'] ?? '');
+        if ($name === '') {
+            return null;
+        }
+
+        $segments = explode('/', $name);
+        $documentId = end($segments);
+        if ($documentId === false || $documentId === '') {
+            return null;
+        }
+
+        $decoded = [
+            'id' => is_numeric($documentId) ? (int) $documentId : $documentId,
+        ];
+
+        foreach (($document['fields'] ?? []) as $field => $value) {
+            $decoded[$field] = $this->decodeValue($value);
+        }
+
+        return $decoded;
+    }
+
+    protected function decodeValue(mixed $value): mixed
+    {
+        if (!is_array($value)) {
+            return $value;
+        }
+
+        if (array_key_exists('stringValue', $value)) {
+            return (string) $value['stringValue'];
+        }
+
+        if (array_key_exists('integerValue', $value)) {
+            return (int) $value['integerValue'];
+        }
+
+        if (array_key_exists('doubleValue', $value)) {
+            return (float) $value['doubleValue'];
+        }
+
+        if (array_key_exists('booleanValue', $value)) {
+            return (bool) $value['booleanValue'];
+        }
+
+        if (array_key_exists('nullValue', $value)) {
+            return null;
+        }
+
+        if (array_key_exists('timestampValue', $value)) {
+            return (string) $value['timestampValue'];
+        }
+
+        if (array_key_exists('referenceValue', $value)) {
+            return (string) $value['referenceValue'];
+        }
+
+        if (array_key_exists('mapValue', $value)) {
+            $output = [];
+            foreach (($value['mapValue']['fields'] ?? []) as $k => $v) {
+                $output[$k] = $this->decodeValue($v);
+            }
+            return $output;
+        }
+
+        if (array_key_exists('arrayValue', $value)) {
+            $items = [];
+            foreach (($value['arrayValue']['values'] ?? []) as $entry) {
+                $items[] = $this->decodeValue($entry);
+            }
+            return $items;
+        }
+
+        return $value;
+    }
+
+    protected function callJson(string $url, string $method): array
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_NOPROXY, '*');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer {$this->token}",
+            "Content-Type: application/json",
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false) {
+            Log::error("Firestore REST Error ($method $httpCode): empty response");
+            return ['ok' => false, 'status' => $httpCode, 'body' => []];
+        }
+
+        $decoded = json_decode($response, true);
+        $body = is_array($decoded) ? $decoded : [];
+        $ok = $httpCode >= 200 && $httpCode < 300;
+
+        if (!$ok) {
+            Log::error("Firestore REST Error ($method $httpCode): " . $response);
+        }
+
+        return ['ok' => $ok, 'status' => $httpCode, 'body' => $body];
     }
 
     protected function call($url, $method, $json = null)
