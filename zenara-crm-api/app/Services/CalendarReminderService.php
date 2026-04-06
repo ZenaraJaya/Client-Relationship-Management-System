@@ -711,6 +711,11 @@ class CalendarReminderService
             $candidates[] = (string) $ownerEmail;
         }
 
+        // Current authenticated user email (useful when records don't carry user_id,
+        // e.g., Firestore-only updates).
+        $authUserEmail = (string) optional(auth()->user())->email;
+        $candidates[] = $authUserEmail;
+
         // Client/contact email.
         if ((bool) config('services.calendar_reminders.notify_client_email', true)) {
             $candidates[] = (string) $crm->email;
