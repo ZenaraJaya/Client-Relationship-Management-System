@@ -79,11 +79,14 @@ const toDateTimeInputValue = (value) => {
   if (!value) return ''
 
   if (typeof value === 'string') {
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 16)
-    if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}/.test(value)) return value.replace(' ', 'T').slice(0, 16)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T09:00`
+    const trimmed = value.trim()
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return `${trimmed}T09:00`
 
-    const parsed = new Date(value)
+    const normalized = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(:\d{2})?$/.test(trimmed)
+      ? trimmed.replace(' ', 'T')
+      : trimmed
+
+    const parsed = new Date(normalized)
     return formatDateTimeInput(parsed)
   }
 
