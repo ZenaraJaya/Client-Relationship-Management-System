@@ -46,9 +46,42 @@ class DiagnosticsController extends Controller
             "Sent at: {$sentAt}",
             'If you received this message, SMTP is working correctly.',
         ]);
+        $htmlBody = <<<HTML
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{$subject}</title>
+</head>
+<body style="margin:0;padding:20px;background:#eef3fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="620" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;background:#ffffff;border:1px solid #d8e2f2;border-radius:14px;overflow:hidden;">
+                    <tr>
+                        <td style="padding:20px 22px;background:#0f172a;color:#ffffff;">
+                            <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:0.88;">Zenara CRM</div>
+                            <h1 style="margin:8px 0 0;font-size:22px;line-height:1.3;color:#ffffff;">SMTP Test Email</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:22px;font-size:14px;line-height:1.6;color:#334155;">
+                            <p style="margin:0 0 12px;">This is a test email from Zenara CRM.</p>
+                            <p style="margin:0 0 12px;"><strong>Sent at:</strong> {$sentAt}</p>
+                            <p style="margin:0;">If you received this message, SMTP is working correctly.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
 
         try {
-            $this->outboundEmail->sendText($to, $subject, $body);
+            $this->outboundEmail->send($to, $subject, $body, $htmlBody);
 
             Log::info('SMTP test email sent.', [
                 'to' => $to,

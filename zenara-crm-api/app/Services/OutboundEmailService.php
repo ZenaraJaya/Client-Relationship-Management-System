@@ -71,6 +71,18 @@ class OutboundEmailService
             ? sprintf('%s <%s>', $fromName, $fromAddress)
             : $fromAddress;
 
+        if (!is_string($htmlBody) || trim($htmlBody) === '') {
+            $safeText = nl2br(htmlspecialchars($textBody, ENT_QUOTES, 'UTF-8'));
+            $htmlBody = "<div style=\"font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#0f172a;\">{$safeText}</div>";
+        }
+
+        Log::info('Sending email via Resend.', [
+            'to' => $to,
+            'subject' => $subject,
+            'has_html' => is_string($htmlBody) && trim($htmlBody) !== '',
+            'delivery_mode' => 'resend_api',
+        ]);
+
         $response = Http::timeout(20)
             ->connectTimeout(8)
             ->withToken($apiKey)
