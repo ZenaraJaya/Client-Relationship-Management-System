@@ -1,5 +1,16 @@
 <?php
 
+$rawScheme = strtolower(trim((string) env('MAIL_SCHEME', '')));
+$legacyEncryption = strtolower(trim((string) env('MAIL_ENCRYPTION', '')));
+$normalizedSchemeSource = $rawScheme !== '' ? $rawScheme : $legacyEncryption;
+
+$mailScheme = match ($normalizedSchemeSource) {
+    '', 'null' => null,
+    'smtp', 'tls', 'starttls' => 'smtp',
+    'smtps', 'ssl' => 'smtps',
+    default => $normalizedSchemeSource,
+};
+
 return [
 
     /*
@@ -39,7 +50,7 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
+            'scheme' => $mailScheme,
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 2525),
