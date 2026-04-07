@@ -5,6 +5,7 @@ export default function TopBar({
   onSearchCompanyChange = () => {},
   onQuickAdd = () => {},
   userName = 'User',
+  profilePhotoUrl = '',
   notificationCount = 0,
   outlookButtonLabel = 'Connect Outlook',
   outlookButtonState = 'idle',
@@ -57,7 +58,11 @@ export default function TopBar({
           onClick={onProfileClick}
           aria-label="Open profile settings"
         >
-          {initials}
+          {profilePhotoUrl ? (
+            <img src={profilePhotoUrl} alt={`${userName} profile`} className="user-chip-image" />
+          ) : (
+            initials
+          )}
         </button>
       </div>
     </header>

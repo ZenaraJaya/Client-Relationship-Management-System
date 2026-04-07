@@ -16,4 +16,4 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD sh -c "php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan schedule:work > /tmp/scheduler.log 2>&1 & php -S 0.0.0.0:${PORT:-10000} -t public"
+CMD sh -c "php artisan migrate --force && php artisan db:seed --force && (php artisan storage:link || true) && php artisan config:cache && php artisan schedule:work > /tmp/scheduler.log 2>&1 & php -S 0.0.0.0:${PORT:-10000} -t public"

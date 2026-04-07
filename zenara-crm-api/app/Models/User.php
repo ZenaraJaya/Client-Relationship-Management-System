@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'email',
         'role',
         'password',
+        'profile_photo_path',
         'api_token',
         'api_token_expires_at',
     ];
@@ -39,6 +41,11 @@ class User extends Authenticatable
         'remember_token',
         'api_token',
         'api_token_expires_at',
+        'profile_photo_path',
+    ];
+
+    protected $appends = [
+        'profile_photo_url',
     ];
 
     /**
@@ -58,6 +65,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return strtolower((string) $this->role) === 'admin';
+    }
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if (!$this->profile_photo_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->profile_photo_path);
     }
 
     public function microsoftCalendarConnection(): HasOne

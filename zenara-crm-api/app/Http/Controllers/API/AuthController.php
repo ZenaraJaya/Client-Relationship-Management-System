@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -67,6 +67,7 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'profile_photo_url' => $user->profile_photo_url,
             'microsoft_calendar_connected' => (bool) $connection,
             'microsoft_calendar_email' => $connection?->microsoft_email,
             'has_active_session' => (bool) $user->api_token,
@@ -93,6 +94,7 @@ class AuthController extends Controller
         $user->loadMissing('microsoftCalendarConnection');
 
         return array_merge($user->withoutRelations()->toArray(), [
+            'profile_photo_url' => $user->profile_photo_url,
             'microsoft_calendar_connected' => (bool) $user->microsoftCalendarConnection,
             'microsoft_calendar_email' => $user->microsoftCalendarConnection?->microsoft_email,
             'microsoft_calendar_display_name' => $user->microsoftCalendarConnection?->microsoft_display_name,
@@ -312,13 +314,7 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'password' => 'nullable|string|min:6|confirmed',
+            'profile_photo' => 'nullable|image|max:3072',
         ]);
 
         if ($validator->fails()) {
@@ -327,10 +323,13 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
         try {
             $user->name = trim((string) $request->input('name'));
-            $user->email = strtolower(trim((string) $request->input('email')));
 
-            if ($request->filled('password')) {
-                $user->password = (string) $request->input('password');
+            if ($request->hasFile('profile_photo')) {
+                if ($user->profile_photo_path) {
+                    Storage::disk('public')->delete($user->profile_photo_path);
+                }
+
+                $user->profile_photo_path = $request->file('profile_photo')->store('profile-photos', 'public');
             }
 
             $user->save();

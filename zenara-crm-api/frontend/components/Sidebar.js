@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 
-export default function Sidebar({ currentView, onViewChange, onLogout, userName = 'User' }) {
+export default function Sidebar({ currentView, onViewChange, onLogout, userName = 'User', profilePhotoUrl = '' }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const navItems = useMemo(
@@ -70,7 +70,13 @@ export default function Sidebar({ currentView, onViewChange, onLogout, userName 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="brand">
-        <div className="avatar">{initials}</div>
+        <div className="avatar">
+          {profilePhotoUrl ? (
+            <img src={profilePhotoUrl} alt={`${userName} profile`} className="avatar-image" />
+          ) : (
+            initials
+          )}
+        </div>
         <div className="brand-copy">
           <div className="brand-title">Zenara Jaya CRM</div>
           <div className="small">Welcome back, {firstName}</div>

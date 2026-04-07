@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 const initialState = {
   name: '',
   email: '',
-  password: '',
-  password_confirmation: '',
 }
 
 export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, user }) {
   const [form, setForm] = useState(initialState)
   const [error, setError] = useState('')
+  const [selectedPhoto, setSelectedPhoto] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -17,11 +18,19 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
     setForm({
       name: user?.name || '',
       email: user?.email || '',
-      password: '',
-      password_confirmation: '',
     })
+    setSelectedPhoto(null)
+    setPreviewUrl(user?.profile_photo_url || '')
     setError('')
   }, [isOpen, user])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -42,27 +51,41 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
       return
     }
 
-    if (form.password && form.password.length < 6) {
-      setError('Your new password must be at least 6 characters.')
-      return
-    }
-
-    if (form.password !== form.password_confirmation) {
-      setError('Your password confirmation does not match.')
-      return
-    }
-
     await onSubmit({
       name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password,
-      password_confirmation: form.password_confirmation,
+      profilePhotoFile: selectedPhoto,
     })
   }
 
   if (!isOpen) return null
 
   const roleLabel = ((user?.role || 'staff').trim() || 'staff').toUpperCase()
+  const initials = (form.name || user?.name || 'U')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  const handlePhotoPick = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file for your profile photo.')
+      return
+    }
+
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl)
+    }
+
+    setSelectedPhoto(file)
+    setPreviewUrl(URL.createObjectURL(file))
+    if (error) setError('')
+  }
 
   return (
     <div style={{
@@ -123,6 +146,73 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
             <div style={{
               display: 'flex',
               alignItems: 'center',
+              gap: 16,
+              padding: '14px',
+              borderRadius: 16,
+              background: '#f8fcfa',
+              border: '1px solid #e0ebe5',
+            }}>
+              <div style={{
+                width: 74,
+                height: 74,
+                borderRadius: 22,
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(150deg, #f5c6ae, #f0a782)',
+                color: '#10231f',
+                fontSize: 24,
+                fontWeight: 800,
+                flexShrink: 0,
+                boxShadow: '0 12px 24px rgba(180, 96, 60, 0.16)',
+              }}>
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt={`${form.name || user?.name || 'User'} profile`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gap: 6 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#17372f' }}>Profile picture</div>
+                <div style={{ fontSize: 13, color: '#60746f', lineHeight: 1.5 }}>
+                  Upload a square image for the best result. PNG and JPG work well.
+                </div>
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoPick}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      padding: '9px 13px',
+                      borderRadius: 12,
+                      border: '1px solid #cfe0d8',
+                      background: '#ffffff',
+                      color: '#295248',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Upload profile pic
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'space-between',
               gap: 12,
               padding: '12px 14px',
@@ -172,55 +262,22 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                 type="email"
                 name="email"
                 value={form.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
+                readOnly
+                aria-readonly="true"
                 style={{
                   width: '100%',
                   padding: '11px 13px',
                   borderRadius: 12,
                   border: '1px solid #d7e4dd',
                   fontSize: 14,
-                  color: '#16312b',
+                  color: '#4e6762',
+                  background: '#f5f8f7',
+                  cursor: 'default',
                 }}
               />
-            </label>
-
-            <label style={{ display: 'grid', gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#26463d' }}>New password</span>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Leave blank to keep your current password"
-                style={{
-                  width: '100%',
-                  padding: '11px 13px',
-                  borderRadius: 12,
-                  border: '1px solid #d7e4dd',
-                  fontSize: 14,
-                  color: '#16312b',
-                }}
-              />
-            </label>
-
-            <label style={{ display: 'grid', gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#26463d' }}>Confirm new password</span>
-              <input
-                type="password"
-                name="password_confirmation"
-                value={form.password_confirmation}
-                onChange={handleChange}
-                placeholder="Repeat the new password"
-                style={{
-                  width: '100%',
-                  padding: '11px 13px',
-                  borderRadius: 12,
-                  border: '1px solid #d7e4dd',
-                  fontSize: 14,
-                  color: '#16312b',
-                }}
-              />
+              <span style={{ fontSize: 12, color: '#728680', fontWeight: 600 }}>
+                Email is view only for this profile form.
+              </span>
             </label>
 
             {error && (

@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class ProfileUpdateTest extends TestCase
@@ -24,50 +26,61 @@ class ProfileUpdateTest extends TestCase
         ];
     }
 
-    public function test_staff_user_can_update_their_own_profile_without_changing_role(): void
+    public function test_staff_user_can_update_their_own_profile_photo_and_name_without_changing_email_or_role(): void
     {
+        Storage::fake('public');
+
         $staff = User::factory()->create([
             'role' => 'staff',
             'password' => 'password',
+            'email' => 'staff@example.com',
         ]);
+        $photo = UploadedFile::fake()->createWithContent(
+            'avatar.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9sX6lz0AAAAASUVORK5CYII=')
+        );
 
-        $response = $this->putJson(
+        $response = $this->withHeaders($this->authHeadersFor($staff, 'staff-profile-token'))->post(
             '/api/auth/profile',
             [
+                '_method' => 'PUT',
                 'name' => 'Staff Updated',
-                'email' => 'staff-updated@example.com',
+                'email' => 'staff-hijack@example.com',
                 'password' => 'new-secret',
-                'password_confirmation' => 'new-secret',
                 'role' => 'admin',
-            ],
-            $this->authHeadersFor($staff, 'staff-profile-token')
+                'profile_photo' => $photo,
+            ]
         );
 
         $response
             ->assertOk()
             ->assertJsonPath('user.name', 'Staff Updated')
-            ->assertJsonPath('user.email', 'staff-updated@example.com')
+            ->assertJsonPath('user.email', 'staff@example.com')
             ->assertJsonPath('user.role', 'staff');
 
         $freshStaff = $staff->fresh();
 
         $this->assertSame('staff', $freshStaff?->role);
         $this->assertSame('Staff Updated', $freshStaff?->name);
-        $this->assertSame('staff-updated@example.com', $freshStaff?->email);
-        $this->assertTrue(Hash::check('new-secret', (string) $freshStaff?->password));
+        $this->assertSame('staff@example.com', $freshStaff?->email);
+        $this->assertTrue(Hash::check('password', (string) $freshStaff?->password));
+        $this->assertNotNull($freshStaff?->profile_photo_path);
+        Storage::disk('public')->assertExists((string) $freshStaff?->profile_photo_path);
+        $this->assertNotNull($response->json('user.profile_photo_url'));
     }
 
     public function test_admin_user_can_update_their_own_profile(): void
     {
         $admin = User::factory()->create([
             'role' => 'admin',
+            'email' => 'admin@example.com',
         ]);
 
         $response = $this->putJson(
             '/api/auth/profile',
             [
                 'name' => 'Admin Updated',
-                'email' => 'admin-updated@example.com',
+                'email' => 'admin-change@example.com',
             ],
             $this->authHeadersFor($admin, 'admin-profile-token')
         );
@@ -75,13 +88,13 @@ class ProfileUpdateTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonPath('user.name', 'Admin Updated')
-            ->assertJsonPath('user.email', 'admin-updated@example.com')
+            ->assertJsonPath('user.email', 'admin@example.com')
             ->assertJsonPath('user.role', 'admin');
 
         $this->assertDatabaseHas('users', [
             'id' => $admin->id,
             'name' => 'Admin Updated',
-            'email' => 'admin-updated@example.com',
+            'email' => 'admin@example.com',
             'role' => 'admin',
         ]);
     }

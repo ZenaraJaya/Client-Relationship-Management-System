@@ -356,14 +356,20 @@ export default function Home() {
     }
   }
 
-  const handleProfileSubmit = async ({ name, email, password, password_confirmation }) => {
+  const handleProfileSubmit = async ({ name, profilePhotoFile }) => {
     setProfileSubmitting(true)
 
     try {
+      const formData = new FormData()
+      formData.append('_method', 'PUT')
+      formData.append('name', name)
+      if (profilePhotoFile) {
+        formData.append('profile_photo', profilePhotoFile)
+      }
+
       const res = await authFetch(`${apiBase}/auth/profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, password_confirmation }),
+        method: 'POST',
+        body: formData,
       })
 
       if (res.status === 401) {
@@ -952,6 +958,7 @@ export default function Home() {
         }}
         onLogout={handleLogout}
         userName={authUser?.name || 'User'}
+        profilePhotoUrl={authUser?.profile_photo_url || ''}
       />
       <main className="main">
         <TopBar
@@ -963,6 +970,7 @@ export default function Home() {
             if (currentView !== 'listing') setCurrentView('listing')
           }}
           userName={authUser?.name || 'User'}
+          profilePhotoUrl={authUser?.profile_photo_url || ''}
           notificationCount={todayFollowUps + sevenDayAppointments.length}
           outlookButtonLabel={outlookButtonLabel}
           outlookButtonState={outlookButtonState}
