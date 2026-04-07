@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -77,12 +78,52 @@ class AuthController extends Controller
         }
     }
 
+    protected function pruneStaleFirestoreDeletedUser(?string $email): void
+    {
+        $normalizedEmail = strtolower(trim((string) $email));
+        if ($normalizedEmail === '' || !$this->firestore->isConfigured()) {
+            return;
+        }
+
+        $user = User::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+
+        if (!$user) {
+            return;
+        }
+
+        $existsInFirestore = $this->firestore->exists($user->id, 'users');
+        if ($existsInFirestore !== false) {
+            return;
+        }
+
+        DB::transaction(function () use ($user): void {
+            DB::table('password_reset_tokens')
+                ->where('email', $user->email)
+                ->delete();
+
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->delete();
+
+            $user->delete();
+        });
+
+        Log::info('Removed stale local user missing from Firestore during registration.', [
+            'user_id' => $user->id,
+            'email' => $normalizedEmail,
+        ]);
+    }
+
     public function register(Request $request): JsonResponse
     {
         if (!$this->tokenColumnReady()) {
             Log::error('Auth failed: users token columns are missing.');
             return $this->schemaOutOfDateResponse();
         }
+
+        $this->pruneStaleFirestoreDeletedUser($request->input('email'));
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',

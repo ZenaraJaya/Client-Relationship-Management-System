@@ -145,6 +145,27 @@ class FirestoreService
         return $this->decodeDocument($result['body']);
     }
 
+    public function exists(int|string $id, ?string $collection = null): ?bool
+    {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
+        $targetCollection = $this->getCollection($collection);
+        $url = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents/{$targetCollection}/{$id}";
+
+        $result = $this->callJson($url, 'GET');
+        if ($result['ok']) {
+            return true;
+        }
+
+        if (($result['status'] ?? 0) === 404) {
+            return false;
+        }
+
+        return null;
+    }
+
     public function sync($id, array $data, ?string $collection = null)
     {
         if (!$this->token || !$this->projectId) return false;
