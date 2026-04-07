@@ -67,9 +67,7 @@ class CalendarReminderService
 
             $this->persistEventIds($crm, $updates);
 
-            if ($actor) {
-                $this->syncPersonalMicrosoftEventsForUser($crm, $actor);
-            }
+            $this->syncPersonalMicrosoftEventsForRelevantUsers($crm, $actor);
         }
 
         if ($sendScheduleNotifications) {
@@ -376,7 +374,7 @@ class CalendarReminderService
     protected function buildMicrosoftPayload(Crm $crm, string $type, $dateValue, ?array $attendeeEmails = null): array
     {
         [$start, $end] = $this->buildEventWindow($dateValue);
-        $attendeeEmails ??= $this->resolveCalendarAttendeeEmails($crm);
+        $attendeeEmails ??= $this->resolveMicrosoftCalendarAttendeeEmails($crm);
         $reminderMinutes = max(1, (int) config('services.calendar_reminders.event_reminder_minutes', 15));
         $reminderEnabled = (bool) config('services.calendar_reminders.event_popup_reminder_enabled', true);
         $payload = [
@@ -412,6 +410,19 @@ class CalendarReminderService
         }
 
         return $payload;
+    }
+
+    protected function syncPersonalMicrosoftEventsForRelevantUsers(Crm $crm, ?User $actor = null): void
+    {
+        $users = $this->resolvePersonalMicrosoftSyncUsers($crm, $actor);
+
+        // Remove old personal-calendar mappings for users who should no longer
+        // receive this CRM appointment in Outlook.
+        $this->clearStalePersonalMicrosoftEvents($crm, array_keys($users));
+
+        foreach ($users as $user) {
+            $this->syncPersonalMicrosoftEventsForUser($crm, $user);
+        }
     }
 
     protected function syncPersonalMicrosoftEventsForUser(Crm $crm, User $user): void
@@ -478,6 +489,26 @@ class CalendarReminderService
             'status' => $createResponse->status(),
             'response' => $createResponse->body(),
         ]);
+    }
+
+    protected function clearStalePersonalMicrosoftEvents(Crm $crm, array $allowedUserIds): void
+    {
+        $query = CrmCalendarEvent::query()
+            ->where('crm_id', $crm->id)
+            ->where('provider', self::PERSONAL_MICROSOFT_PROVIDER);
+
+        if ($allowedUserIds !== []) {
+            $query->whereNotIn('user_id', $allowedUserIds);
+        }
+
+        $mappings = $query->with('user')->get();
+
+        foreach ($mappings as $mapping) {
+            if ($mapping->external_event_id && $mapping->user) {
+                $this->clearPersonalMicrosoftEvent($mapping->user, $mapping->external_event_id);
+            }
+            $mapping->delete();
+        }
     }
 
     protected function clearPersonalMicrosoftEventsForCrm(Crm $crm): void
@@ -1019,6 +1050,74 @@ HTML;
             $candidates[] = (string) $crm->email;
         }
 
+        return $this->normalizeEmailCandidates($candidates);
+    }
+
+    protected function resolveMicrosoftCalendarAttendeeEmails(Crm $crm): array
+    {
+        $candidates = [];
+        $candidates[] = (string) config('services.calendar_reminders.attendee_email');
+
+        $owner = $this->resolveCrmOwner($crm);
+        if ((bool) config('services.calendar_reminders.sync_owner_as_attendee', false) && $this->isInternalCalendarUser($owner)) {
+            $candidates[] = (string) $owner?->email;
+        }
+
+        if ((bool) config('services.calendar_reminders.sync_auth_user_as_attendee', false)) {
+            $authUser = auth()->user();
+            $authRole = strtolower((string) ($authUser->role ?? ''));
+            $adminOnly = (bool) config('services.calendar_reminders.sync_auth_admin_only', false);
+
+            if ((!$adminOnly || $authRole === 'admin') && $this->isInternalCalendarUser($authUser)) {
+                $candidates[] = (string) ($authUser->email ?? '');
+            }
+        }
+
+        return $this->normalizeEmailCandidates($candidates);
+    }
+
+    protected function resolvePersonalMicrosoftSyncUsers(Crm $crm, ?User $actor = null): array
+    {
+        $users = [];
+        $owner = $this->resolveCrmOwner($crm, $actor);
+
+        foreach ([$owner, $actor] as $candidate) {
+            if (!$this->isInternalCalendarUser($candidate)) {
+                continue;
+            }
+
+            $users[$candidate->id] = $candidate;
+        }
+
+        return $users;
+    }
+
+    protected function resolveCrmOwner(Crm $crm, ?User $fallback = null): ?User
+    {
+        $ownerId = (int) ($crm->user_id ?? 0);
+        if ($ownerId <= 0) {
+            return null;
+        }
+
+        if ($fallback && (int) $fallback->id === $ownerId) {
+            return $fallback;
+        }
+
+        return User::query()->find($ownerId);
+    }
+
+    protected function isInternalCalendarUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return in_array(strtolower((string) $user->role), ['admin', 'staff'], true)
+            && filter_var((string) $user->email, FILTER_VALIDATE_EMAIL) !== false;
+    }
+
+    protected function normalizeEmailCandidates(array $candidates): array
+    {
         $attendees = [];
         foreach ($candidates as $candidate) {
             $email = strtolower(trim((string) $candidate));
