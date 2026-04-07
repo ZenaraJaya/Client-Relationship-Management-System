@@ -1,32 +1,59 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
+const {setGlobalOptions} = require("firebase-functions/v2/options");
+const {onDocumentDeleted} = require("firebase-functions/v2/firestore");
 const logger = require("firebase-functions/logger");
+const {defineSecret, defineString} = require("firebase-functions/params");
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({maxInstances: 10});
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+const laravelWebhookUrl = defineString("LARAVEL_FIRESTORE_DELETE_WEBHOOK_URL");
+const firestoreSyncSecret = defineSecret("FIRESTORE_SYNC_SECRET");
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+async function notifyLaravelDelete(collection, documentId) {
+  const url = laravelWebhookUrl.value();
+  if (!url) {
+    throw new Error("LARAVEL_FIRESTORE_DELETE_WEBHOOK_URL is not configured.");
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Firestore-Sync-Secret": firestoreSyncSecret.value(),
+    },
+    body: JSON.stringify({
+      collection,
+      document_id: documentId,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Laravel sync failed (${response.status}) for ${collection}/${documentId}: ${body}`,
+    );
+  }
+}
+
+exports.onCrmDocumentDeleted = onDocumentDeleted(
+  {
+    document: "crms/{docId}",
+    secrets: [firestoreSyncSecret],
+  },
+  async (event) => {
+    const docId = event.params.docId;
+    await notifyLaravelDelete("crms", docId);
+    logger.info("Mirrored Firestore delete to Laravel (crm).", {docId});
+  },
+);
+
+exports.onUserDocumentDeleted = onDocumentDeleted(
+  {
+    document: "users/{docId}",
+    secrets: [firestoreSyncSecret],
+  },
+  async (event) => {
+    const docId = event.params.docId;
+    await notifyLaravelDelete("users", docId);
+    logger.info("Mirrored Firestore delete to Laravel (user).", {docId});
+  },
+);
