@@ -6,8 +6,12 @@ export default function TopBar({
   onQuickAdd = () => {},
   userName = 'User',
   notificationCount = 0,
+  reminderButtonLabel = 'Enable laptop reminders',
+  reminderButtonState = 'idle',
+  onReminderButtonClick = () => {},
 }) {
   const initials = (userName || 'U').trim().charAt(0).toUpperCase()
+  const reminderButtonClassName = `reminder-toggle-btn${reminderButtonState === 'active' ? ' active' : ''}${reminderButtonState === 'blocked' ? ' blocked' : ''}`
 
   return (
     <header className="topbar premium-topbar">
@@ -31,6 +35,9 @@ export default function TopBar({
       </div>
 
       <div className="command-right">
+        <button type="button" className={reminderButtonClassName} onClick={onReminderButtonClick}>
+          {reminderButtonLabel}
+        </button>
         <button type="button" className="notify-pill">
           <span>Notifications</span>
           <strong>{notificationCount}</strong>
