@@ -91,6 +91,7 @@ export default function Home() {
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
 
   const toastTimerRef = useRef(null)
+  const outlookPopupRef = useRef(null)
   const reminderTimersRef = useRef([])
   const reminderHistoryRef = useRef({})
   const dateFields = ['last_contact', 'appointment', 'follow_up']
@@ -154,6 +155,14 @@ export default function Home() {
     return fetch(url, { ...options, headers })
   }
 
+  const fetchCurrentUser = async (token) => {
+    const res = await fetch(`${apiBase}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error('Invalid session')
+    return res.json()
+  }
+
   const clearReminderTimers = () => {
     reminderTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
     reminderTimersRef.current = []
@@ -172,6 +181,9 @@ export default function Home() {
   useEffect(() => {
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
+        outlookPopupRef.current.close()
+      }
       clearReminderTimers()
     }
   }, [])
@@ -220,11 +232,7 @@ export default function Home() {
       }
 
       try {
-        const res = await fetch(`${apiBase}/auth/me`, {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        })
-        if (!res.ok) throw new Error('Invalid session')
-        const user = await res.json()
+        const user = await fetchCurrentUser(savedToken)
 
         if (!mounted) return
         setAuthToken(savedToken)
@@ -343,6 +351,116 @@ export default function Home() {
       showToast('Logged out successfully.')
     }
   }
+
+  const handleOutlookConnect = async () => {
+    if (typeof window === 'undefined' || !authToken) return
+
+    try {
+      const origin = encodeURIComponent(window.location.origin)
+      const res = await authFetch(`${apiBase}/auth/microsoft/connect-url?origin=${origin}`)
+      const json = await res.json().catch(() => null)
+
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
+
+      if (!res.ok || !json?.url) {
+        throw new Error(extractErrorMessage(json, 'Unable to start Outlook connection.'))
+      }
+
+      outlookPopupRef.current = window.open(
+        json.url,
+        'zenara-outlook-connect',
+        'width=560,height=720,menubar=no,toolbar=no,location=yes,resizable=yes,scrollbars=yes,status=no'
+      )
+
+      if (!outlookPopupRef.current) {
+        showToast('The Outlook popup was blocked. Please allow popups for this site and try again.', 'error')
+        return
+      }
+
+      showToast('Complete the Outlook sign-in in the popup window.')
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error')
+    }
+  }
+
+  const handleOutlookDisconnect = async () => {
+    if (!authToken) return
+
+    if (typeof window !== 'undefined') {
+      const confirmed = window.confirm('Disconnect Outlook calendar for this account? Existing Outlook events will stay in Outlook, but new CRM reminders will stop syncing there.')
+      if (!confirmed) return
+    }
+
+    try {
+      const res = await authFetch(`${apiBase}/auth/microsoft/connection`, { method: 'DELETE' })
+      const json = await res.json().catch(() => null)
+
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
+
+      if (!res.ok) {
+        throw new Error(extractErrorMessage(json, 'Unable to disconnect Outlook.'))
+      }
+
+      if (json?.user) {
+        setAuthUser(json.user)
+      } else {
+        const refreshedUser = await fetchCurrentUser(authToken)
+        setAuthUser(refreshedUser)
+      }
+
+      showToast(json?.message || 'Outlook calendar disconnected.')
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error')
+    }
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    let active = true
+    let apiOrigin = ''
+
+    try {
+      apiOrigin = new URL(apiBase).origin
+    } catch (err) {
+      apiOrigin = ''
+    }
+
+    const handleMicrosoftOauthMessage = async (event) => {
+      if (!apiOrigin || event.origin !== apiOrigin) return
+
+      const payload = event.data
+      if (!payload || payload.type !== 'zenara:outlook-calendar-auth') return
+
+      if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
+        outlookPopupRef.current.close()
+      }
+
+      showToast(payload.message || (payload.ok ? 'Outlook calendar connected.' : 'Outlook calendar connection failed.'), payload.ok ? 'success' : 'error')
+
+      if (payload.ok && authToken && active) {
+        try {
+          const refreshedUser = await fetchCurrentUser(authToken)
+          if (active) setAuthUser(refreshedUser)
+        } catch (err) {
+          console.error('Failed to refresh auth user after Outlook connect:', err)
+        }
+      }
+    }
+
+    window.addEventListener('message', handleMicrosoftOauthMessage)
+
+    return () => {
+      active = false
+      window.removeEventListener('message', handleMicrosoftOauthMessage)
+    }
+  }, [apiBase, authToken])
 
   const handleBrowserReminderToggle = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -729,6 +847,9 @@ export default function Home() {
   const rowOffset = (currentPage - 1) * perPage
   const hasPrevPage = currentPage > 1
   const hasNextPage = currentPage < lastPage
+  const outlookConnected = Boolean(authUser?.microsoft_calendar_connected)
+  const outlookButtonLabel = outlookConnected ? 'Disconnect Outlook' : 'Connect Outlook'
+  const outlookButtonState = outlookConnected ? 'active' : 'idle'
   const browserReminderButtonLabel = browserRemindersEnabled
     ? 'Laptop reminders on'
     : browserReminderPermission === 'denied'
@@ -739,6 +860,7 @@ export default function Home() {
     : browserReminderPermission === 'denied'
       ? 'blocked'
       : 'idle'
+  const handleOutlookButtonClick = outlookConnected ? handleOutlookDisconnect : handleOutlookConnect
 
   const goToPreviousPage = () => {
     if (!hasPrevPage || loading) return
@@ -787,6 +909,9 @@ export default function Home() {
           }}
           userName={authUser?.name || 'User'}
           notificationCount={todayFollowUps + sevenDayAppointments.length}
+          outlookButtonLabel={outlookButtonLabel}
+          outlookButtonState={outlookButtonState}
+          onOutlookButtonClick={handleOutlookButtonClick}
           reminderButtonLabel={browserReminderButtonLabel}
           reminderButtonState={browserReminderButtonState}
           onReminderButtonClick={handleBrowserReminderToggle}

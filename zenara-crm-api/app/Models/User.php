@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -56,5 +58,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return strtolower((string) $this->role) === 'admin';
+    }
+
+    public function microsoftCalendarConnection(): HasOne
+    {
+        return $this->hasOne(MicrosoftCalendarConnection::class);
+    }
+
+    public function crmCalendarEvents(): HasMany
+    {
+        return $this->hasMany(CrmCalendarEvent::class);
     }
 }

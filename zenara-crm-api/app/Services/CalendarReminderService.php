@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Crm;
+use App\Models\CrmCalendarEvent;
 use App\Models\User;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Http\Client\PendingRequest;
@@ -13,16 +14,19 @@ use Illuminate\Support\Facades\Schema;
 
 class CalendarReminderService
 {
+    protected const PERSONAL_MICROSOFT_PROVIDER = 'microsoft-user';
+
     protected ?string $googleAccessToken = null;
     protected ?string $microsoftAccessToken = null;
     protected ?bool $timedReminderColumnsReady = null;
 
     public function __construct(
-        protected OutboundEmailService $outboundEmail
+        protected OutboundEmailService $outboundEmail,
+        protected MicrosoftCalendarOAuthService $microsoftOauth
     ) {
     }
 
-    public function syncForCrm(Crm $crm, bool $sendScheduleNotifications = true): void
+    public function syncForCrm(Crm $crm, bool $sendScheduleNotifications = true, ?User $actor = null): void
     {
         $calendarSyncEnabled = (bool) config('services.calendar_reminders.enabled');
 
@@ -62,6 +66,10 @@ class CalendarReminderService
             ];
 
             $this->persistEventIds($crm, $updates);
+
+            if ($actor) {
+                $this->syncPersonalMicrosoftEventsForUser($crm, $actor);
+            }
         }
 
         if ($sendScheduleNotifications) {
@@ -180,6 +188,7 @@ class CalendarReminderService
         ];
 
         $this->persistEventIds($crm, $updates);
+        $this->clearPersonalMicrosoftEventsForCrm($crm);
     }
 
     protected function syncGoogleEvent(Crm $crm, string $type, $dateValue, ?string $existingEventId): ?string
@@ -364,10 +373,10 @@ class CalendarReminderService
         return $payload;
     }
 
-    protected function buildMicrosoftPayload(Crm $crm, string $type, $dateValue): array
+    protected function buildMicrosoftPayload(Crm $crm, string $type, $dateValue, ?array $attendeeEmails = null): array
     {
         [$start, $end] = $this->buildEventWindow($dateValue);
-        $attendeeEmails = $this->resolveCalendarAttendeeEmails($crm);
+        $attendeeEmails ??= $this->resolveCalendarAttendeeEmails($crm);
         $reminderMinutes = max(1, (int) config('services.calendar_reminders.event_reminder_minutes', 15));
         $reminderEnabled = (bool) config('services.calendar_reminders.event_popup_reminder_enabled', true);
         $payload = [
@@ -403,6 +412,102 @@ class CalendarReminderService
         }
 
         return $payload;
+    }
+
+    protected function syncPersonalMicrosoftEventsForUser(Crm $crm, User $user): void
+    {
+        if (!$this->microsoftOauth->getConnectionForUser($user)) {
+            return;
+        }
+
+        $this->syncPersonalMicrosoftEvent($crm, $user, 'appointment', $crm->appointment);
+        $this->syncPersonalMicrosoftEvent($crm, $user, 'follow_up', $crm->follow_up);
+    }
+
+    protected function syncPersonalMicrosoftEvent(Crm $crm, User $user, string $type, $dateValue): void
+    {
+        $mapping = CrmCalendarEvent::query()->firstOrNew([
+            'crm_id' => $crm->id,
+            'user_id' => $user->id,
+            'provider' => self::PERSONAL_MICROSOFT_PROVIDER,
+            'event_type' => $type,
+        ]);
+
+        if (!$dateValue) {
+            if ($mapping->exists && $mapping->external_event_id) {
+                $this->clearPersonalMicrosoftEvent($user, $mapping->external_event_id);
+                $mapping->delete();
+            }
+            return;
+        }
+
+        $token = $this->microsoftOauth->getValidAccessTokenForUser($user);
+        if (!$token) {
+            return;
+        }
+
+        $payload = $this->buildMicrosoftPayload($crm, $type, $dateValue, []);
+
+        if ($mapping->exists && $mapping->external_event_id) {
+            $updateResponse = $this->calendarHttp()
+                ->withToken($token)
+                ->patch('https://graph.microsoft.com/v1.0/me/events/' . rawurlencode($mapping->external_event_id), $payload);
+
+            if ($updateResponse->successful()) {
+                $mapping->forceFill(['last_synced_at' => now()])->save();
+                return;
+            }
+        }
+
+        $createResponse = $this->calendarHttp()
+            ->withToken($token)
+            ->post('https://graph.microsoft.com/v1.0/me/calendar/events', $payload);
+
+        if ($createResponse->successful()) {
+            $mapping->forceFill([
+                'external_event_id' => (string) $createResponse->json('id'),
+                'last_synced_at' => now(),
+            ])->save();
+            return;
+        }
+
+        Log::warning('Personal Microsoft calendar event sync failed.', [
+            'crm_id' => $crm->id,
+            'user_id' => $user->id,
+            'type' => $type,
+            'status' => $createResponse->status(),
+            'response' => $createResponse->body(),
+        ]);
+    }
+
+    protected function clearPersonalMicrosoftEventsForCrm(Crm $crm): void
+    {
+        $mappings = CrmCalendarEvent::query()
+            ->where('crm_id', $crm->id)
+            ->where('provider', self::PERSONAL_MICROSOFT_PROVIDER)
+            ->with('user')
+            ->get();
+
+        foreach ($mappings as $mapping) {
+            if ($mapping->external_event_id && $mapping->user) {
+                $this->clearPersonalMicrosoftEvent($mapping->user, $mapping->external_event_id);
+            }
+            $mapping->delete();
+        }
+    }
+
+    protected function clearPersonalMicrosoftEvent(User $user, string $eventId): bool
+    {
+        $token = $this->microsoftOauth->getValidAccessTokenForUser($user);
+        if (!$token) {
+            return false;
+        }
+
+        $response = $this->calendarHttp()
+            ->withToken($token)
+            ->delete('https://graph.microsoft.com/v1.0/me/events/' . rawurlencode($eventId));
+
+        return $response->successful() || $response->status() === 404;
     }
 
     protected function buildEventWindow($dateValue): array

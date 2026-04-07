@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Services\FirestoreService;
+use App\Models\CrmCalendarEvent;
 use App\Models\User;
+use App\Services\FirestoreService;
+use App\Services\MicrosoftCalendarOAuthService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +21,8 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     public function __construct(
-        protected FirestoreService $firestore
+        protected FirestoreService $firestore,
+        protected MicrosoftCalendarOAuthService $microsoftOauth
     ) {
     }
 
@@ -54,11 +57,17 @@ class AuthController extends Controller
 
     protected function syncUserToFirestore(User $user): void
     {
+        $connection = $user->relationLoaded('microsoftCalendarConnection')
+            ? $user->microsoftCalendarConnection
+            : $user->microsoftCalendarConnection()->first();
+
         $payload = [
             'id' => (string) $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'microsoft_calendar_connected' => (bool) $connection,
+            'microsoft_calendar_email' => $connection?->microsoft_email,
             'has_active_session' => (bool) $user->api_token,
             'token_expires_at' => $user->api_token_expires_at?->toDateTimeString(),
             // Wipe legacy sensitive fields from previous sync versions
@@ -76,6 +85,17 @@ class AuthController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    protected function serializeAuthUser(User $user): array
+    {
+        $user->loadMissing('microsoftCalendarConnection');
+
+        return array_merge($user->withoutRelations()->toArray(), [
+            'microsoft_calendar_connected' => (bool) $user->microsoftCalendarConnection,
+            'microsoft_calendar_email' => $user->microsoftCalendarConnection?->microsoft_email,
+            'microsoft_calendar_display_name' => $user->microsoftCalendarConnection?->microsoft_display_name,
+        ]);
     }
 
     protected function pruneStaleFirestoreDeletedUser(?string $email): void
@@ -114,6 +134,76 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'email' => $normalizedEmail,
         ]);
+    }
+
+    protected function resolveFrontendOrigin(Request $request): ?string
+    {
+        $candidate = trim((string) ($request->query('origin') ?: $request->headers->get('Origin', '')));
+        if ($candidate === '' || !filter_var($candidate, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        $parts = parse_url($candidate);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = (string) ($parts['host'] ?? '');
+        $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+
+        if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+            return null;
+        }
+
+        return "{$scheme}://{$host}{$port}";
+    }
+
+    protected function renderMicrosoftOauthCallback(?string $origin, bool $ok, string $message, array $extra = [])
+    {
+        $payload = json_encode(
+            array_merge(
+                [
+                    'type' => 'zenara:outlook-calendar-auth',
+                    'ok' => $ok,
+                    'message' => $message,
+                ],
+                $extra
+            ),
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+        );
+        $targetOrigin = $origin && filter_var($origin, FILTER_VALIDATE_URL) ? $origin : '*';
+        $safeTitle = htmlspecialchars($ok ? 'Outlook Connected' : 'Outlook Connection Failed', ENT_QUOTES, 'UTF-8');
+        $safeMessage = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+        $targetOriginJson = json_encode($targetOrigin, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+
+        return response(<<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{$safeTitle}</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08); max-width: 420px; padding: 24px; text-align: center; }
+    .status { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+    .copy { color: #475569; line-height: 1.5; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="status">{$safeTitle}</div>
+    <p class="copy">{$safeMessage}</p>
+  </div>
+  <script>
+    (function () {
+      var payload = {$payload};
+      if (window.opener && typeof window.opener.postMessage === 'function') {
+        window.opener.postMessage(payload, {$targetOriginJson});
+        window.close();
+      }
+    })();
+  </script>
+</body>
+</html>
+HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
     }
 
     public function register(Request $request): JsonResponse
@@ -160,7 +250,7 @@ class AuthController extends Controller
             'message' => 'Account created successfully.',
             'token' => $plainToken,
             'token_expires_at' => $user->api_token_expires_at?->toDateTimeString(),
-            'user' => $user,
+            'user' => $this->serializeAuthUser($user),
         ], 201);
     }
 
@@ -197,7 +287,7 @@ class AuthController extends Controller
             'message' => 'Login successful.',
             'token' => $plainToken,
             'token_expires_at' => $user->api_token_expires_at?->toDateTimeString(),
-            'user' => $user,
+            'user' => $this->serializeAuthUser($user),
         ]);
     }
 
@@ -207,7 +297,7 @@ class AuthController extends Controller
             return $this->schemaOutOfDateResponse();
         }
 
-        return response()->json($request->user());
+        return response()->json($this->serializeAuthUser($request->user()));
     }
 
     public function logout(Request $request): JsonResponse
@@ -231,5 +321,93 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Logged out successfully.']);
+    }
+
+    public function microsoftConnectUrl(Request $request): JsonResponse
+    {
+        $origin = $this->resolveFrontendOrigin($request);
+        if (!$origin) {
+            return response()->json(['message' => 'A valid frontend origin is required.'], 422);
+        }
+
+        if (!$this->microsoftOauth->delegatedAuthConfigured()) {
+            return response()->json(['message' => 'Microsoft Outlook OAuth is not configured on the server.'], 500);
+        }
+
+        try {
+            $url = $this->microsoftOauth->buildAuthorizationUrl($request->user(), $origin);
+        } catch (\Throwable $e) {
+            Log::error('Failed to build Microsoft OAuth URL.', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to start Outlook connection right now.'], 500);
+        }
+
+        return response()->json(['url' => $url]);
+    }
+
+    public function handleMicrosoftCallback(Request $request)
+    {
+        $state = (string) $request->query('state', '');
+        $error = trim((string) $request->query('error', ''));
+        $errorDescription = trim((string) $request->query('error_description', ''));
+
+        if ($error !== '') {
+            return $this->renderMicrosoftOauthCallback(
+                null,
+                false,
+                $errorDescription !== '' ? $errorDescription : 'Microsoft sign-in was cancelled or denied.'
+            );
+        }
+
+        $code = trim((string) $request->query('code', ''));
+        if ($state === '' || $code === '') {
+            return $this->renderMicrosoftOauthCallback(null, false, 'Microsoft did not return the required authorization code.');
+        }
+
+        try {
+            $result = $this->microsoftOauth->completeAuthorization($state, $code);
+            /** @var User $user */
+            $user = $result['user'];
+            $user->load('microsoftCalendarConnection');
+            $this->syncUserToFirestore($user);
+
+            return $this->renderMicrosoftOauthCallback(
+                (string) ($result['origin'] ?? ''),
+                true,
+                'Outlook calendar connected successfully.',
+                [
+                    'email' => $user->microsoftCalendarConnection?->microsoft_email,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::error('Microsoft OAuth callback failed.', ['error' => $e->getMessage()]);
+            return $this->renderMicrosoftOauthCallback(null, false, 'Unable to connect Outlook right now. Please try again.');
+        }
+    }
+
+    public function disconnectMicrosoftCalendar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        try {
+            DB::transaction(function () use ($user): void {
+                CrmCalendarEvent::query()
+                    ->where('user_id', $user->id)
+                    ->where('provider', 'microsoft-user')
+                    ->delete();
+
+                $this->microsoftOauth->disconnect($user);
+            });
+
+            $freshUser = $user->fresh() ?? $user;
+            $this->syncUserToFirestore($freshUser);
+        } catch (\Throwable $e) {
+            Log::error('Outlook disconnect failed.', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to disconnect Outlook right now.'], 500);
+        }
+
+        return response()->json([
+            'message' => 'Outlook calendar disconnected.',
+            'user' => $this->serializeAuthUser($freshUser),
+        ]);
     }
 }

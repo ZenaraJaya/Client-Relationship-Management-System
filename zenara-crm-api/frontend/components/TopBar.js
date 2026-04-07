@@ -6,11 +6,15 @@ export default function TopBar({
   onQuickAdd = () => {},
   userName = 'User',
   notificationCount = 0,
+  outlookButtonLabel = 'Connect Outlook',
+  outlookButtonState = 'idle',
+  onOutlookButtonClick = () => {},
   reminderButtonLabel = 'Enable laptop reminders',
   reminderButtonState = 'idle',
   onReminderButtonClick = () => {},
 }) {
   const initials = (userName || 'U').trim().charAt(0).toUpperCase()
+  const outlookButtonClassName = `outlook-connect-btn${outlookButtonState === 'active' ? ' active' : ''}${outlookButtonState === 'blocked' ? ' blocked' : ''}`
   const reminderButtonClassName = `reminder-toggle-btn${reminderButtonState === 'active' ? ' active' : ''}${reminderButtonState === 'blocked' ? ' blocked' : ''}`
 
   return (
@@ -35,6 +39,9 @@ export default function TopBar({
       </div>
 
       <div className="command-right">
+        <button type="button" className={outlookButtonClassName} onClick={onOutlookButtonClick}>
+          {outlookButtonLabel}
+        </button>
         <button type="button" className={reminderButtonClassName} onClick={onReminderButtonClick}>
           {reminderButtonLabel}
         </button>

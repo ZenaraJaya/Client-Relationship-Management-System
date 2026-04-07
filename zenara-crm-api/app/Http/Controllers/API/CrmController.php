@@ -365,7 +365,7 @@ class CrmController extends Controller
     protected function safeSyncCalendarReminders(Crm $crm, bool $sendScheduleNotifications = true): void
     {
         try {
-            $this->calendarReminder->syncForCrm($crm, $sendScheduleNotifications);
+            $this->calendarReminder->syncForCrm($crm, $sendScheduleNotifications, auth()->user());
         } catch (\Throwable $e) {
             Log::warning('Calendar reminder sync failed but CRM data was saved.', [
                 'crm_id' => $crm->id,

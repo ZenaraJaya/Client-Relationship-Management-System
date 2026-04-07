@@ -74,6 +74,9 @@ return [
         'client_id' => env('MICROSOFT_CLIENT_ID'),
         'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
         'calendar_user_id' => env('MICROSOFT_CALENDAR_USER_ID'),
+        'redirect_uri' => env('MICROSOFT_OAUTH_REDIRECT_URI', rtrim((string) env('APP_URL', ''), '/') . '/api/auth/microsoft/callback'),
+        'delegated_scopes' => env('MICROSOFT_OAUTH_SCOPES', 'openid profile offline_access User.Read Calendars.ReadWrite'),
+        'oauth_state_ttl_minutes' => (int) env('MICROSOFT_OAUTH_STATE_TTL_MINUTES', 10),
     ],
 
     'firebase' => [
