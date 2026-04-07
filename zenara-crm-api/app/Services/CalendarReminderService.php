@@ -323,7 +323,18 @@ class CalendarReminderService
     protected function buildGooglePayload(Crm $crm, string $type, $dateValue): array
     {
         [$start, $end] = $this->buildEventWindow($dateValue);
-        $attendeeEmail = config('services.calendar_reminders.attendee_email');
+        $attendeeEmails = $this->resolveCalendarAttendeeEmails($crm);
+        $reminderMinutes = max(1, (int) config('services.calendar_reminders.event_reminder_minutes', 15));
+        $googleReminderOverrides = [];
+
+        if ((bool) config('services.calendar_reminders.event_popup_reminder_enabled', true)) {
+            $googleReminderOverrides[] = ['method' => 'popup', 'minutes' => $reminderMinutes];
+        }
+
+        if ((bool) config('services.calendar_reminders.event_email_reminder_enabled', false)) {
+            $googleReminderOverrides[] = ['method' => 'email', 'minutes' => $reminderMinutes];
+        }
+
         $payload = [
             'summary' => $this->buildEventTitle($crm, $type),
             'description' => $this->buildEventDescription($crm, $type),
@@ -335,17 +346,19 @@ class CalendarReminderService
                 'dateTime' => $end->toRfc3339String(),
                 'timeZone' => $end->timezoneName,
             ],
-            'reminders' => [
-                'useDefault' => false,
-                'overrides' => [
-                    ['method' => 'email', 'minutes' => 60],
-                    ['method' => 'popup', 'minutes' => 60],
+            'reminders' => $googleReminderOverrides === []
+                ? ['useDefault' => true]
+                : [
+                    'useDefault' => false,
+                    'overrides' => $googleReminderOverrides,
                 ],
-            ],
         ];
 
-        if ($attendeeEmail) {
-            $payload['attendees'] = [['email' => $attendeeEmail]];
+        if ($attendeeEmails !== []) {
+            $payload['attendees'] = array_map(
+                fn ($email) => ['email' => $email],
+                $attendeeEmails
+            );
         }
 
         return $payload;
@@ -354,7 +367,9 @@ class CalendarReminderService
     protected function buildMicrosoftPayload(Crm $crm, string $type, $dateValue): array
     {
         [$start, $end] = $this->buildEventWindow($dateValue);
-        $attendeeEmail = config('services.calendar_reminders.attendee_email');
+        $attendeeEmails = $this->resolveCalendarAttendeeEmails($crm);
+        $reminderMinutes = max(1, (int) config('services.calendar_reminders.event_reminder_minutes', 15));
+        $reminderEnabled = (bool) config('services.calendar_reminders.event_popup_reminder_enabled', true);
         $payload = [
             'subject' => $this->buildEventTitle($crm, $type),
             'body' => [
@@ -369,19 +384,22 @@ class CalendarReminderService
                 'dateTime' => $end->copy()->setTimezone('UTC')->format('Y-m-d\TH:i:s'),
                 'timeZone' => 'UTC',
             ],
-            'isReminderOn' => true,
-            'reminderMinutesBeforeStart' => 60,
+            'isReminderOn' => $reminderEnabled,
+            'reminderMinutesBeforeStart' => $reminderMinutes,
             'showAs' => 'busy',
         ];
 
-        if ($attendeeEmail) {
-            $payload['attendees'] = [[
-                'emailAddress' => [
-                    'address' => $attendeeEmail,
-                    'name' => $attendeeEmail,
+        if ($attendeeEmails !== []) {
+            $payload['attendees'] = array_map(
+                fn ($email) => [
+                    'emailAddress' => [
+                        'address' => $email,
+                        'name' => $email,
+                    ],
+                    'type' => 'required',
                 ],
-                'type' => 'required',
-            ]];
+                $attendeeEmails
+            );
         }
 
         return $payload;
@@ -867,6 +885,44 @@ HTML;
         }
 
         return array_keys($recipients);
+    }
+
+    protected function resolveCalendarAttendeeEmails(Crm $crm): array
+    {
+        $candidates = [];
+
+        $candidates[] = (string) config('services.calendar_reminders.attendee_email');
+
+        if ((bool) config('services.calendar_reminders.sync_owner_as_attendee', false) && $crm->user_id) {
+            $ownerEmail = User::query()
+                ->whereKey($crm->user_id)
+                ->value('email');
+            $candidates[] = (string) $ownerEmail;
+        }
+
+        if ((bool) config('services.calendar_reminders.sync_auth_user_as_attendee', false)) {
+            $authUser = auth()->user();
+            $authRole = strtolower((string) ($authUser->role ?? ''));
+            $adminOnly = (bool) config('services.calendar_reminders.sync_auth_admin_only', false);
+
+            if (!$adminOnly || $authRole === 'admin') {
+                $candidates[] = (string) ($authUser->email ?? '');
+            }
+        }
+
+        if ((bool) config('services.calendar_reminders.sync_client_as_attendee', false)) {
+            $candidates[] = (string) $crm->email;
+        }
+
+        $attendees = [];
+        foreach ($candidates as $candidate) {
+            $email = strtolower(trim((string) $candidate));
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $attendees[$email] = true;
+            }
+        }
+
+        return array_keys($attendees);
     }
 
     protected function parseEmailList(string $value): array
