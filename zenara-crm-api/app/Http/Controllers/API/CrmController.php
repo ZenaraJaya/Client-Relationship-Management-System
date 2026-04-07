@@ -51,7 +51,10 @@ class CrmController extends Controller
 
     protected function crmNotificationPayload(array $source, int|string|null $id = null): array
     {
-        $payload = ['id' => $id];
+        $payload = [
+            'id' => $id,
+            'user_id' => $source['user_id'] ?? null,
+        ];
         foreach ($this->allowedCrmFields() as $field) {
             $payload[$field] = $source[$field] ?? null;
         }

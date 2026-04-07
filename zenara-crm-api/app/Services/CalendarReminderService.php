@@ -825,7 +825,7 @@ HTML;
         }
 
         // Owner/creator email.
-        if ($crm->user_id) {
+        if ((bool) config('services.calendar_reminders.notify_owner_email', false) && $crm->user_id) {
             $ownerEmail = User::query()
                 ->whereKey($crm->user_id)
                 ->value('email');
@@ -834,18 +834,29 @@ HTML;
 
         // Current authenticated user email (useful when records don't carry user_id,
         // e.g., Firestore-only updates).
-        $authUserEmail = (string) optional(auth()->user())->email;
-        $candidates[] = $authUserEmail;
+        if ((bool) config('services.calendar_reminders.notify_auth_user_email', false)) {
+            $authUser = auth()->user();
+            $authRole = strtolower((string) ($authUser->role ?? ''));
+            $adminOnly = (bool) config('services.calendar_reminders.notify_auth_admin_only', false);
+
+            if (!$adminOnly || $authRole === 'admin') {
+                $authUserEmail = (string) ($authUser->email ?? '');
+                $candidates[] = $authUserEmail;
+            }
+        }
 
         // Client/contact email.
         if ((bool) config('services.calendar_reminders.notify_client_email', true)) {
             $candidates[] = (string) $crm->email;
         }
 
-        // Optional attendee recipient from previous calendar settings.
-        $candidates[] = (string) config('services.calendar_reminders.attendee_email');
-        // Fallback recipient to avoid losing alerts when admin/client fields are missing.
-        $candidates[] = (string) config('mail.from.address');
+        // Calendar attendees and email-notification recipients are separate by default.
+        if ((bool) config('services.calendar_reminders.notify_attendee_email', false)) {
+            $candidates[] = (string) config('services.calendar_reminders.attendee_email');
+        }
+        if ((bool) config('services.calendar_reminders.notify_from_address', false)) {
+            $candidates[] = (string) config('mail.from.address');
+        }
 
         $recipients = [];
         foreach ($candidates as $candidate) {

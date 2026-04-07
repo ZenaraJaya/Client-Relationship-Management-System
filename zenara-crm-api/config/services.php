@@ -49,6 +49,11 @@ return [
         'admin_emails' => env('CALENDAR_REMINDER_ADMIN_EMAILS', ''),
         'notify_client_email' => env('CALENDAR_NOTIFY_CLIENT_EMAIL', true),
         'notify_admin_users' => env('CALENDAR_NOTIFY_ADMIN_USERS', true),
+        'notify_owner_email' => env('CALENDAR_NOTIFY_OWNER_EMAIL', false),
+        'notify_auth_user_email' => env('CALENDAR_NOTIFY_AUTH_USER_EMAIL', false),
+        'notify_auth_admin_only' => env('CALENDAR_NOTIFY_AUTH_ADMIN_ONLY', false),
+        'notify_attendee_email' => env('CALENDAR_NOTIFY_ATTENDEE_EMAIL', false),
+        'notify_from_address' => env('CALENDAR_NOTIFY_FROM_ADDRESS', false),
     ],
 
     'google_calendar' => [

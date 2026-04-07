@@ -37,8 +37,8 @@ class OutboundEmailService
         if ($htmlBody) {
             Mail::send([], [], function ($message) use ($to, $subject, $textBody, $htmlBody): void {
                 $message->to($to)->subject($subject);
-                $message->setBody($htmlBody, 'text/html');
-                $message->addPart($textBody, 'text/plain');
+                $message->text($textBody);
+                $message->html($htmlBody);
             });
             return;
         }
