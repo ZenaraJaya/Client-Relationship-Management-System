@@ -206,6 +206,7 @@ export default function CrmList({
   onUpdate,
   selectedIds = [],
   onSelectionChange,
+  canEdit = true,
   canDelete = true,
   rowOffset = 0,
 }) {
@@ -289,12 +290,16 @@ export default function CrmList({
         <thead>
           <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
             <th style={{ padding: '12px 10px', width: '40px' }}>
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                onChange={handleSelectAll}
-                style={{ cursor: 'pointer' }}
-              />
+              {canDelete ? (
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  style={{ cursor: 'pointer' }}
+                />
+              ) : (
+                <span style={{ color: '#cbd5e1' }}>-</span>
+              )}
             </th>
             <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>No</th>
             <th style={{ padding: '12px 10px', width: 'auto', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Company Name</th>
@@ -360,70 +365,110 @@ export default function CrmList({
                     </div>
                   </td>
                   <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
-                    <div className="date-cell-card" onClick={openDatePickerFromCard}>
-                      <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
-                      <span className={`date-cell-label ${toDateTimeInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
-                        {formatDateCardLabel(row.appointment)}
-                      </span>
-                      <input
-                        className="date-cell-input-overlay"
-                        type="datetime-local"
-                        value={toDateTimeInputValue(row.appointment)}
-                        onChange={(e) => onUpdate(row, 'appointment', e.target.value)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openDatePicker(e)
-                        }}
-                        aria-label="Appointment date and time"
-                      />
-                    </div>
+                    {canEdit ? (
+                      <div className="date-cell-card" onClick={openDatePickerFromCard}>
+                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span className={`date-cell-label ${toDateTimeInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
+                          {formatDateCardLabel(row.appointment)}
+                        </span>
+                        <input
+                          className="date-cell-input-overlay"
+                          type="datetime-local"
+                          value={toDateTimeInputValue(row.appointment)}
+                          onChange={(e) => onUpdate(row, 'appointment', e.target.value)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openDatePicker(e)
+                          }}
+                          aria-label="Appointment date and time"
+                        />
+                      </div>
+                    ) : (
+                      <div className="date-cell-card">
+                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span className={`date-cell-label ${toDateTimeInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
+                          {toDateTimeInputValue(row.appointment) ? formatDateCardLabel(row.appointment) : 'Not scheduled'}
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
-                    <div className="date-cell-card" onClick={openDatePickerFromCard}>
-                      <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
-                      <span className={`date-cell-label ${toDateTimeInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
-                        {formatDateCardLabel(row.follow_up)}
-                      </span>
-                      <input
-                        className="date-cell-input-overlay"
-                        type="datetime-local"
-                        value={toDateTimeInputValue(row.follow_up)}
-                        onChange={(e) => onUpdate(row, 'follow_up', e.target.value)}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openDatePicker(e)
-                        }}
-                        aria-label="Follow up date and time"
+                    {canEdit ? (
+                      <div className="date-cell-card" onClick={openDatePickerFromCard}>
+                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span className={`date-cell-label ${toDateTimeInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
+                          {formatDateCardLabel(row.follow_up)}
+                        </span>
+                        <input
+                          className="date-cell-input-overlay"
+                          type="datetime-local"
+                          value={toDateTimeInputValue(row.follow_up)}
+                          onChange={(e) => onUpdate(row, 'follow_up', e.target.value)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openDatePicker(e)
+                          }}
+                          aria-label="Follow up date and time"
+                        />
+                      </div>
+                    ) : (
+                      <div className="date-cell-card">
+                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span className={`date-cell-label ${toDateTimeInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
+                          {toDateTimeInputValue(row.follow_up) ? formatDateCardLabel(row.follow_up) : 'Not scheduled'}
+                        </span>
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
+                    {canEdit ? (
+                      <CustomDropdown
+                        value={row.priority || 'Low'}
+                        options={priorityOptions}
+                        onChange={(val) => onUpdate(row, 'priority', val)}
+                        badgeStyle={badgeStyle(priorityColor(row.priority), '#111827')}
+                        colorClassPrefix=""
                       />
-                    </div>
+                    ) : (
+                      <div style={badgeStyle(priorityColor(row.priority), '#111827')}>
+                        {row.priority || 'Low'}
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
-                    <CustomDropdown
-                      value={row.priority || 'Low'}
-                      options={priorityOptions}
-                      onChange={(val) => onUpdate(row, 'priority', val)}
-                      badgeStyle={badgeStyle(priorityColor(row.priority), '#111827')}
-                      colorClassPrefix=""
-                    />
-                  </td>
-                  <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
-                    <CustomDropdown
-                      value={row.status || 'New'}
-                      options={statusOptions}
-                      onChange={(val) => onUpdate(row, 'status', val)}
-                      badgeStyle={badgeStyle(statusColor(row.status), statusTextColor(row.status))}
-                      colorClassPrefix=""
-                    />
+                    {canEdit ? (
+                      <CustomDropdown
+                        value={row.status || 'New'}
+                        options={statusOptions}
+                        onChange={(val) => onUpdate(row, 'status', val)}
+                        badgeStyle={badgeStyle(statusColor(row.status), statusTextColor(row.status))}
+                        colorClassPrefix=""
+                      />
+                    ) : (
+                      <div style={badgeStyle(statusColor(row.status), statusTextColor(row.status))}>
+                        {row.status || 'New'}
+                      </div>
+                    )}
                   </td>
                   <td
                     style={{ ...truncatedStyle, width: '180px', fontSize: '12px', color: '#475569' }}
@@ -433,21 +478,23 @@ export default function CrmList({
                   </td>
                   <td style={{ padding: '12px 10px', width: '120px' }} onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => onEdit(row)}
-                        style={{
-                          padding: '4px 8px',
-                          background: '#e0f2fe',
-                          color: '#0369a1',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Edit
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => onEdit(row)}
+                          style={{
+                            padding: '4px 8px',
+                            background: '#e0f2fe',
+                            color: '#0369a1',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Edit
+                        </button>
+                      )}
                       {canDelete && (
                         <button
                           onClick={() => onDelete(row.id)}
@@ -464,6 +511,11 @@ export default function CrmList({
                         >
                           Delete
                         </button>
+                      )}
+                      {!canEdit && !canDelete && (
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8' }}>
+                          View only
+                        </span>
                       )}
                     </div>
                   </td>

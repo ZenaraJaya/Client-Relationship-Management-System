@@ -511,6 +511,11 @@ export default function Home() {
   }
 
   const handleAddCrm = async (formData) => {
+    if (editingItem && !isAdmin) {
+      showToast('Only admin users can edit contacts.', 'error')
+      return
+    }
+
     setSubmitting(true)
     try {
       const method = editingItem ? 'PUT' : 'POST'
@@ -625,11 +630,21 @@ export default function Home() {
   }
 
   const handleEditCrm = (item) => {
+    if (!isAdmin) {
+      showToast('Only admin users can edit contacts.', 'error')
+      return
+    }
+
     setEditingItem(item)
     setModalOpen(true)
   }
 
   const handleUpdateField = async (item, field, value) => {
+    if (!isAdmin) {
+      showToast('Only admin users can edit contacts.', 'error')
+      return
+    }
+
     const normalizedValue = dateFields.includes(field) && value === '' ? null : value
     const previousValue = item[field]
 
@@ -653,7 +668,10 @@ export default function Home() {
         handleUnauthorized()
         return
       }
-      if (!res.ok) throw new Error(`Failed to update ${field}`)
+      if (!res.ok) {
+        const json = await res.json().catch(() => null)
+        throw new Error(extractErrorMessage(json, `Failed to update ${field}`))
+      }
 
       showToast('Changes have been made.')
     } catch (err) {
@@ -1039,6 +1057,7 @@ export default function Home() {
                   onUpdate={handleUpdateField}
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
+                  canEdit={isAdmin}
                   canDelete={isAdmin}
                   rowOffset={rowOffset}
                 />

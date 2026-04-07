@@ -67,16 +67,15 @@ class CrmController extends Controller
         return Crm::find($id);
     }
 
-    protected function ensureAdmin(): ?JsonResponse
+    protected function ensureAdmin(string $message = 'Only admin users can perform this action.'): ?JsonResponse
     {
         $user = auth()->user();
-        $role = strtolower((string) ($user->role ?? ''));
-        if ($role === 'admin') {
+        if ($user?->isAdmin()) {
             return null;
         }
 
         return response()->json([
-            'message' => 'Only admin users can delete contacts.',
+            'message' => $message,
         ], 403);
     }
 
@@ -225,6 +224,11 @@ class CrmController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        $adminCheck = $this->ensureAdmin('Only admin users can edit contacts.');
+        if ($adminCheck) {
+            return $adminCheck;
+        }
+
         $crm = $this->findCrm($id);
         $data = $this->extractCrmPayload($request);
 
@@ -272,7 +276,7 @@ class CrmController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $adminCheck = $this->ensureAdmin();
+        $adminCheck = $this->ensureAdmin('Only admin users can delete contacts.');
         if ($adminCheck) {
             return $adminCheck;
         }
@@ -306,7 +310,7 @@ class CrmController extends Controller
      */
     public function bulkDestroy(Request $request): JsonResponse
     {
-        $adminCheck = $this->ensureAdmin();
+        $adminCheck = $this->ensureAdmin('Only admin users can delete contacts.');
         if ($adminCheck) {
             return $adminCheck;
         }
