@@ -957,6 +957,7 @@ export default function Home() {
           if (v !== 'listing') setSearchCompany('')
         }}
         onLogout={handleLogout}
+        onProfileClick={() => setProfileOpen(true)}
         userName={authUser?.name || 'User'}
         profilePhotoUrl={authUser?.profile_photo_url || ''}
       />
@@ -969,16 +970,12 @@ export default function Home() {
             setModalOpen(true)
             if (currentView !== 'listing') setCurrentView('listing')
           }}
-          userName={authUser?.name || 'User'}
-          profilePhotoUrl={authUser?.profile_photo_url || ''}
-          notificationCount={todayFollowUps + sevenDayAppointments.length}
           outlookButtonLabel={outlookButtonLabel}
           outlookButtonState={outlookButtonState}
           onOutlookButtonClick={handleOutlookButtonClick}
           reminderButtonLabel={browserReminderButtonLabel}
           reminderButtonState={browserReminderButtonState}
           onReminderButtonClick={handleBrowserReminderToggle}
-          onProfileClick={() => setProfileOpen(true)}
         />
 
         {currentView === 'dashboard' && (

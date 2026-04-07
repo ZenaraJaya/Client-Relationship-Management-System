@@ -4,18 +4,13 @@ export default function TopBar({
   searchCompany = '',
   onSearchCompanyChange = () => {},
   onQuickAdd = () => {},
-  userName = 'User',
-  profilePhotoUrl = '',
-  notificationCount = 0,
   outlookButtonLabel = 'Connect Outlook',
   outlookButtonState = 'idle',
   onOutlookButtonClick = () => {},
   reminderButtonLabel = 'Enable laptop reminders',
   reminderButtonState = 'idle',
   onReminderButtonClick = () => {},
-  onProfileClick = () => {},
 }) {
-  const initials = (userName || 'U').trim().charAt(0).toUpperCase()
   const outlookButtonClassName = `outlook-connect-btn${outlookButtonState === 'active' ? ' active' : ''}${outlookButtonState === 'blocked' ? ' blocked' : ''}`
   const reminderButtonClassName = `reminder-toggle-btn${reminderButtonState === 'active' ? ' active' : ''}${reminderButtonState === 'blocked' ? ' blocked' : ''}`
 
@@ -46,23 +41,6 @@ export default function TopBar({
         </button>
         <button type="button" className={reminderButtonClassName} onClick={onReminderButtonClick}>
           {reminderButtonLabel}
-        </button>
-        <button type="button" className="notify-pill">
-          <span>Notifications</span>
-          <strong>{notificationCount}</strong>
-        </button>
-        <button
-          type="button"
-          className="user-chip"
-          title={`Open profile for ${userName}`}
-          onClick={onProfileClick}
-          aria-label="Open profile settings"
-        >
-          {profilePhotoUrl ? (
-            <img src={profilePhotoUrl} alt={`${userName} profile`} className="user-chip-image" />
-          ) : (
-            initials
-          )}
         </button>
       </div>
     </header>

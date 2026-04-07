@@ -1,6 +1,13 @@
 import React, { useMemo, useState } from 'react'
 
-export default function Sidebar({ currentView, onViewChange, onLogout, userName = 'User', profilePhotoUrl = '' }) {
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  onLogout,
+  onProfileClick = () => {},
+  userName = 'User',
+  profilePhotoUrl = '',
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const navItems = useMemo(
@@ -70,13 +77,19 @@ export default function Sidebar({ currentView, onViewChange, onLogout, userName 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="brand">
-        <div className="avatar">
+        <button
+          type="button"
+          className="avatar profile-avatar-button"
+          onClick={onProfileClick}
+          title={`Open profile for ${userName}`}
+          aria-label="Open profile settings"
+        >
           {profilePhotoUrl ? (
             <img src={profilePhotoUrl} alt={`${userName} profile`} className="avatar-image" />
           ) : (
             initials
           )}
-        </div>
+        </button>
         <div className="brand-copy">
           <div className="brand-title">Zenara Jaya CRM</div>
           <div className="small">Welcome back, {firstName}</div>

@@ -101,6 +101,24 @@ body {
   object-fit: cover;
 }
 
+.profile-avatar-button {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  appearance: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.profile-avatar-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.profile-avatar-button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus), 0 10px 20px rgba(180, 96, 60, 0.22);
+}
+
 .brand-copy {
   display: flex;
   flex-direction: column;
