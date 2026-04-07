@@ -12,6 +12,7 @@ export default function TopBar({
   reminderButtonLabel = 'Enable laptop reminders',
   reminderButtonState = 'idle',
   onReminderButtonClick = () => {},
+  onProfileClick = () => {},
 }) {
   const initials = (userName || 'U').trim().charAt(0).toUpperCase()
   const outlookButtonClassName = `outlook-connect-btn${outlookButtonState === 'active' ? ' active' : ''}${outlookButtonState === 'blocked' ? ' blocked' : ''}`
@@ -49,9 +50,15 @@ export default function TopBar({
           <span>Notifications</span>
           <strong>{notificationCount}</strong>
         </button>
-        <div className="user-chip" title={userName}>
+        <button
+          type="button"
+          className="user-chip"
+          title={`Open profile for ${userName}`}
+          onClick={onProfileClick}
+          aria-label="Open profile settings"
+        >
           {initials}
-        </div>
+        </button>
       </div>
     </header>
   )

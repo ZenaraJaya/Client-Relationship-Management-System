@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -298,6 +299,53 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
         }
 
         return response()->json($this->serializeAuthUser($request->user()));
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        if (!$this->tokenColumnReady()) {
+            return $this->schemaOutOfDateResponse();
+        }
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $user->name = trim((string) $request->input('name'));
+            $user->email = strtolower(trim((string) $request->input('email')));
+
+            if ($request->filled('password')) {
+                $user->password = (string) $request->input('password');
+            }
+
+            $user->save();
+
+            $freshUser = $user->fresh() ?? $user;
+            $this->syncUserToFirestore($freshUser);
+        } catch (QueryException $e) {
+            Log::error('Profile update query failed.', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to update your profile right now. Please try again.'], 500);
+        }
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'user' => $this->serializeAuthUser($freshUser),
+        ]);
     }
 
     public function logout(Request $request): JsonResponse

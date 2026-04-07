@@ -5,6 +5,7 @@ import DashboardCards from '../components/DashboardCards'
 import CrmList from '../components/CrmList'
 import AddCrmModal from '../components/AddCrmModal'
 import AuthPanel from '../components/AuthPanel'
+import ProfileModal from '../components/ProfileModal'
 
 const AUTH_TOKEN_KEY = 'zenara_crm_auth_token'
 const BROWSER_REMINDERS_ENABLED_KEY = 'zenara_crm_browser_reminders_enabled'
@@ -86,6 +87,8 @@ export default function Home() {
   const [authChecking, setAuthChecking] = useState(true)
   const [authSubmitting, setAuthSubmitting] = useState(false)
   const [authError, setAuthError] = useState('')
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [browserReminderPermission, setBrowserReminderPermission] = useState('unsupported')
   const [browserRemindersEnabled, setBrowserRemindersEnabled] = useState(false)
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
@@ -113,6 +116,7 @@ export default function Home() {
     setCurrentView('dashboard')
     setModalOpen(false)
     setEditingItem(null)
+    setProfileOpen(false)
     setServerPage(1)
     setDeleteConfirm({ open: false, mode: 'single', ids: [], count: 0, isDeleting: false })
   }
@@ -349,6 +353,39 @@ export default function Home() {
       setAuthUser(null)
       resetCrmUiState()
       showToast('Logged out successfully.')
+    }
+  }
+
+  const handleProfileSubmit = async ({ name, email, password, password_confirmation }) => {
+    setProfileSubmitting(true)
+
+    try {
+      const res = await authFetch(`${apiBase}/auth/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, password_confirmation }),
+      })
+
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
+
+      const json = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(extractErrorMessage(json, 'Unable to update profile.'))
+      }
+
+      if (json?.user) {
+        setAuthUser(json.user)
+      }
+
+      setProfileOpen(false)
+      showToast(json?.message || 'Profile updated successfully.')
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error')
+    } finally {
+      setProfileSubmitting(false)
     }
   }
 
@@ -933,6 +970,7 @@ export default function Home() {
           reminderButtonLabel={browserReminderButtonLabel}
           reminderButtonState={browserReminderButtonState}
           onReminderButtonClick={handleBrowserReminderToggle}
+          onProfileClick={() => setProfileOpen(true)}
         />
 
         {currentView === 'dashboard' && (
@@ -1132,6 +1170,14 @@ export default function Home() {
         onSubmit={handleAddCrm}
         isLoading={submitting}
         editingItem={editingItem}
+      />
+
+      <ProfileModal
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        onSubmit={handleProfileSubmit}
+        isLoading={profileSubmitting}
+        user={authUser}
       />
 
       {deleteConfirm.open && (
