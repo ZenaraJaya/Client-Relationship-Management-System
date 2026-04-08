@@ -4,6 +4,7 @@ export default function TopBar({
   searchCompany = '',
   onSearchCompanyChange = () => {},
   onQuickAdd = () => {},
+  canQuickAdd = true,
   outlookButtonLabel = 'Connect Outlook',
   outlookButtonState = 'idle',
   onOutlookButtonClick = () => {},
@@ -26,9 +27,11 @@ export default function TopBar({
             aria-label="Search company"
           />
         </div>
-        <button type="button" className="topbar-action-btn" onClick={onQuickAdd}>
-          + New Contact
-        </button>
+        {canQuickAdd && (
+          <button type="button" className="topbar-action-btn" onClick={onQuickAdd}>
+            + New Contact
+          </button>
+        )}
       </div>
 
       <div className="command-right">

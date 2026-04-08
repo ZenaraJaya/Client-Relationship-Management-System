@@ -738,6 +738,7 @@ export default function Home() {
         <TopBar
           searchCompany={searchCompany}
           onSearchCompanyChange={setSearchCompany}
+          canQuickAdd={isAdmin}
           onQuickAdd={() => {
             setEditingItem(null)
             setModalOpen(true)
