@@ -731,6 +731,7 @@ export default function Home() {
         onLogout={handleLogout}
         onProfileClick={() => setProfileOpen(true)}
         userName={authUser?.name || 'User'}
+        userRole={authUser?.role || ''}
         profilePhotoUrl={authUser?.profile_photo_url || ''}
       />
       <main className="main">

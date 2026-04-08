@@ -6,6 +6,7 @@ export default function Sidebar({
   onLogout,
   onProfileClick = () => {},
   userName = 'User',
+  userRole = '',
   profilePhotoUrl = '',
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -73,6 +74,7 @@ export default function Sidebar({
     .toUpperCase()
 
   const firstName = (userName || 'User').trim().split(' ')[0]
+  const roleLabel = (userRole || '').trim().toLowerCase() === 'admin' ? 'Admin' : 'Staff'
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -91,7 +93,7 @@ export default function Sidebar({
           )}
         </button>
         <div className="brand-copy">
-          <div className="brand-title">Zenara Jaya CRM</div>
+          <div className="brand-title">{roleLabel} Dashboard</div>
           <div className="small">Welcome back, {firstName}</div>
         </div>
       </div>
