@@ -66,7 +66,11 @@ class ProfileUpdateTest extends TestCase
         $this->assertTrue(Hash::check('password', (string) $freshStaff?->password));
         $this->assertNotNull($freshStaff?->profile_photo_path);
         Storage::disk('public')->assertExists((string) $freshStaff?->profile_photo_path);
-        $this->assertNotNull($response->json('user.profile_photo_url'));
+        $profilePhotoUrl = (string) $response->json('user.profile_photo_url');
+        $this->assertStringContainsString('/api/auth/profile-photo/' . $staff->id, $profilePhotoUrl);
+
+        $photoResponse = $this->get(parse_url($profilePhotoUrl, PHP_URL_PATH) ?? '');
+        $photoResponse->assertOk();
     }
 
     public function test_admin_user_can_update_their_own_profile(): void

@@ -11,6 +11,9 @@ use App\Http\Controllers\API\FirestoreWebhookController;
  */
 Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::get('auth/profile-photo/{user}', [AuthController::class, 'profilePhoto'])
+    ->name('auth.profile-photo')
+    ->middleware('throttle:60,1');
 Route::get('auth/microsoft/callback', [AuthController::class, 'handleMicrosoftCallback'])
     ->middleware('throttle:30,1');
 Route::post('webhooks/firestore/delete', [FirestoreWebhookController::class, 'handleDelete'])

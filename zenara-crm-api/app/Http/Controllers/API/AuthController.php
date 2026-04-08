@@ -67,7 +67,7 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
-            'profile_photo_url' => $user->profile_photo_url,
+            'profile_photo_url' => $this->profilePhotoUrlForUser($user),
             'microsoft_calendar_connected' => (bool) $connection,
             'microsoft_calendar_email' => $connection?->microsoft_email,
             'has_active_session' => (bool) $user->api_token,
@@ -89,12 +89,41 @@ class AuthController extends Controller
         }
     }
 
-    protected function serializeAuthUser(User $user): array
+    protected function resolveApiRoot(?Request $request = null): string
+    {
+        if ($request) {
+            return rtrim($request->getSchemeAndHttpHost(), '/');
+        }
+
+        return rtrim((string) config('app.url', ''), '/');
+    }
+
+    protected function profilePhotoUrlForUser(User $user, ?Request $request = null): ?string
+    {
+        if (!$user->profile_photo_path) {
+            return null;
+        }
+
+        $relativePath = route('auth.profile-photo', ['user' => $user->id], false);
+        $version = $user->updated_at?->timestamp;
+        if ($version) {
+            $relativePath .= '?v=' . $version;
+        }
+
+        $apiRoot = $this->resolveApiRoot($request);
+        if ($apiRoot === '') {
+            return $relativePath;
+        }
+
+        return $apiRoot . $relativePath;
+    }
+
+    protected function serializeAuthUser(User $user, ?Request $request = null): array
     {
         $user->loadMissing('microsoftCalendarConnection');
 
         return array_merge($user->withoutRelations()->toArray(), [
-            'profile_photo_url' => $user->profile_photo_url,
+            'profile_photo_url' => $this->profilePhotoUrlForUser($user, $request),
             'microsoft_calendar_connected' => (bool) $user->microsoftCalendarConnection,
             'microsoft_calendar_email' => $user->microsoftCalendarConnection?->microsoft_email,
             'microsoft_calendar_display_name' => $user->microsoftCalendarConnection?->microsoft_display_name,
@@ -253,7 +282,7 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             'message' => 'Account created successfully.',
             'token' => $plainToken,
             'token_expires_at' => $user->api_token_expires_at?->toDateTimeString(),
-            'user' => $this->serializeAuthUser($user),
+            'user' => $this->serializeAuthUser($user, $request),
         ], 201);
     }
 
@@ -290,7 +319,7 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             'message' => 'Login successful.',
             'token' => $plainToken,
             'token_expires_at' => $user->api_token_expires_at?->toDateTimeString(),
-            'user' => $this->serializeAuthUser($user),
+            'user' => $this->serializeAuthUser($user, $request),
         ]);
     }
 
@@ -300,7 +329,7 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             return $this->schemaOutOfDateResponse();
         }
 
-        return response()->json($this->serializeAuthUser($request->user()));
+        return response()->json($this->serializeAuthUser($request->user(), $request));
     }
 
     public function updateProfile(Request $request): JsonResponse
@@ -343,8 +372,21 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
         return response()->json([
             'message' => 'Profile updated successfully.',
-            'user' => $this->serializeAuthUser($freshUser),
+            'user' => $this->serializeAuthUser($freshUser, $request),
         ]);
+    }
+
+    public function profilePhoto(User $user)
+    {
+        if (!$user->profile_photo_path || !Storage::disk('public')->exists($user->profile_photo_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response(
+            $user->profile_photo_path,
+            null,
+            ['Cache-Control' => 'public, max-age=3600']
+        );
     }
 
     public function logout(Request $request): JsonResponse
@@ -469,7 +511,7 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
         return response()->json([
             'message' => 'Outlook calendar disconnected.',
-            'user' => $this->serializeAuthUser($freshUser),
+            'user' => $this->serializeAuthUser($freshUser, $request),
         ]);
     }
 }
