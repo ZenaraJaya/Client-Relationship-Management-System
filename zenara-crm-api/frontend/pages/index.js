@@ -571,7 +571,7 @@ export default function Home() {
   const handleUpdateField = async (item, field, value) => {
     if (!isAdmin) {
       showToast('Only admin users can edit contacts.', 'error')
-      return
+      return false
     }
 
     const normalizedValue = dateFields.includes(field) && value === '' ? null : value
@@ -596,7 +596,7 @@ export default function Home() {
 
       if (res.status === 401) {
         handleUnauthorized()
-        return
+        return false
       }
       if (!res.ok) {
         throw new Error(extractErrorMessage(json, `Failed to update ${field}`))
@@ -604,6 +604,7 @@ export default function Home() {
 
       const calendarSyncWarning = extractCalendarSyncWarning(json)
       showToast(calendarSyncWarning || 'Changes have been made.', calendarSyncWarning ? 'error' : 'success')
+      return true
     } catch (err) {
       setData((prev) => {
         if (!prev || !prev.data) return prev
@@ -613,6 +614,7 @@ export default function Home() {
         }
       })
       showToast(`Error updating ${field}: ${err.message}`, 'error')
+      return false
     }
   }
 

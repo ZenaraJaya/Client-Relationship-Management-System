@@ -107,23 +107,6 @@ const toDateTimeInputValue = (value) => {
   return ''
 }
 
-const openDatePicker = (event) => {
-  if (typeof event.target.showPicker === 'function') {
-    event.target.showPicker()
-  }
-}
-
-const openDatePickerFromCard = (event) => {
-  event.stopPropagation()
-  const input = event.currentTarget.querySelector('input')
-  if (!input) return
-
-  input.focus()
-  if (typeof input.showPicker === 'function') {
-    input.showPicker()
-  }
-}
-
 const formatDateCardLabel = (value) => {
   const dateTimeValue = toDateTimeInputValue(value)
   if (!dateTimeValue) return 'Pick date & time'
@@ -199,6 +182,8 @@ const CustomDropdown = ({ value, options, onChange, badgeStyle, colorClassPrefix
   )
 }
 
+const buildDateDraftKey = (rowId, field) => `${rowId}:${field}`
+
 export default function CrmList({
   items = [],
   onEdit,
@@ -211,6 +196,10 @@ export default function CrmList({
   rowOffset = 0,
 }) {
   const [expandedId, setExpandedId] = useState(null)
+  const [dateDrafts, setDateDrafts] = useState({})
+  const [activeDateEditor, setActiveDateEditor] = useState(null)
+  const [savingDateKey, setSavingDateKey] = useState('')
+  const dateInputRefs = React.useRef({})
   const isAllSelected = canDelete && items.length > 0 && items.every((item) => selectedIds.includes(item.id))
 
   React.useEffect(() => {
@@ -218,6 +207,40 @@ export default function CrmList({
       setExpandedId(null)
     }
   }, [items, expandedId])
+
+  React.useEffect(() => {
+    const validKeys = new Set(
+      items.flatMap((item) => ['appointment', 'follow_up'].map((field) => buildDateDraftKey(item.id, field)))
+    )
+
+    setDateDrafts((prev) => {
+      const nextEntries = Object.entries(prev).filter(([key]) => validKeys.has(key))
+      if (nextEntries.length === Object.keys(prev).length) {
+        return prev
+      }
+      return Object.fromEntries(nextEntries)
+    })
+
+    if (activeDateEditor && !validKeys.has(activeDateEditor)) {
+      setActiveDateEditor(null)
+    }
+
+    if (savingDateKey && !validKeys.has(savingDateKey)) {
+      setSavingDateKey('')
+    }
+  }, [items, activeDateEditor, savingDateKey])
+
+  React.useEffect(() => {
+    if (!activeDateEditor) return
+
+    const input = dateInputRefs.current[activeDateEditor]
+    if (!input) return
+
+    input.focus()
+    if (typeof input.showPicker === 'function') {
+      input.showPicker()
+    }
+  }, [activeDateEditor])
 
   const handleSelectAll = (e) => {
     if (!canDelete) return
@@ -241,6 +264,173 @@ export default function CrmList({
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id)
+  }
+
+  const getCurrentDateValue = (row, field) => toDateTimeInputValue(row[field])
+
+  const getDraftDateValue = (row, field) => {
+    const key = buildDateDraftKey(row.id, field)
+    return Object.prototype.hasOwnProperty.call(dateDrafts, key)
+      ? dateDrafts[key]
+      : getCurrentDateValue(row, field)
+  }
+
+  const openDateEditor = (event, row, field) => {
+    event.stopPropagation()
+
+    const key = buildDateDraftKey(row.id, field)
+    setActiveDateEditor(key)
+    setDateDrafts((prev) => {
+      if (Object.prototype.hasOwnProperty.call(prev, key)) {
+        return prev
+      }
+
+      return {
+        ...prev,
+        [key]: getCurrentDateValue(row, field),
+      }
+    })
+  }
+
+  const updateDateDraft = (row, field, value) => {
+    const key = buildDateDraftKey(row.id, field)
+    setDateDrafts((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  const clearDateEditor = (row, field) => {
+    const key = buildDateDraftKey(row.id, field)
+
+    setActiveDateEditor((prev) => (prev === key ? null : prev))
+    setDateDrafts((prev) => {
+      if (!Object.prototype.hasOwnProperty.call(prev, key)) {
+        return prev
+      }
+
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
+
+  const saveDateEditor = async (event, row, field) => {
+    event.stopPropagation()
+
+    const key = buildDateDraftKey(row.id, field)
+    const currentValue = getCurrentDateValue(row, field)
+    const draftValue = getDraftDateValue(row, field)
+
+    if (draftValue === currentValue) {
+      clearDateEditor(row, field)
+      return
+    }
+
+    setSavingDateKey(key)
+    const saved = await onUpdate(row, field, draftValue || null)
+    setSavingDateKey((prev) => (prev === key ? '' : prev))
+
+    if (saved) {
+      clearDateEditor(row, field)
+    }
+  }
+
+  const handleDateInputKeyDown = async (event, row, field) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      await saveDateEditor(event, row, field)
+      return
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      clearDateEditor(row, field)
+    }
+  }
+
+  const renderDateCell = (row, field, ariaLabel) => {
+    const key = buildDateDraftKey(row.id, field)
+    const currentValue = getCurrentDateValue(row, field)
+    const draftValue = getDraftDateValue(row, field)
+    const isEditing = activeDateEditor === key
+    const isSaving = savingDateKey === key
+    const isDirty = draftValue !== currentValue
+
+    if (!canEdit) {
+      return (
+        <div className="date-cell-card">
+          <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span className={`date-cell-label ${currentValue ? '' : 'date-cell-placeholder'}`}>
+            {currentValue ? formatDateCardLabel(row[field]) : 'Not scheduled'}
+          </span>
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className={`date-cell-card ${isEditing ? 'date-cell-card-editing' : ''}`}
+        onClick={(event) => openDateEditor(event, row, field)}
+      >
+        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        {isEditing ? (
+          <div className="date-cell-editor">
+            <input
+              ref={(element) => {
+                if (element) {
+                  dateInputRefs.current[key] = element
+                } else {
+                  delete dateInputRefs.current[key]
+                }
+              }}
+              className="date-cell-input-editor"
+              type="datetime-local"
+              value={draftValue}
+              onChange={(event) => updateDateDraft(row, field, event.target.value)}
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => handleDateInputKeyDown(event, row, field)}
+              aria-label={ariaLabel}
+            />
+            <div className="date-cell-actions">
+              <button
+                type="button"
+                className="date-cell-action-btn date-cell-action-btn-secondary"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  clearDateEditor(row, field)
+                }}
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="date-cell-action-btn"
+                onClick={(event) => saveDateEditor(event, row, field)}
+                disabled={isSaving || !isDirty}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <span className={`date-cell-label ${currentValue ? '' : 'date-cell-placeholder'}`}>
+            {formatDateCardLabel(row[field])}
+          </span>
+        )}
+      </div>
+    )
   }
 
   if (items.length === 0) {
@@ -365,80 +555,10 @@ export default function CrmList({
                     </div>
                   </td>
                   <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
-                    {canEdit ? (
-                      <div className="date-cell-card" onClick={openDatePickerFromCard}>
-                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                          <line x1="16" y1="2" x2="16" y2="6"></line>
-                          <line x1="8" y1="2" x2="8" y2="6"></line>
-                          <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        <span className={`date-cell-label ${toDateTimeInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
-                          {formatDateCardLabel(row.appointment)}
-                        </span>
-                        <input
-                          className="date-cell-input-overlay"
-                          type="datetime-local"
-                          value={toDateTimeInputValue(row.appointment)}
-                          onChange={(e) => onUpdate(row, 'appointment', e.target.value)}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            openDatePicker(e)
-                          }}
-                          aria-label="Appointment date and time"
-                        />
-                      </div>
-                    ) : (
-                      <div className="date-cell-card">
-                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                          <line x1="16" y1="2" x2="16" y2="6"></line>
-                          <line x1="8" y1="2" x2="8" y2="6"></line>
-                          <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        <span className={`date-cell-label ${toDateTimeInputValue(row.appointment) ? '' : 'date-cell-placeholder'}`}>
-                          {toDateTimeInputValue(row.appointment) ? formatDateCardLabel(row.appointment) : 'Not scheduled'}
-                        </span>
-                      </div>
-                    )}
+                    {renderDateCell(row, 'appointment', 'Appointment date and time')}
                   </td>
                   <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
-                    {canEdit ? (
-                      <div className="date-cell-card" onClick={openDatePickerFromCard}>
-                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                          <line x1="16" y1="2" x2="16" y2="6"></line>
-                          <line x1="8" y1="2" x2="8" y2="6"></line>
-                          <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        <span className={`date-cell-label ${toDateTimeInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
-                          {formatDateCardLabel(row.follow_up)}
-                        </span>
-                        <input
-                          className="date-cell-input-overlay"
-                          type="datetime-local"
-                          value={toDateTimeInputValue(row.follow_up)}
-                          onChange={(e) => onUpdate(row, 'follow_up', e.target.value)}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            openDatePicker(e)
-                          }}
-                          aria-label="Follow up date and time"
-                        />
-                      </div>
-                    ) : (
-                      <div className="date-cell-card">
-                        <svg className="date-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                          <line x1="16" y1="2" x2="16" y2="6"></line>
-                          <line x1="8" y1="2" x2="8" y2="6"></line>
-                          <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        <span className={`date-cell-label ${toDateTimeInputValue(row.follow_up) ? '' : 'date-cell-placeholder'}`}>
-                          {toDateTimeInputValue(row.follow_up) ? formatDateCardLabel(row.follow_up) : 'Not scheduled'}
-                        </span>
-                      </div>
-                    )}
+                    {renderDateCell(row, 'follow_up', 'Follow up date and time')}
                   </td>
                   <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (

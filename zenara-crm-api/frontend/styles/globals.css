@@ -870,6 +870,20 @@ td {
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
 }
 
+.date-cell-card-editing {
+  cursor: default;
+  align-items: flex-start;
+  min-height: 78px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  transform: none;
+  background: #ffffff;
+}
+
+.date-cell-card-editing:hover {
+  transform: none;
+}
+
 .date-cell-card:focus-within {
   transform: translateY(-1px);
   border-color: #0f766e;
@@ -906,21 +920,63 @@ td {
   font-weight: 500;
 }
 
-.date-cell-input-overlay {
-  position: absolute;
-  inset: 0;
+.date-cell-editor {
   width: 100%;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  padding: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.date-cell-input-overlay::-webkit-calendar-picker-indicator {
+.date-cell-input-editor {
+  width: 100%;
+  border: 1px solid #d8e3ec;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  background: #f8fbfa;
+}
+
+.date-cell-input-editor:focus {
+  outline: none;
+  border-color: #0f766e;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+}
+
+.date-cell-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.date-cell-action-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0f766e, #115e59);
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.18);
+}
+
+.date-cell-action-btn:hover:not(:disabled) {
+  filter: brightness(1.03);
+}
+
+.date-cell-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.date-cell-action-btn-secondary {
+  color: #375166;
+  background: #e8eef3;
+  box-shadow: none;
 }
 
 .toast-notification {
