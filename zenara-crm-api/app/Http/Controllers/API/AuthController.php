@@ -397,7 +397,10 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
         return Storage::disk('public')->response(
             $user->profile_photo_path,
             null,
-            ['Cache-Control' => 'public, max-age=3600']
+            [
+                'Cache-Control' => 'public, max-age=3600',
+                'Cross-Origin-Resource-Policy' => 'cross-origin',
+            ]
         );
     }
 

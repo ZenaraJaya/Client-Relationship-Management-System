@@ -70,7 +70,9 @@ class ProfileUpdateTest extends TestCase
         $this->assertStringContainsString('/api/auth/profile-photo/' . $staff->id, $profilePhotoUrl);
 
         $photoResponse = $this->get(parse_url($profilePhotoUrl, PHP_URL_PATH) ?? '');
-        $photoResponse->assertOk();
+        $photoResponse
+            ->assertOk()
+            ->assertHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     }
 
     public function test_profile_photo_url_prefers_forwarded_https_origin(): void
