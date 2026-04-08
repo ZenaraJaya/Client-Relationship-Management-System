@@ -7,6 +7,7 @@ use App\Models\CrmCalendarEvent;
 use App\Models\User;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +20,7 @@ class CalendarReminderService
     protected ?string $googleAccessToken = null;
     protected ?string $microsoftAccessToken = null;
     protected ?bool $timedReminderColumnsReady = null;
+    protected array $lastSyncWarnings = [];
 
     public function __construct(
         protected OutboundEmailService $outboundEmail,
@@ -28,6 +30,7 @@ class CalendarReminderService
 
     public function syncForCrm(Crm $crm, bool $sendScheduleNotifications = true, ?User $actor = null): void
     {
+        $this->resetLastSyncWarnings();
         $calendarSyncEnabled = (bool) config('services.calendar_reminders.enabled');
 
         $appointmentChanged = $crm->wasRecentlyCreated
@@ -68,6 +71,8 @@ class CalendarReminderService
             $this->persistEventIds($crm, $updates);
 
             $this->syncPersonalMicrosoftEventsForRelevantUsers($crm, $actor);
+        } elseif ($crm->appointment || $crm->follow_up) {
+            $this->addSyncWarning('CRM saved, but calendar sync is disabled on the server.');
         }
 
         if ($sendScheduleNotifications) {
@@ -75,6 +80,14 @@ class CalendarReminderService
             $this->sendScheduleNotificationIfNeeded($crm, 'follow_up', $crm->follow_up, $followUpChanged);
         }
         $this->resetTimedReminderMarkersIfScheduleChanged($crm, $appointmentChanged, $followUpChanged);
+    }
+
+    public function getLastSyncWarnings(): array
+    {
+        return array_values(array_unique(array_filter(array_map(
+            fn ($warning) => trim((string) $warning),
+            $this->lastSyncWarnings
+        ))));
     }
 
     /**
@@ -271,6 +284,9 @@ class CalendarReminderService
             'status' => $createResponse->status(),
             'response' => $createResponse->body(),
         ]);
+        $this->addSyncWarning(
+            'CRM saved, but Microsoft calendar sync failed: ' . $this->formatApiFailure($createResponse, 'The event could not be created in Microsoft Graph.')
+        );
 
         return $existingEventId;
     }
@@ -454,6 +470,12 @@ class CalendarReminderService
 
         $token = $this->microsoftOauth->getValidAccessTokenForUser($user);
         if (!$token) {
+            $this->addSyncWarning(
+                sprintf(
+                    'CRM saved, but Outlook sync could not get a valid access token for %s.',
+                    $user->email ?: 'the connected account'
+                )
+            );
             return;
         }
 
@@ -489,6 +511,13 @@ class CalendarReminderService
             'status' => $createResponse->status(),
             'response' => $createResponse->body(),
         ]);
+        $this->addSyncWarning(
+            sprintf(
+                'CRM saved, but Outlook sync failed for %s: %s',
+                $user->email ?: 'the connected account',
+                $this->formatApiFailure($createResponse, 'The event could not be created in Outlook.')
+            )
+        );
     }
 
     protected function clearStalePersonalMicrosoftEvents(Crm $crm, array $allowedUserIds): void
@@ -1216,6 +1245,9 @@ HTML;
                     'status' => $response->status(),
                     'response' => $response->body(),
                 ]);
+                $this->addSyncWarning(
+                    'CRM saved, but Microsoft calendar token request failed: ' . $this->formatApiFailure($response, 'Microsoft Graph rejected the token request.')
+                );
                 return null;
             }
 
@@ -1223,8 +1255,65 @@ HTML;
             return $this->microsoftAccessToken;
         } catch (\Throwable $e) {
             Log::error('Microsoft Graph token request failed.', ['error' => $e->getMessage()]);
+            $this->addSyncWarning('CRM saved, but Microsoft calendar token request failed: ' . $e->getMessage());
             return null;
         }
+    }
+
+    protected function resetLastSyncWarnings(): void
+    {
+        $this->lastSyncWarnings = [];
+    }
+
+    protected function addSyncWarning(string $message): void
+    {
+        $message = trim($message);
+        if ($message === '') {
+            return;
+        }
+
+        $this->lastSyncWarnings[] = $message;
+    }
+
+    protected function formatApiFailure(Response $response, string $fallback): string
+    {
+        $payload = $response->json();
+        $errorCode = '';
+        $message = '';
+
+        if (is_array($payload)) {
+            $nestedError = $payload['error'] ?? null;
+
+            if (is_string($nestedError)) {
+                $errorCode = trim($nestedError);
+            } elseif (is_array($nestedError)) {
+                $errorCode = trim((string) ($nestedError['code'] ?? ''));
+                $message = trim((string) ($nestedError['message'] ?? ''));
+            }
+
+            if ($message === '') {
+                $message = trim((string) ($payload['error_description'] ?? $payload['message'] ?? ''));
+            }
+        }
+
+        if ($message === '') {
+            $message = trim((string) $response->body());
+        }
+
+        $message = preg_replace('/\s+Trace ID:.*$/i', '', $message ?? '');
+        $message = preg_replace('/\s+Correlation ID:.*$/i', '', $message ?? '');
+        $message = preg_replace('/\s+Timestamp:.*$/i', '', $message ?? '');
+        $message = trim((string) preg_replace('/\s+/', ' ', $message ?? ''));
+
+        if ($message === '') {
+            return $fallback;
+        }
+
+        if ($errorCode !== '' && stripos($message, $errorCode) === false) {
+            return "{$errorCode}: {$message}";
+        }
+
+        return $message;
     }
 
     protected function calendarHttp(): PendingRequest

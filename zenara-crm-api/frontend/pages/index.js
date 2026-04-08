@@ -153,6 +153,20 @@ export default function Home() {
     return fallback
   }
 
+  const extractCalendarSyncWarning = (json) => {
+    if (!json || typeof json !== 'object') return ''
+    if (typeof json.calendar_sync_warning === 'string' && json.calendar_sync_warning.trim()) {
+      return json.calendar_sync_warning.trim()
+    }
+
+    if (Array.isArray(json.calendar_sync_warnings)) {
+      const firstWarning = json.calendar_sync_warnings.find((warning) => typeof warning === 'string' && warning.trim())
+      return firstWarning ? firstWarning.trim() : ''
+    }
+
+    return ''
+  }
+
   const authFetch = async (url, options = {}) => {
     const headers = { ...(options.headers || {}) }
     if (authToken) headers.Authorization = `Bearer ${authToken}`
@@ -570,6 +584,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      const json = await res.json().catch(() => null)
 
       if (res.status === 401) {
         handleUnauthorized()
@@ -577,14 +592,17 @@ export default function Home() {
       }
 
       if (!res.ok) {
-        const json = await res.json().catch(() => null)
         throw new Error(extractErrorMessage(json, `Failed to ${editingItem ? 'update' : 'create'} CRM`))
       }
 
+      const calendarSyncWarning = extractCalendarSyncWarning(json)
       setModalOpen(false)
       setEditingItem(null)
       fetchCrms({ page: serverPage })
-      showToast(`CRM contact ${editingItem ? 'updated' : 'added'} successfully.`)
+      showToast(
+        calendarSyncWarning || `CRM contact ${editingItem ? 'updated' : 'added'} successfully.`,
+        calendarSyncWarning ? 'error' : 'success'
+      )
     } catch (err) {
       showToast(`Error: ${err.message}`, 'error')
     } finally {
@@ -706,17 +724,18 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(normalizeDateFields(updatedItem)),
       })
+      const json = await res.json().catch(() => null)
 
       if (res.status === 401) {
         handleUnauthorized()
         return
       }
       if (!res.ok) {
-        const json = await res.json().catch(() => null)
         throw new Error(extractErrorMessage(json, `Failed to update ${field}`))
       }
 
-      showToast('Changes have been made.')
+      const calendarSyncWarning = extractCalendarSyncWarning(json)
+      showToast(calendarSyncWarning || 'Changes have been made.', calendarSyncWarning ? 'error' : 'success')
     } catch (err) {
       setData((prev) => {
         if (!prev || !prev.data) return prev

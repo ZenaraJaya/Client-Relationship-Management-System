@@ -193,10 +193,10 @@ class CrmController extends Controller
         }
         $crm = Crm::create($data);
 
-        $this->syncExternalSystems($crm, false);
+        $calendarWarnings = $this->syncExternalSystems($crm, false);
         $this->safeNotifyScheduleChangesFromPayload([], $this->crmNotificationPayload($crm->toArray(), $crm->id));
 
-        return response()->json($crm, 201);
+        return response()->json($this->buildCrmResponsePayload($crm, $calendarWarnings), 201);
     }
 
     /**
@@ -259,16 +259,21 @@ class CrmController extends Controller
 
             $this->safeNotifyScheduleChangesFromPayload($existingRemote, $updatedRemote, $id);
 
-            return response()->json($updatedRemote);
+            return response()->json(array_merge(
+                $updatedRemote,
+                $this->buildCalendarWarningPayload(
+                    $this->remoteOnlyCalendarSyncWarnings($existingRemote, $updatedRemote)
+                )
+            ));
         }
 
         $before = $this->crmNotificationPayload($crm->toArray(), $crm->id);
         $crm->update($data);
-        $this->syncExternalSystems($crm, false);
+        $calendarWarnings = $this->syncExternalSystems($crm, false);
         $freshCrm = $crm->fresh() ?? $crm;
         $this->safeNotifyScheduleChangesFromPayload($before, $this->crmNotificationPayload($freshCrm->toArray(), $crm->id));
 
-        return response()->json($crm);
+        return response()->json($this->buildCrmResponsePayload($freshCrm, $calendarWarnings));
     }
 
     /**
@@ -360,21 +365,26 @@ class CrmController extends Controller
         ], 200);
     }
 
-    protected function syncExternalSystems(Crm $crm, bool $sendScheduleNotifications = true): void
+    protected function syncExternalSystems(Crm $crm, bool $sendScheduleNotifications = true): array
     {
-        $this->safeSyncCalendarReminders($crm, $sendScheduleNotifications);
+        $calendarWarnings = $this->safeSyncCalendarReminders($crm, $sendScheduleNotifications);
         $this->safeSyncToFirestore($crm);
+
+        return $calendarWarnings;
     }
 
-    protected function safeSyncCalendarReminders(Crm $crm, bool $sendScheduleNotifications = true): void
+    protected function safeSyncCalendarReminders(Crm $crm, bool $sendScheduleNotifications = true): array
     {
         try {
             $this->calendarReminder->syncForCrm($crm, $sendScheduleNotifications, auth()->user());
+            return $this->calendarReminder->getLastSyncWarnings();
         } catch (\Throwable $e) {
             Log::warning('Calendar reminder sync failed but CRM data was saved.', [
                 'crm_id' => $crm->id,
                 'error' => $e->getMessage(),
             ]);
+
+            return ['CRM saved, but Outlook calendar sync failed: ' . $e->getMessage()];
         }
     }
 
@@ -424,5 +434,45 @@ class CrmController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    protected function buildCrmResponsePayload(Crm $crm, array $calendarWarnings = []): array
+    {
+        return array_merge(
+            $crm->toArray(),
+            $this->buildCalendarWarningPayload($calendarWarnings)
+        );
+    }
+
+    protected function buildCalendarWarningPayload(array $calendarWarnings = []): array
+    {
+        $warnings = array_values(array_unique(array_filter(array_map(
+            fn ($warning) => trim((string) $warning),
+            $calendarWarnings
+        ))));
+
+        return [
+            'calendar_sync_warning' => $warnings[0] ?? null,
+            'calendar_sync_warnings' => $warnings,
+        ];
+    }
+
+    protected function remoteOnlyCalendarSyncWarnings(array $before, array $after): array
+    {
+        $scheduleChanged = ($before['appointment'] ?? null) !== ($after['appointment'] ?? null)
+            || ($before['follow_up'] ?? null) !== ($after['follow_up'] ?? null);
+
+        $user = auth()->user();
+        $hasOutlookConnection = $user && method_exists($user, 'microsoftCalendarConnection')
+            ? $user->microsoftCalendarConnection()->exists()
+            : false;
+
+        if (!$scheduleChanged || !$hasOutlookConnection) {
+            return [];
+        }
+
+        return [
+            'CRM saved, but Outlook sync was skipped because this contact exists only in Firestore. Create a new contact or resave it after the database-backed record exists.',
+        ];
     }
 }
