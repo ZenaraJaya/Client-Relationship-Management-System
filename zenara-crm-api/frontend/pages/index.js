@@ -18,6 +18,39 @@ const getDefaultApiBase = () => {
   return 'http://localhost:8000/api'
 }
 
+const normalizeProfilePhotoUrl = (value, apiBase) => {
+  if (!value) return ''
+
+  let apiOrigin = ''
+  try {
+    apiOrigin = new URL(apiBase).origin
+  } catch {
+    apiOrigin = ''
+  }
+
+  try {
+    const resolved = new URL(value, apiOrigin || undefined)
+
+    if (resolved.pathname.startsWith('/api/auth/profile-photo/') && apiOrigin) {
+      const apiUrl = new URL(apiOrigin)
+      resolved.protocol = apiUrl.protocol
+      resolved.host = apiUrl.host
+    }
+
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && resolved.protocol === 'http:') {
+      resolved.protocol = 'https:'
+    }
+
+    return resolved.toString()
+  } catch {
+    if (typeof value === 'string' && value.startsWith('http://') && typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      return value.replace(/^http:\/\//i, 'https://')
+    }
+
+    return value
+  }
+}
+
 export default function Home() {
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || getDefaultApiBase()).replace(/\/+$/, '')
 
@@ -48,6 +81,7 @@ export default function Home() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
+  const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(authUser?.profile_photo_url || '', apiBase)
 
   const toastTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)
@@ -732,7 +766,7 @@ export default function Home() {
         onProfileClick={() => setProfileOpen(true)}
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
-        profilePhotoUrl={authUser?.profile_photo_url || ''}
+        profilePhotoUrl={normalizedProfilePhotoUrl}
       />
       <main className="main">
         <TopBar
@@ -953,7 +987,7 @@ export default function Home() {
         onClose={() => setProfileOpen(false)}
         onSubmit={handleProfileSubmit}
         isLoading={profileSubmitting}
-        user={authUser}
+        user={authUser ? { ...authUser, profile_photo_url: normalizedProfilePhotoUrl } : null}
       />
 
       {deleteConfirm.open && (

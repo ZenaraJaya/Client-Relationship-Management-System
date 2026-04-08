@@ -73,6 +73,39 @@ class ProfileUpdateTest extends TestCase
         $photoResponse->assertOk();
     }
 
+    public function test_profile_photo_url_prefers_forwarded_https_origin(): void
+    {
+        Storage::fake('public');
+
+        $staff = User::factory()->create([
+            'role' => 'staff',
+            'password' => 'password',
+            'email' => 'staff-https@example.com',
+        ]);
+        $photo = UploadedFile::fake()->createWithContent(
+            'avatar.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9sX6lz0AAAAASUVORK5CYII=')
+        );
+
+        $response = $this->withHeaders(array_merge(
+            $this->authHeadersFor($staff, 'staff-profile-forwarded-token'),
+            [
+                'X-Forwarded-Proto' => 'https',
+                'X-Forwarded-Host' => 'zenara-crm.onrender.com',
+            ]
+        ))->post('/api/auth/profile', [
+            '_method' => 'PUT',
+            'name' => 'Staff HTTPS',
+            'profile_photo' => $photo,
+        ]);
+
+        $response->assertOk();
+        $this->assertSame(
+            'https://zenara-crm.onrender.com/api/auth/profile-photo/' . $staff->id . '?v=' . $staff->fresh()?->updated_at?->timestamp,
+            $response->json('user.profile_photo_url')
+        );
+    }
+
     public function test_admin_user_can_update_their_own_profile(): void
     {
         $admin = User::factory()->create([

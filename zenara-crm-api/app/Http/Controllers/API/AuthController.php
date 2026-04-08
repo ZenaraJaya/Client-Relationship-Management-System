@@ -92,6 +92,18 @@ class AuthController extends Controller
     protected function resolveApiRoot(?Request $request = null): string
     {
         if ($request) {
+            $forwardedProto = trim((string) $request->headers->get('x-forwarded-proto', ''));
+            $forwardedHost = trim((string) $request->headers->get('x-forwarded-host', ''));
+
+            if ($forwardedProto !== '' && $forwardedHost !== '') {
+                $scheme = strtolower(trim(explode(',', $forwardedProto)[0]));
+                $host = trim(explode(',', $forwardedHost)[0]);
+
+                if (in_array($scheme, ['http', 'https'], true) && $host !== '') {
+                    return "{$scheme}://{$host}";
+                }
+            }
+
             return rtrim($request->getSchemeAndHttpHost(), '/');
         }
 
