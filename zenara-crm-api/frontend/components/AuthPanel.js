@@ -2,13 +2,100 @@ import React, { useMemo, useState } from 'react'
 import styles from './AuthPanel.module.css'
 
 const BACKGROUND_BUBBLES = [
-  { size: '160px', left: '8%', duration: '18s', delay: '-2s', drift: '34px', opacity: 0.6 },
-  { size: '92px', left: '20%', duration: '14s', delay: '-8s', drift: '18px', opacity: 0.45 },
-  { size: '132px', left: '34%', duration: '20s', delay: '-5s', drift: '-26px', opacity: 0.5 },
-  { size: '108px', left: '54%', duration: '16s', delay: '-11s', drift: '22px', opacity: 0.42 },
-  { size: '188px', left: '67%', duration: '24s', delay: '-7s', drift: '-32px', opacity: 0.5 },
-  { size: '78px', left: '79%', duration: '13s', delay: '-4s', drift: '16px', opacity: 0.38 },
-  { size: '146px', left: '88%', duration: '19s', delay: '-9s', drift: '-24px', opacity: 0.46 },
+  {
+    size: '210px',
+    left: '5%',
+    duration: '22s',
+    delay: '-4s',
+    drift: '44px',
+    opacity: 0.76,
+    tint: 'rgba(191, 219, 254, 0.62)',
+    edge: 'rgba(255, 255, 255, 0.92)',
+    shadow: 'rgba(96, 165, 250, 0.2)',
+    blur: '0px',
+  },
+  {
+    size: '112px',
+    left: '18%',
+    duration: '15s',
+    delay: '-10s',
+    drift: '20px',
+    opacity: 0.56,
+    tint: 'rgba(186, 230, 253, 0.52)',
+    edge: 'rgba(255, 255, 255, 0.84)',
+    shadow: 'rgba(125, 211, 252, 0.18)',
+    blur: '0px',
+  },
+  {
+    size: '154px',
+    left: '31%',
+    duration: '20s',
+    delay: '-6s',
+    drift: '-30px',
+    opacity: 0.62,
+    tint: 'rgba(253, 230, 138, 0.24)',
+    edge: 'rgba(255, 255, 255, 0.88)',
+    shadow: 'rgba(251, 191, 36, 0.12)',
+    blur: '1px',
+  },
+  {
+    size: '128px',
+    left: '47%',
+    duration: '17s',
+    delay: '-12s',
+    drift: '24px',
+    opacity: 0.52,
+    tint: 'rgba(219, 234, 254, 0.48)',
+    edge: 'rgba(255, 255, 255, 0.82)',
+    shadow: 'rgba(148, 163, 184, 0.16)',
+    blur: '0px',
+  },
+  {
+    size: '196px',
+    left: '60%',
+    duration: '24s',
+    delay: '-8s',
+    drift: '-36px',
+    opacity: 0.66,
+    tint: 'rgba(196, 181, 253, 0.2)',
+    edge: 'rgba(255, 255, 255, 0.9)',
+    shadow: 'rgba(148, 163, 184, 0.2)',
+    blur: '1px',
+  },
+  {
+    size: '92px',
+    left: '76%',
+    duration: '14s',
+    delay: '-3s',
+    drift: '18px',
+    opacity: 0.5,
+    tint: 'rgba(254, 240, 138, 0.22)',
+    edge: 'rgba(255, 255, 255, 0.82)',
+    shadow: 'rgba(250, 204, 21, 0.12)',
+    blur: '0px',
+  },
+  {
+    size: '168px',
+    left: '87%',
+    duration: '19s',
+    delay: '-9s',
+    drift: '-26px',
+    opacity: 0.58,
+    tint: 'rgba(186, 230, 253, 0.46)',
+    edge: 'rgba(255, 255, 255, 0.88)',
+    shadow: 'rgba(125, 211, 252, 0.16)',
+    blur: '0px',
+  },
+]
+
+const BACKGROUND_SPARKLES = [
+  { size: '18px', left: '11%', bottom: '18%', duration: '8s', delay: '-2s', opacity: 0.34 },
+  { size: '24px', left: '24%', bottom: '11%', duration: '10s', delay: '-6s', opacity: 0.28 },
+  { size: '14px', left: '39%', bottom: '23%', duration: '9s', delay: '-4s', opacity: 0.3 },
+  { size: '28px', left: '52%', bottom: '14%', duration: '11s', delay: '-7s', opacity: 0.24 },
+  { size: '16px', left: '64%', bottom: '26%', duration: '8.5s', delay: '-3s', opacity: 0.3 },
+  { size: '20px', left: '73%', bottom: '9%', duration: '10.5s', delay: '-8s', opacity: 0.26 },
+  { size: '12px', left: '84%', bottom: '20%', duration: '7.5s', delay: '-5s', opacity: 0.32 },
 ]
 
 function getPasswordStrength(password) {
@@ -88,12 +175,13 @@ export default function AuthPanel({ onSubmit, isLoading, error }) {
     <div className={styles.shell}>
       <div className={styles.backdrop} aria-hidden="true">
         <span className={`${styles.glow} ${styles.glowTop}`} />
+        <span className={`${styles.glow} ${styles.glowMiddle}`} />
         <span className={`${styles.glow} ${styles.glowBottom}`} />
         <div className={styles.bubbleField}>
-          {BACKGROUND_BUBBLES.map((bubble, index) => (
+          {BACKGROUND_BUBBLES.map((bubble) => (
             <span
               key={`${bubble.left}-${bubble.size}`}
-              className={styles.bubble}
+              className={styles.bubbleTrack}
               style={{
                 '--bubble-size': bubble.size,
                 '--bubble-left': bubble.left,
@@ -101,7 +189,32 @@ export default function AuthPanel({ onSubmit, isLoading, error }) {
                 '--bubble-delay': bubble.delay,
                 '--bubble-drift': bubble.drift,
                 '--bubble-opacity': bubble.opacity,
-                '--bubble-blur': index % 2 === 0 ? '0px' : '1px',
+                '--bubble-tint': bubble.tint,
+                '--bubble-edge': bubble.edge,
+                '--bubble-shadow': bubble.shadow,
+                '--bubble-blur': bubble.blur,
+              }}
+            >
+              <span className={styles.bubble}>
+                <span className={styles.bubbleRing} />
+                <span className={styles.bubbleHighlight} />
+                <span className={styles.bubbleGlint} />
+              </span>
+            </span>
+          ))}
+        </div>
+        <div className={styles.sparkleField}>
+          {BACKGROUND_SPARKLES.map((sparkle) => (
+            <span
+              key={`${sparkle.left}-${sparkle.size}`}
+              className={styles.sparkle}
+              style={{
+                '--sparkle-size': sparkle.size,
+                '--sparkle-left': sparkle.left,
+                '--sparkle-bottom': sparkle.bottom,
+                '--sparkle-duration': sparkle.duration,
+                '--sparkle-delay': sparkle.delay,
+                '--sparkle-opacity': sparkle.opacity,
               }}
             />
           ))}
