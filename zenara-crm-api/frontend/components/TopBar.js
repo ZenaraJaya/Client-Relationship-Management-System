@@ -7,12 +7,8 @@ export default function TopBar({
   outlookButtonLabel = 'Connect Outlook',
   outlookButtonState = 'idle',
   onOutlookButtonClick = () => {},
-  reminderButtonLabel = 'Enable laptop reminders',
-  reminderButtonState = 'idle',
-  onReminderButtonClick = () => {},
 }) {
   const outlookButtonClassName = `outlook-connect-btn${outlookButtonState === 'active' ? ' active' : ''}${outlookButtonState === 'blocked' ? ' blocked' : ''}`
-  const reminderButtonClassName = `reminder-toggle-btn${reminderButtonState === 'active' ? ' active' : ''}${reminderButtonState === 'blocked' ? ' blocked' : ''}`
 
   return (
     <header className="topbar premium-topbar">
@@ -38,9 +34,6 @@ export default function TopBar({
       <div className="command-right">
         <button type="button" className={outlookButtonClassName} onClick={onOutlookButtonClick}>
           {outlookButtonLabel}
-        </button>
-        <button type="button" className={reminderButtonClassName} onClick={onReminderButtonClick}>
-          {reminderButtonLabel}
         </button>
       </div>
     </header>

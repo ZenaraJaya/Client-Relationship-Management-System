@@ -8,48 +8,6 @@ import AuthPanel from '../components/AuthPanel'
 import ProfileModal from '../components/ProfileModal'
 
 const AUTH_TOKEN_KEY = 'zenara_crm_auth_token'
-const BROWSER_REMINDERS_ENABLED_KEY = 'zenara_crm_browser_reminders_enabled'
-const BROWSER_REMINDER_HISTORY_KEY = 'zenara_crm_browser_reminder_history'
-const BROWSER_REMINDER_LEAD_MINUTES = 15
-const BROWSER_REMINDER_HISTORY_TTL_MS = 14 * 24 * 60 * 60 * 1000
-const BROWSER_REMINDER_GRACE_MS = 2 * 60 * 1000
-const MAX_BROWSER_TIMEOUT_MS = 2147483647
-
-const getNotificationPermission = () => {
-  if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported'
-  return Notification.permission
-}
-
-const readReminderHistory = () => {
-  if (typeof window === 'undefined') return {}
-
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(BROWSER_REMINDER_HISTORY_KEY) || '{}')
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  } catch (err) {
-    return {}
-  }
-}
-
-const persistReminderHistory = (history) => {
-  if (typeof window === 'undefined') return
-
-  try {
-    window.localStorage.setItem(BROWSER_REMINDER_HISTORY_KEY, JSON.stringify(history))
-  } catch (err) {
-    // Ignore localStorage write failures so reminders still work for the session.
-  }
-}
-
-const pruneReminderHistory = (history) => {
-  const now = Date.now()
-
-  return Object.fromEntries(
-    Object.entries(history).filter(([, timestamp]) => {
-      return typeof timestamp === 'number' && now - timestamp <= BROWSER_REMINDER_HISTORY_TTL_MS
-    })
-  )
-}
 
 const getDefaultApiBase = () => {
   if (typeof window !== 'undefined') {
@@ -89,14 +47,10 @@ export default function Home() {
   const [authError, setAuthError] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
-  const [browserReminderPermission, setBrowserReminderPermission] = useState('unsupported')
-  const [browserRemindersEnabled, setBrowserRemindersEnabled] = useState(false)
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
 
   const toastTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)
-  const reminderTimersRef = useRef([])
-  const reminderHistoryRef = useRef({})
   const dateFields = ['last_contact', 'appointment', 'follow_up']
 
   const showToast = (message, type = 'success') => {
@@ -181,50 +135,12 @@ export default function Home() {
     return res.json()
   }
 
-  const clearReminderTimers = () => {
-    reminderTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
-    reminderTimersRef.current = []
-  }
-
-  const storeBrowserReminderPreference = (enabled) => {
-    if (typeof window === 'undefined') return
-
-    try {
-      window.localStorage.setItem(BROWSER_REMINDERS_ENABLED_KEY, enabled ? 'true' : 'false')
-    } catch (err) {
-      // Ignore localStorage write failures and keep the in-memory state.
-    }
-  }
-
   useEffect(() => {
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
       if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
         outlookPopupRef.current.close()
       }
-      clearReminderTimers()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    reminderHistoryRef.current = pruneReminderHistory(readReminderHistory())
-    persistReminderHistory(reminderHistoryRef.current)
-
-    const syncNotificationPermission = () => {
-      const permission = getNotificationPermission()
-      const savedPreference = window.localStorage.getItem(BROWSER_REMINDERS_ENABLED_KEY) === 'true'
-
-      setBrowserReminderPermission(permission)
-      setBrowserRemindersEnabled(permission === 'granted' && savedPreference)
-    }
-
-    syncNotificationPermission()
-    window.addEventListener('focus', syncNotificationPermission)
-
-    return () => {
-      window.removeEventListener('focus', syncNotificationPermission)
     }
   }, [])
 
@@ -519,54 +435,6 @@ export default function Home() {
     }
   }, [apiBase, authToken])
 
-  const handleBrowserReminderToggle = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      showToast('Laptop reminders are not supported in this browser.', 'error')
-      return
-    }
-
-    if (browserRemindersEnabled) {
-      clearReminderTimers()
-      storeBrowserReminderPreference(false)
-      setBrowserRemindersEnabled(false)
-      showToast('Laptop reminders turned off.')
-      return
-    }
-
-    if (Notification.permission === 'granted') {
-      storeBrowserReminderPreference(true)
-      setBrowserReminderPermission('granted')
-      setBrowserRemindersEnabled(true)
-      showToast(`Laptop reminders turned on. You'll be notified ${BROWSER_REMINDER_LEAD_MINUTES} minutes before and at the scheduled time.`)
-      return
-    }
-
-    if (Notification.permission === 'denied') {
-      setBrowserReminderPermission('denied')
-      showToast('Browser notifications are blocked. Allow notifications for this site in your browser settings.', 'error')
-      return
-    }
-
-    const permission = await Notification.requestPermission()
-    setBrowserReminderPermission(permission)
-
-    if (permission === 'granted') {
-      storeBrowserReminderPreference(true)
-      setBrowserRemindersEnabled(true)
-      showToast(`Laptop reminders turned on. You'll be notified ${BROWSER_REMINDER_LEAD_MINUTES} minutes before and at the scheduled time.`)
-      return
-    }
-
-    storeBrowserReminderPreference(false)
-    setBrowserRemindersEnabled(false)
-    showToast(
-      permission === 'denied'
-        ? 'Browser notifications were blocked. Allow notifications for this site in your browser settings.'
-        : 'Notification permission was dismissed, so laptop reminders stay off for now.',
-      'error'
-    )
-  }
-
   const handleAddCrm = async (formData) => {
     if (editingItem && !isAdmin) {
       showToast('Only admin users can edit contacts.', 'error')
@@ -800,29 +668,6 @@ export default function Home() {
     .filter(Boolean)
     .sort((a, b) => a.date - b.date)
 
-  const reminderEntries = items.flatMap((item) => {
-    const companyName = item.company_name || 'Unnamed Company'
-    const contactName = item.contact_person || item.email || 'No contact name'
-
-    return [
-      { kind: 'appointment', label: 'Appointment', date: toDate(item.appointment) },
-      { kind: 'follow_up', label: 'Follow Up', date: toDate(item.follow_up) },
-    ]
-      .filter((entry) => entry.date)
-      .map((entry) => ({
-        crmId: item.id || companyName,
-        companyName,
-        contactName,
-        kind: entry.kind,
-        label: entry.label,
-        date: entry.date,
-      }))
-  })
-
-  const reminderSignature = reminderEntries
-    .map((entry) => `${entry.crmId}:${entry.kind}:${entry.date.toISOString()}`)
-    .join('|')
-
   const sevenDayAppointments = upcomingTouchpoints.filter((entry) => entry.date <= nextSevenDays)
   const recentContacts = [...items]
     .filter((item) => toDate(item.updated_at))
@@ -837,90 +682,6 @@ export default function Home() {
       minute: '2-digit',
     })
 
-  useEffect(() => {
-    clearReminderTimers()
-
-    if (!authToken || !browserRemindersEnabled || browserReminderPermission !== 'granted') {
-      return undefined
-    }
-
-    reminderHistoryRef.current = pruneReminderHistory(reminderHistoryRef.current)
-    persistReminderHistory(reminderHistoryRef.current)
-
-    const dispatchBrowserReminder = (entry, phase) => {
-      if (typeof window === 'undefined' || !('Notification' in window)) return
-      if (Notification.permission !== 'granted') return
-
-      const reminderKey = `${entry.crmId}:${entry.kind}:${entry.date.toISOString()}:${phase}`
-      const history = pruneReminderHistory(reminderHistoryRef.current)
-      if (history[reminderKey]) return
-
-      history[reminderKey] = Date.now()
-      reminderHistoryRef.current = history
-      persistReminderHistory(history)
-
-      const notificationTitle = phase === 'upcoming'
-        ? `${entry.label} in ${BROWSER_REMINDER_LEAD_MINUTES} minutes`
-        : `${entry.label} is due now`
-      const scheduledTime = entry.date.toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-      const notificationBody = `${entry.companyName} - ${entry.contactName} - ${scheduledTime}`
-
-      showToast(`${notificationTitle}: ${entry.companyName}`)
-
-      try {
-        const browserNotification = new Notification(notificationTitle, {
-          body: notificationBody,
-          tag: reminderKey,
-        })
-
-        browserNotification.onclick = () => {
-          window.focus()
-          browserNotification.close()
-        }
-      } catch (err) {
-        console.error('Browser reminder failed:', err)
-      }
-    }
-
-    const scheduleReminder = (entry, phase, triggerAtMs) => {
-      const reminderKey = `${entry.crmId}:${entry.kind}:${entry.date.toISOString()}:${phase}`
-      if (reminderHistoryRef.current[reminderKey]) return
-
-      const msUntilTrigger = triggerAtMs - Date.now()
-      if (msUntilTrigger <= 0) {
-        if (Math.abs(msUntilTrigger) <= BROWSER_REMINDER_GRACE_MS) {
-          dispatchBrowserReminder(entry, phase)
-        }
-        return
-      }
-
-      if (msUntilTrigger > MAX_BROWSER_TIMEOUT_MS) return
-
-      const timeoutId = window.setTimeout(() => {
-        dispatchBrowserReminder(entry, phase)
-      }, msUntilTrigger)
-
-      reminderTimersRef.current.push(timeoutId)
-    }
-
-    reminderEntries.forEach((entry) => {
-      const scheduledAtMs = entry.date.getTime()
-      if (scheduledAtMs <= Date.now() - BROWSER_REMINDER_GRACE_MS) return
-
-      scheduleReminder(entry, 'upcoming', scheduledAtMs - BROWSER_REMINDER_LEAD_MINUTES * 60 * 1000)
-      scheduleReminder(entry, 'due', scheduledAtMs)
-    })
-
-    return () => {
-      clearReminderTimers()
-    }
-  }, [authToken, browserRemindersEnabled, browserReminderPermission, reminderSignature])
-
   const currentPage = Math.max(1, Number(data?.current_page) || serverPage || 1)
   const lastPage = Math.max(1, Number(data?.last_page) || 1)
   const perPage = Math.max(1, Number(data?.per_page) || 10)
@@ -930,16 +691,6 @@ export default function Home() {
   const outlookConnected = Boolean(authUser?.microsoft_calendar_connected)
   const outlookButtonLabel = outlookConnected ? 'Disconnect Outlook' : 'Connect Outlook'
   const outlookButtonState = outlookConnected ? 'active' : 'idle'
-  const browserReminderButtonLabel = browserRemindersEnabled
-    ? 'Laptop reminders on'
-    : browserReminderPermission === 'denied'
-      ? 'Allow laptop reminders'
-      : 'Enable laptop reminders'
-  const browserReminderButtonState = browserRemindersEnabled
-    ? 'active'
-    : browserReminderPermission === 'denied'
-      ? 'blocked'
-      : 'idle'
   const handleOutlookButtonClick = outlookConnected ? handleOutlookDisconnect : handleOutlookConnect
 
   const goToPreviousPage = () => {
@@ -992,9 +743,6 @@ export default function Home() {
           outlookButtonLabel={outlookButtonLabel}
           outlookButtonState={outlookButtonState}
           onOutlookButtonClick={handleOutlookButtonClick}
-          reminderButtonLabel={browserReminderButtonLabel}
-          reminderButtonState={browserReminderButtonState}
-          onReminderButtonClick={handleBrowserReminderToggle}
         />
 
         {currentView === 'dashboard' && (
