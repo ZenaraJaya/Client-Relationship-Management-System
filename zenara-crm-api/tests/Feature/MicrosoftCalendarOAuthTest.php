@@ -109,4 +109,22 @@ class MicrosoftCalendarOAuthTest extends TestCase
             ->assertSee('Microsoft authorization state is invalid or expired.')
             ->assertDontSee('Unable to connect Outlook right now. Please try again.');
     }
+
+    public function test_microsoft_connect_url_can_be_created_without_app_key_when_client_secret_exists(): void
+    {
+        $this->configureMicrosoftOauth();
+        config()->set('app.key', null);
+
+        $user = User::factory()->create([
+            'email' => 'staff@example.com',
+            'role' => 'staff',
+        ]);
+
+        $response = $this
+            ->withHeaders($this->authHeadersFor($user, 'oauth-no-app-key-token'))
+            ->getJson('/api/auth/microsoft/connect-url?origin=' . urlencode('https://frontend.example.test'));
+
+        $response->assertOk();
+        $this->assertNotEmpty($response->json('url'));
+    }
 }

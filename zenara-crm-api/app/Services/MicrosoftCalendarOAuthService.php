@@ -4,11 +4,9 @@ namespace App\Services;
 
 use App\Models\MicrosoftCalendarConnection;
 use App\Models\User;
-use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -205,17 +203,27 @@ class MicrosoftCalendarOAuthService
 
     protected function encodeStatePayload(array $payload): string
     {
-        return Crypt::encryptString(json_encode($payload, JSON_THROW_ON_ERROR));
+        $json = json_encode($payload, JSON_THROW_ON_ERROR);
+        $encodedPayload = $this->base64UrlEncode($json);
+        $signature = hash_hmac('sha256', $encodedPayload, $this->stateSecret());
+
+        return $encodedPayload . '.' . $signature;
     }
 
     protected function decodeStatePayload(string $state): array
     {
-        try {
-            $json = Crypt::decryptString($state);
-        } catch (DecryptException $e) {
-            throw new RuntimeException('Microsoft authorization state is invalid or expired.', 0, $e);
+        $parts = explode('.', $state, 2);
+        if (count($parts) !== 2 || trim($parts[0]) === '' || trim($parts[1]) === '') {
+            throw new RuntimeException('Microsoft authorization state is invalid or expired.');
         }
 
+        [$encodedPayload, $signature] = $parts;
+        $expectedSignature = hash_hmac('sha256', $encodedPayload, $this->stateSecret());
+        if (!hash_equals($expectedSignature, $signature)) {
+            throw new RuntimeException('Microsoft authorization state is invalid or expired.');
+        }
+
+        $json = $this->base64UrlDecode($encodedPayload);
         $payload = json_decode($json, true);
         if (!is_array($payload) || empty($payload['user_id'])) {
             throw new RuntimeException('Microsoft authorization state is invalid or expired.');
@@ -232,6 +240,36 @@ class MicrosoftCalendarOAuthService
             'user_id' => (int) $payload['user_id'],
             'origin' => $origin,
         ];
+    }
+
+    protected function stateSecret(): string
+    {
+        $appKey = trim((string) config('app.key'));
+        if ($appKey !== '') {
+            return $appKey;
+        }
+
+        $clientSecret = trim((string) config('services.microsoft_graph.client_secret'));
+        if ($clientSecret !== '') {
+            return $clientSecret;
+        }
+
+        throw new RuntimeException('Microsoft OAuth state signing is not configured.');
+    }
+
+    protected function base64UrlEncode(string $value): string
+    {
+        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+    }
+
+    protected function base64UrlDecode(string $value): string
+    {
+        $decoded = base64_decode(strtr($value, '-_', '+/') . str_repeat('=', (4 - strlen($value) % 4) % 4), true);
+        if ($decoded === false) {
+            throw new RuntimeException('Microsoft authorization state is invalid or expired.');
+        }
+
+        return $decoded;
     }
 
     protected function decodeSuccessfulResponse(Response $response, string $action): array
