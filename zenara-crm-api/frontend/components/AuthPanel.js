@@ -1,6 +1,16 @@
 import React, { useMemo, useState } from 'react'
 import styles from './AuthPanel.module.css'
 
+const BACKGROUND_BUBBLES = [
+  { size: '160px', left: '8%', duration: '18s', delay: '-2s', drift: '34px', opacity: 0.6 },
+  { size: '92px', left: '20%', duration: '14s', delay: '-8s', drift: '18px', opacity: 0.45 },
+  { size: '132px', left: '34%', duration: '20s', delay: '-5s', drift: '-26px', opacity: 0.5 },
+  { size: '108px', left: '54%', duration: '16s', delay: '-11s', drift: '22px', opacity: 0.42 },
+  { size: '188px', left: '67%', duration: '24s', delay: '-7s', drift: '-32px', opacity: 0.5 },
+  { size: '78px', left: '79%', duration: '13s', delay: '-4s', drift: '16px', opacity: 0.38 },
+  { size: '146px', left: '88%', duration: '19s', delay: '-9s', drift: '-24px', opacity: 0.46 },
+]
+
 function getPasswordStrength(password) {
   if (!password) return { score: 0, label: 'Add a password', percent: 0, tone: 'weak' }
 
@@ -76,6 +86,28 @@ export default function AuthPanel({ onSubmit, isLoading, error }) {
 
   return (
     <div className={styles.shell}>
+      <div className={styles.backdrop} aria-hidden="true">
+        <span className={`${styles.glow} ${styles.glowTop}`} />
+        <span className={`${styles.glow} ${styles.glowBottom}`} />
+        <div className={styles.bubbleField}>
+          {BACKGROUND_BUBBLES.map((bubble, index) => (
+            <span
+              key={`${bubble.left}-${bubble.size}`}
+              className={styles.bubble}
+              style={{
+                '--bubble-size': bubble.size,
+                '--bubble-left': bubble.left,
+                '--bubble-duration': bubble.duration,
+                '--bubble-delay': bubble.delay,
+                '--bubble-drift': bubble.drift,
+                '--bubble-opacity': bubble.opacity,
+                '--bubble-blur': index % 2 === 0 ? '0px' : '1px',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
       <section className={styles.formPane}>
         <div className={styles.modeSwitch} role="tablist" aria-label="Authentication mode">
           <button

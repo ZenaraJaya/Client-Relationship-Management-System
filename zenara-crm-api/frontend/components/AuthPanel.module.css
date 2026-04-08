@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 .shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -12,7 +15,76 @@
     linear-gradient(155deg, #edf2f7 0%, #f8fafc 52%, #eef4fb 100%);
 }
 
+.backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(16px);
+  opacity: 0.55;
+}
+
+.glowTop {
+  width: 42vw;
+  height: 42vw;
+  min-width: 320px;
+  min-height: 320px;
+  top: -12vw;
+  left: -10vw;
+  background: radial-gradient(circle, rgba(191, 219, 254, 0.34) 0%, rgba(191, 219, 254, 0.04) 70%, transparent 75%);
+}
+
+.glowBottom {
+  width: 36vw;
+  height: 36vw;
+  min-width: 280px;
+  min-height: 280px;
+  right: -10vw;
+  bottom: -12vw;
+  background: radial-gradient(circle, rgba(148, 163, 184, 0.24) 0%, rgba(148, 163, 184, 0.03) 72%, transparent 78%);
+}
+
+.bubbleField {
+  position: absolute;
+  inset: 0;
+}
+
+.bubble {
+  position: absolute;
+  left: var(--bubble-left);
+  bottom: -24vh;
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  border-radius: 50%;
+  opacity: var(--bubble-opacity);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.56) 26%, rgba(191, 219, 254, 0.28) 55%, rgba(148, 163, 184, 0.12) 72%, rgba(148, 163, 184, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  box-shadow:
+    inset 0 10px 18px rgba(255, 255, 255, 0.45),
+    0 20px 42px rgba(148, 163, 184, 0.16);
+  filter: blur(var(--bubble-blur));
+  animation: bubbleRise var(--bubble-duration) linear infinite;
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  inset: 18% 20% auto auto;
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  filter: blur(1px);
+}
+
 .formPane {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 520px;
   background: rgba(248, 250, 252, 0.96);
@@ -270,9 +342,43 @@
   line-height: 1.5;
 }
 
+@keyframes bubbleRise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+  }
+  20% {
+    transform: translate3d(calc(var(--bubble-drift) * -0.35), -20vh, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(var(--bubble-drift), -48vh, 0) scale(1.05);
+  }
+  80% {
+    transform: translate3d(calc(var(--bubble-drift) * -0.55), -78vh, 0) scale(0.98);
+  }
+  100% {
+    transform: translate3d(calc(var(--bubble-drift) * 0.3), -122vh, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+    opacity: 0.24;
+  }
+}
+
 @media (max-width: 560px) {
   .shell {
     padding: 12px;
+  }
+
+  .glowTop,
+  .glowBottom {
+    filter: blur(10px);
+  }
+
+  .bubble {
+    opacity: calc(var(--bubble-opacity) * 0.7);
   }
 
   .formPane {
