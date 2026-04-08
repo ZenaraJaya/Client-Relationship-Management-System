@@ -396,10 +396,11 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
         $state = (string) $request->query('state', '');
         $error = trim((string) $request->query('error', ''));
         $errorDescription = trim((string) $request->query('error_description', ''));
+        $origin = $this->microsoftOauth->resolveOriginFromState($state);
 
         if ($error !== '') {
             return $this->renderMicrosoftOauthCallback(
-                null,
+                $origin,
                 false,
                 $errorDescription !== '' ? $errorDescription : 'Microsoft sign-in was cancelled or denied.'
             );
@@ -407,7 +408,11 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
         $code = trim((string) $request->query('code', ''));
         if ($state === '' || $code === '') {
-            return $this->renderMicrosoftOauthCallback(null, false, 'Microsoft did not return the required authorization code.');
+            return $this->renderMicrosoftOauthCallback(
+                $origin,
+                false,
+                'Microsoft did not return the required authorization code.'
+            );
         }
 
         try {
@@ -426,8 +431,18 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
                 ]
             );
         } catch (\Throwable $e) {
-            Log::error('Microsoft OAuth callback failed.', ['error' => $e->getMessage()]);
-            return $this->renderMicrosoftOauthCallback(null, false, 'Unable to connect Outlook right now. Please try again.');
+            Log::error('Microsoft OAuth callback failed.', [
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+                'origin' => $origin,
+                'state_present' => $state !== '',
+            ]);
+
+            $safeMessage = trim($e->getMessage()) !== ''
+                ? $e->getMessage()
+                : 'Unable to connect Outlook right now. Please try again.';
+
+            return $this->renderMicrosoftOauthCallback($origin, false, $safeMessage);
         }
     }
 
