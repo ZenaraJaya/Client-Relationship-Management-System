@@ -639,12 +639,12 @@ td {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 12px 13px;
+  gap: 11px;
+  padding: 10px 12px;
   border-radius: 12px;
   color: var(--sidebar-nav-text);
   text-align: left;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1.2;
   font-weight: 600;
   cursor: pointer;
@@ -671,8 +671,8 @@ td {
 }
 
 .nav-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .nav-link:hover .nav-icon svg {
@@ -727,7 +727,7 @@ td {
 
 .sidebar.collapsed .nav-link {
   justify-content: center;
-  padding: 12px 0;
+  padding: 10px 0;
 }
 
 .sidebar.collapsed .nav-label {
