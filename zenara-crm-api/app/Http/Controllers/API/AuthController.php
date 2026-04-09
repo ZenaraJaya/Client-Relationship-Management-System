@@ -142,6 +142,35 @@ class AuthController extends Controller
         ]);
     }
 
+    protected function profilePhotoPlaceholderSvg(User $user): string
+    {
+        $initials = collect(preg_split('/\s+/', trim((string) $user->name)) ?: [])
+            ->filter()
+            ->map(fn (string $part): string => Str::upper(Str::substr($part, 0, 1)))
+            ->take(2)
+            ->implode('');
+
+        if ($initials === '') {
+            $initials = 'U';
+        }
+
+        $safeInitials = htmlspecialchars($initials, ENT_QUOTES, 'UTF-8');
+        $safeLabel = htmlspecialchars(trim((string) $user->name) ?: 'User', ENT_QUOTES, 'UTF-8');
+
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="{$safeLabel}">
+  <defs>
+    <linearGradient id="avatarGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#f6d2bf" />
+      <stop offset="100%" stop-color="#e7a07a" />
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="24" fill="url(#avatarGradient)" />
+  <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#10231f">{$safeInitials}</text>
+</svg>
+SVG;
+    }
+
     protected function pruneStaleFirestoreDeletedUser(?string $email): void
     {
         $normalizedEmail = strtolower(trim((string) $email));
@@ -390,8 +419,25 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
     public function profilePhoto(User $user)
     {
-        if (!$user->profile_photo_path || !Storage::disk('public')->exists($user->profile_photo_path)) {
-            abort(404);
+        if (!$user->profile_photo_path) {
+            return response($this->profilePhotoPlaceholderSvg($user), 200, [
+                'Content-Type' => 'image/svg+xml; charset=UTF-8',
+                'Cache-Control' => 'no-store, max-age=0',
+                'Cross-Origin-Resource-Policy' => 'cross-origin',
+            ]);
+        }
+
+        if (!Storage::disk('public')->exists($user->profile_photo_path)) {
+            Log::warning('Profile photo file is missing from storage.', [
+                'user_id' => $user->id,
+                'path' => $user->profile_photo_path,
+            ]);
+
+            return response($this->profilePhotoPlaceholderSvg($user), 200, [
+                'Content-Type' => 'image/svg+xml; charset=UTF-8',
+                'Cache-Control' => 'no-store, max-age=0',
+                'Cross-Origin-Resource-Policy' => 'cross-origin',
+            ]);
         }
 
         return Storage::disk('public')->response(

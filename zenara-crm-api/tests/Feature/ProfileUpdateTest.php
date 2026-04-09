@@ -108,6 +108,26 @@ class ProfileUpdateTest extends TestCase
         );
     }
 
+    public function test_profile_photo_route_falls_back_to_cross_origin_svg_when_file_is_missing(): void
+    {
+        Storage::fake('public');
+
+        $staff = User::factory()->create([
+            'role' => 'staff',
+            'email' => 'staff-missing-photo@example.com',
+            'profile_photo_path' => 'profile-photos/missing-avatar.png',
+        ]);
+
+        $response = $this->get('/api/auth/profile-photo/' . $staff->id);
+
+        $response
+            ->assertOk()
+            ->assertHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+            ->assertHeader('Content-Type', 'image/svg+xml; charset=UTF-8');
+
+        $this->assertStringContainsString('<svg', $response->getContent());
+    }
+
     public function test_admin_user_can_update_their_own_profile(): void
     {
         $admin = User::factory()->create([

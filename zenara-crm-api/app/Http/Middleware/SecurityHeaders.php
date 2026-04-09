@@ -17,7 +17,9 @@ class SecurityHeaders
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-        if (!$response->headers->has('Cross-Origin-Resource-Policy')) {
+        if ($request->is('api/auth/profile-photo/*')) {
+            $response->headers->set('Cross-Origin-Resource-Policy', 'cross-origin');
+        } elseif (!$response->headers->has('Cross-Origin-Resource-Policy')) {
             $response->headers->set('Cross-Origin-Resource-Policy', 'same-site');
         }
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
