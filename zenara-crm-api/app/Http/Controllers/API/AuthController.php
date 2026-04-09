@@ -494,18 +494,62 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
         return response()->json(['url' => $url]);
     }
 
+    public function microsoftAuthUrl(Request $request): JsonResponse
+    {
+        $origin = $this->resolveFrontendOrigin($request);
+        if (!$origin) {
+            return response()->json(['message' => 'A valid frontend origin is required.'], 422);
+        }
+
+        if (!$this->microsoftOauth->delegatedAuthConfigured()) {
+            return response()->json(['message' => 'Microsoft Outlook OAuth is not configured on the server.'], 500);
+        }
+
+        $mode = strtolower(trim((string) $request->query('mode', 'login')));
+        if (!in_array($mode, ['login', 'signup'], true)) {
+            $mode = 'login';
+        }
+
+        $role = strtolower(trim((string) $request->query('role', 'staff')));
+        if (!in_array($role, ['admin', 'staff'], true)) {
+            $role = 'staff';
+        }
+
+        try {
+            $url = $this->microsoftOauth->buildAuthAuthorizationUrl($origin, $mode, $role);
+        } catch (\Throwable $e) {
+            Log::error('Failed to build Microsoft OAuth auth URL.', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to start Outlook sign-in right now.'], 500);
+        }
+
+        return response()->json(['url' => $url]);
+    }
+
     public function handleMicrosoftCallback(Request $request)
     {
         $state = (string) $request->query('state', '');
         $error = trim((string) $request->query('error', ''));
         $errorDescription = trim((string) $request->query('error_description', ''));
-        $origin = $this->microsoftOauth->resolveOriginFromState($state);
+        $statePayload = null;
+        try {
+            if ($state !== '') {
+                $statePayload = $this->microsoftOauth->parseStatePayload($state);
+            }
+        } catch (\Throwable) {
+            $statePayload = null;
+        }
+
+        $payloadType = (($statePayload['flow'] ?? null) === 'auth')
+            ? 'zenara:outlook-auth'
+            : 'zenara:outlook-calendar-auth';
+        $origin = (string) ($statePayload['origin'] ?? $this->microsoftOauth->resolveOriginFromState($state));
 
         if ($error !== '') {
             return $this->renderMicrosoftOauthCallback(
                 $origin,
                 false,
-                $errorDescription !== '' ? $errorDescription : 'Microsoft sign-in was cancelled or denied.'
+                $errorDescription !== '' ? $errorDescription : 'Microsoft sign-in was cancelled or denied.',
+                ['type' => $payloadType]
             );
         }
 
@@ -514,11 +558,49 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             return $this->renderMicrosoftOauthCallback(
                 $origin,
                 false,
-                'Microsoft did not return the required authorization code.'
+                'Microsoft did not return the required authorization code.',
+                ['type' => $payloadType]
             );
         }
 
         try {
+            if (($statePayload['flow'] ?? null) === 'auth') {
+                if (!$this->tokenColumnReady()) {
+                    return $this->renderMicrosoftOauthCallback(
+                        $origin,
+                        false,
+                        'Database schema is not up to date. Please run: php artisan migrate',
+                        ['type' => 'zenara:outlook-auth']
+                    );
+                }
+
+                $result = $this->microsoftOauth->completeAuthAuthorization($state, $code);
+                /** @var User $user */
+                $user = $result['user'];
+                $user->load('microsoftCalendarConnection');
+
+                $plainToken = $this->issueToken($user);
+                $this->syncUserToFirestore($user);
+
+                $created = (bool) ($result['created'] ?? false);
+                $message = $created
+                    ? 'Outlook account created successfully. You are now signed in.'
+                    : 'Outlook sign-in successful.';
+
+                return $this->renderMicrosoftOauthCallback(
+                    (string) ($result['origin'] ?? ''),
+                    true,
+                    $message,
+                    [
+                        'type' => 'zenara:outlook-auth',
+                        'token' => $plainToken,
+                        'user' => $this->serializeAuthUser($user, $request),
+                        'created' => $created,
+                        'mode' => (string) ($result['mode'] ?? 'login'),
+                    ]
+                );
+            }
+
             $result = $this->microsoftOauth->completeAuthorization($state, $code);
             /** @var User $user */
             $user = $result['user'];
@@ -545,7 +627,12 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
                 ? $e->getMessage()
                 : 'Unable to connect Outlook right now. Please try again.';
 
-            return $this->renderMicrosoftOauthCallback($origin, false, $safeMessage);
+            return $this->renderMicrosoftOauthCallback(
+                $origin,
+                false,
+                $safeMessage,
+                ['type' => $payloadType]
+            );
         }
     }
 

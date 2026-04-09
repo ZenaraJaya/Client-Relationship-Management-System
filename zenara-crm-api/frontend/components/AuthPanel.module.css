@@ -396,6 +396,82 @@
   box-shadow: none;
 }
 
+.oauthSection {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oauthDivider {
+  position: relative;
+  text-align: center;
+  color: #64748b;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.oauthDivider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #dbe5f0;
+  transform: translateY(-50%);
+}
+
+.oauthDivider span {
+  position: relative;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.outlookAuthButton {
+  border: 1px solid #c3d4ea;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+  color: #1e3a8a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 11px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.outlookAuthButton:hover {
+  transform: translateY(-1px);
+  border-color: #93c5fd;
+  box-shadow: 0 10px 18px rgba(30, 58, 138, 0.14);
+}
+
+.outlookAuthButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.outlookAuthIcon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+  background:
+    linear-gradient(90deg, #0a66c2 0 50%, #2563eb 50% 100%),
+    linear-gradient(180deg, #38bdf8 0 50%, #1e3a8a 50% 100%);
+  background-blend-mode: multiply;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
 .footnote {
   margin: 14px 0 0;
   color: #64748b;

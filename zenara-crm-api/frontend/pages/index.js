@@ -302,6 +302,44 @@ export default function Home() {
     }
   }
 
+  const handleOutlookAuthStart = async ({ mode, role }) => {
+    if (typeof window === 'undefined') return
+
+    setAuthSubmitting(true)
+    setAuthError('')
+
+    try {
+      const authMode = mode === 'signup' ? 'signup' : 'login'
+      const authRole = authMode === 'signup' && role === 'admin' ? 'admin' : 'staff'
+      const origin = encodeURIComponent(window.location.origin)
+
+      const res = await fetch(`${apiBase}/auth/microsoft/auth-url?origin=${origin}&mode=${authMode}&role=${authRole}`)
+      const json = await res.json().catch(() => null)
+
+      if (!res.ok || !json?.url) {
+        setAuthError(extractErrorMessage(json, 'Unable to start Outlook sign-in.'))
+        return
+      }
+
+      outlookPopupRef.current = window.open(
+        json.url,
+        'zenara-outlook-auth',
+        'width=560,height=720,menubar=no,toolbar=no,location=yes,resizable=yes,scrollbars=yes,status=no'
+      )
+
+      if (!outlookPopupRef.current) {
+        setAuthError('The Outlook popup was blocked. Please allow popups for this site and try again.')
+        return
+      }
+
+      showToast('Complete the Outlook sign-in in the popup window.')
+    } catch (err) {
+      setAuthError(`Unable to connect to server at ${apiBase}.`)
+    } finally {
+      setAuthSubmitting(false)
+    }
+  }
+
   const handleLogout = async () => {
     try {
       if (authToken) {
@@ -443,7 +481,44 @@ export default function Home() {
       if (!apiOrigin || event.origin !== apiOrigin) return
 
       const payload = event.data
-      if (!payload || payload.type !== 'zenara:outlook-calendar-auth') return
+      if (!payload || typeof payload !== 'object') return
+
+      if (payload.type === 'zenara:outlook-auth') {
+        if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
+          outlookPopupRef.current.close()
+        }
+
+        if (!payload.ok) {
+          if (active) {
+            setAuthError(payload.message || 'Outlook sign-in failed.')
+          }
+          showToast(payload.message || 'Outlook sign-in failed.', 'error')
+          return
+        }
+
+        const token = payload.token
+        const user = payload.user
+        if (!token || !user) {
+          if (active) {
+            setAuthError('Outlook sign-in response is invalid.')
+          }
+          showToast('Outlook sign-in response is invalid.', 'error')
+          return
+        }
+
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+        }
+
+        if (!active) return
+        setAuthToken(token)
+        setAuthUser(user)
+        setAuthError('')
+        showToast(payload.message || 'Outlook sign-in successful.', 'success')
+        return
+      }
+
+      if (payload.type !== 'zenara:outlook-calendar-auth') return
 
       if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
         outlookPopupRef.current.close()
@@ -750,7 +825,14 @@ export default function Home() {
   }
 
   if (!authToken) {
-    return <AuthPanel onSubmit={handleAuthSubmit} isLoading={authSubmitting} error={authError} />
+    return (
+      <AuthPanel
+        onSubmit={handleAuthSubmit}
+        onOutlookAuth={handleOutlookAuthStart}
+        isLoading={authSubmitting}
+        error={authError}
+      />
+    )
   }
 
   return (

@@ -27,12 +27,44 @@ class MicrosoftCalendarOAuthService
             throw new RuntimeException('Microsoft calendar OAuth is not configured.');
         }
 
-        $state = $this->encodeStatePayload([
+        return $this->buildAuthorizationUrlFromPayload([
             'nonce' => Str::random(40),
+            'flow' => 'connect',
             'user_id' => $user->id,
             'origin' => $origin,
             'expires_at' => now()->addMinutes($this->stateTtlMinutes())->timestamp,
         ]);
+    }
+
+    public function buildAuthAuthorizationUrl(string $origin, string $mode = 'login', string $role = 'staff'): string
+    {
+        if (!$this->delegatedAuthConfigured()) {
+            throw new RuntimeException('Microsoft calendar OAuth is not configured.');
+        }
+
+        $normalizedMode = strtolower(trim($mode));
+        if (!in_array($normalizedMode, ['login', 'signup'], true)) {
+            $normalizedMode = 'login';
+        }
+
+        $normalizedRole = strtolower(trim($role));
+        if (!in_array($normalizedRole, ['admin', 'staff'], true)) {
+            $normalizedRole = 'staff';
+        }
+
+        return $this->buildAuthorizationUrlFromPayload([
+            'nonce' => Str::random(40),
+            'flow' => 'auth',
+            'mode' => $normalizedMode,
+            'role' => $normalizedRole,
+            'origin' => $origin,
+            'expires_at' => now()->addMinutes($this->stateTtlMinutes())->timestamp,
+        ]);
+    }
+
+    protected function buildAuthorizationUrlFromPayload(array $payload): string
+    {
+        $state = $this->encodeStatePayload($payload);
 
         $query = http_build_query([
             'client_id' => config('services.microsoft_graph.client_id'),
@@ -45,6 +77,44 @@ class MicrosoftCalendarOAuthService
         ]);
 
         return "https://login.microsoftonline.com/{$this->tenantId()}/oauth2/v2.0/authorize?{$query}";
+    }
+
+    public function parseStatePayload(string $state): array
+    {
+        $payload = $this->decodeStatePayloadRaw($state);
+        $flow = strtolower(trim((string) ($payload['flow'] ?? 'connect')));
+
+        if (!in_array($flow, ['connect', 'auth'], true)) {
+            throw new RuntimeException('Microsoft authorization state is invalid or expired.');
+        }
+
+        $result = [
+            'flow' => $flow,
+            'origin' => (string) ($payload['origin'] ?? ''),
+        ];
+
+        if ($flow === 'connect') {
+            if (empty($payload['user_id'])) {
+                throw new RuntimeException('Microsoft authorization state is invalid or expired.');
+            }
+
+            $result['user_id'] = (int) $payload['user_id'];
+            return $result;
+        }
+
+        $mode = strtolower(trim((string) ($payload['mode'] ?? 'login')));
+        if (!in_array($mode, ['login', 'signup'], true)) {
+            $mode = 'login';
+        }
+
+        $role = strtolower(trim((string) ($payload['role'] ?? 'staff')));
+        if (!in_array($role, ['admin', 'staff'], true)) {
+            $role = 'staff';
+        }
+
+        $result['mode'] = $mode;
+        $result['role'] = $role;
+        return $result;
     }
 
     public function completeAuthorization(string $state, string $code): array
@@ -86,6 +156,76 @@ class MicrosoftCalendarOAuthService
         ];
     }
 
+    public function completeAuthAuthorization(string $state, string $code): array
+    {
+        $payload = $this->parseStatePayload($state);
+        if (($payload['flow'] ?? null) !== 'auth') {
+            throw new RuntimeException('Microsoft authorization state is invalid or expired.');
+        }
+
+        $tokenData = $this->exchangeAuthorizationCode($code);
+        $profile = $this->fetchCurrentUserProfile((string) ($tokenData['access_token'] ?? ''));
+
+        $email = trim((string) ($profile['mail'] ?? $profile['userPrincipalName'] ?? ''));
+        if ($email === '') {
+            throw new RuntimeException('Microsoft did not return a usable email address.');
+        }
+
+        $normalizedEmail = strtolower($email);
+        $mode = (string) ($payload['mode'] ?? 'login');
+        $requestedRole = (string) ($payload['role'] ?? 'staff');
+        $created = false;
+
+        $user = User::query()
+            ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+            ->first();
+
+        if (!$user) {
+            if ($mode !== 'signup') {
+                throw new RuntimeException('No account found for this Outlook email. Please sign up first.');
+            }
+
+            $displayName = trim((string) ($profile['displayName'] ?? ''));
+            if ($displayName === '') {
+                $displayName = trim((string) Str::of($normalizedEmail)->before('@')->replace(['.', '_', '-'], ' ')->title());
+            }
+            if ($displayName === '') {
+                $displayName = 'Outlook User';
+            }
+
+            $user = User::create([
+                'name' => $displayName,
+                'email' => $normalizedEmail,
+                'role' => $requestedRole,
+                'password' => Str::random(48),
+            ]);
+            $created = true;
+        }
+
+        $connection = MicrosoftCalendarConnection::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'microsoft_user_id' => (string) ($profile['id'] ?? ''),
+                'microsoft_email' => $normalizedEmail,
+                'microsoft_display_name' => (string) ($profile['displayName'] ?? $normalizedEmail),
+                'access_token' => (string) ($tokenData['access_token'] ?? ''),
+                'refresh_token' => (string) ($tokenData['refresh_token'] ?? ''),
+                'scopes' => (string) ($tokenData['scope'] ?? $this->delegatedScopes()),
+                'access_token_expires_at' => Carbon::now()->addSeconds(max(60, (int) ($tokenData['expires_in'] ?? 3600))),
+                'connected_at' => now(),
+                'last_synced_at' => now(),
+            ]
+        );
+
+        return [
+            'origin' => (string) ($payload['origin'] ?? ''),
+            'user' => $user,
+            'connection' => $connection,
+            'mode' => $mode,
+            'created' => $created,
+        ];
+    }
+
     public function resolveOriginFromState(string $state): ?string
     {
         if (trim($state) === '') {
@@ -93,7 +233,7 @@ class MicrosoftCalendarOAuthService
         }
 
         try {
-            $payload = $this->decodeStatePayload($state);
+            $payload = $this->parseStatePayload($state);
         } catch (\Throwable) {
             return null;
         }
@@ -212,6 +352,19 @@ class MicrosoftCalendarOAuthService
 
     protected function decodeStatePayload(string $state): array
     {
+        $payload = $this->decodeStatePayloadRaw($state);
+        if (empty($payload['user_id'])) {
+            throw new RuntimeException('Microsoft authorization state is invalid or expired.');
+        }
+
+        return [
+            'user_id' => (int) $payload['user_id'],
+            'origin' => (string) ($payload['origin'] ?? ''),
+        ];
+    }
+
+    protected function decodeStatePayloadRaw(string $state): array
+    {
         $parts = explode('.', $state, 2);
         if (count($parts) !== 2 || trim($parts[0]) === '' || trim($parts[1]) === '') {
             throw new RuntimeException('Microsoft authorization state is invalid or expired.');
@@ -225,7 +378,7 @@ class MicrosoftCalendarOAuthService
 
         $json = $this->base64UrlDecode($encodedPayload);
         $payload = json_decode($json, true);
-        if (!is_array($payload) || empty($payload['user_id'])) {
+        if (!is_array($payload)) {
             throw new RuntimeException('Microsoft authorization state is invalid or expired.');
         }
 
@@ -236,10 +389,8 @@ class MicrosoftCalendarOAuthService
             throw new RuntimeException('Microsoft authorization state is invalid or expired.');
         }
 
-        return [
-            'user_id' => (int) $payload['user_id'],
-            'origin' => $origin,
-        ];
+        $payload['origin'] = $origin;
+        return $payload;
     }
 
     protected function stateSecret(): string

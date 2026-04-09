@@ -113,7 +113,7 @@ function getPasswordStrength(password) {
   return { score, label: 'Excellent password', percent: 100, tone: 'great' }
 }
 
-export default function AuthPanel({ onSubmit, isLoading, error }) {
+export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, isLoading, error }) {
   const [mode, setMode] = useState('login')
   const [name, setName] = useState('')
   const [role, setRole] = useState('staff')
@@ -169,6 +169,15 @@ export default function AuthPanel({ onSubmit, isLoading, error }) {
     if (isLoading) return
     setMode(nextMode)
     setLocalError('')
+  }
+
+  const handleOutlookAuth = async () => {
+    if (isLoading) return
+    setLocalError('')
+    await onOutlookAuth({
+      mode,
+      role: isSignup ? role : 'staff',
+    })
   }
 
   return (
@@ -371,6 +380,21 @@ export default function AuthPanel({ onSubmit, isLoading, error }) {
             {isLoading ? 'Please wait...' : (isSignup ? 'Create Account' : 'Login')}
           </button>
         </form>
+
+        <div className={styles.oauthSection}>
+          <div className={styles.oauthDivider} role="presentation">
+            <span>or continue with</span>
+          </div>
+          <button
+            type="button"
+            className={styles.outlookAuthButton}
+            onClick={handleOutlookAuth}
+            disabled={isLoading}
+          >
+            <span className={styles.outlookAuthIcon} aria-hidden="true" />
+            <span>{isSignup ? 'Sign up with Outlook' : 'Login with Outlook'}</span>
+          </button>
+        </div>
 
         <p className={styles.footnote}>
           By continuing, you agree to secure session logging and account protection checks.

@@ -14,6 +14,8 @@ Route::post('auth/register', [AuthController::class, 'register'])->middleware('t
 Route::get('auth/profile-photo/{user}', [AuthController::class, 'profilePhoto'])
     ->name('auth.profile-photo')
     ->middleware('throttle:60,1');
+Route::get('auth/microsoft/auth-url', [AuthController::class, 'microsoftAuthUrl'])
+    ->middleware('throttle:30,1');
 Route::get('auth/microsoft/callback', [AuthController::class, 'handleMicrosoftCallback'])
     ->middleware('throttle:30,1');
 Route::post('webhooks/firestore/delete', [FirestoreWebhookController::class, 'handleDelete'])

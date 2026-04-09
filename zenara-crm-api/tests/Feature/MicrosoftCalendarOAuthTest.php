@@ -127,4 +127,102 @@ class MicrosoftCalendarOAuthTest extends TestCase
         $response->assertOk();
         $this->assertNotEmpty($response->json('url'));
     }
+
+    public function test_microsoft_auth_callback_logs_in_existing_user_from_login_mode(): void
+    {
+        $this->configureMicrosoftOauth();
+
+        $user = User::factory()->create([
+            'name' => 'Staff Example',
+            'email' => 'staff@example.com',
+            'role' => 'staff',
+        ]);
+
+        $authResponse = $this->getJson(
+            '/api/auth/microsoft/auth-url?origin=' . urlencode('https://frontend.example.test') . '&mode=login'
+        );
+
+        $authResponse->assertOk();
+        parse_str((string) parse_url((string) $authResponse->json('url'), PHP_URL_QUERY), $query);
+        $this->assertArrayHasKey('state', $query);
+
+        Http::fake([
+            'https://login.microsoftonline.com/*/oauth2/v2.0/token' => Http::response([
+                'access_token' => 'access-token',
+                'refresh_token' => 'refresh-token',
+                'expires_in' => 3600,
+                'scope' => 'openid profile offline_access User.Read Calendars.ReadWrite',
+            ], 200),
+            'https://graph.microsoft.com/v1.0/me*' => Http::response([
+                'id' => 'microsoft-user-id',
+                'displayName' => 'Staff Example',
+                'mail' => 'staff@example.com',
+                'userPrincipalName' => 'staff@example.com',
+            ], 200),
+        ]);
+
+        $callbackResponse = $this->get(
+            '/api/auth/microsoft/callback?state=' . urlencode((string) $query['state']) . '&code=test-code'
+        );
+
+        $callbackResponse
+            ->assertOk()
+            ->assertSee('Outlook sign-in successful.')
+            ->assertSee('zenara:outlook-auth');
+
+        $this->assertNotNull($user->fresh()?->api_token);
+        $this->assertDatabaseHas('microsoft_calendar_connections', [
+            'user_id' => $user->id,
+            'microsoft_user_id' => 'microsoft-user-id',
+            'microsoft_email' => 'staff@example.com',
+        ]);
+    }
+
+    public function test_microsoft_auth_callback_can_create_a_new_user_from_signup_mode(): void
+    {
+        $this->configureMicrosoftOauth();
+
+        $authResponse = $this->getJson(
+            '/api/auth/microsoft/auth-url?origin=' . urlencode('https://frontend.example.test') . '&mode=signup&role=admin'
+        );
+
+        $authResponse->assertOk();
+        parse_str((string) parse_url((string) $authResponse->json('url'), PHP_URL_QUERY), $query);
+        $this->assertArrayHasKey('state', $query);
+
+        Http::fake([
+            'https://login.microsoftonline.com/*/oauth2/v2.0/token' => Http::response([
+                'access_token' => 'access-token',
+                'refresh_token' => 'refresh-token',
+                'expires_in' => 3600,
+                'scope' => 'openid profile offline_access User.Read Calendars.ReadWrite',
+            ], 200),
+            'https://graph.microsoft.com/v1.0/me*' => Http::response([
+                'id' => 'new-microsoft-user-id',
+                'displayName' => 'Outlook Admin',
+                'mail' => 'new-admin@example.com',
+                'userPrincipalName' => 'new-admin@example.com',
+            ], 200),
+        ]);
+
+        $callbackResponse = $this->get(
+            '/api/auth/microsoft/callback?state=' . urlencode((string) $query['state']) . '&code=test-code'
+        );
+
+        $callbackResponse
+            ->assertOk()
+            ->assertSee('Outlook account created successfully. You are now signed in.')
+            ->assertSee('zenara:outlook-auth');
+
+        $createdUser = User::query()->where('email', 'new-admin@example.com')->first();
+        $this->assertNotNull($createdUser);
+        $this->assertSame('admin', $createdUser?->role);
+        $this->assertNotNull($createdUser?->api_token);
+
+        $this->assertDatabaseHas('microsoft_calendar_connections', [
+            'user_id' => $createdUser?->id,
+            'microsoft_user_id' => 'new-microsoft-user-id',
+            'microsoft_email' => 'new-admin@example.com',
+        ]);
+    }
 }
