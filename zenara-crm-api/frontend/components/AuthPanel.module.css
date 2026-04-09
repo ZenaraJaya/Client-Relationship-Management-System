@@ -38,7 +38,7 @@
   min-height: 320px;
   top: -13vw;
   left: -8vw;
-  background: radial-gradient(circle, rgba(219, 234, 254, 0.72) 0%, rgba(191, 219, 254, 0.2) 56%, transparent 76%);
+  background: radial-gradient(circle, rgba(147, 197, 253, 0.64) 0%, rgba(59, 130, 246, 0.3) 56%, transparent 78%);
 }
 
 .glowMiddle {
@@ -48,7 +48,7 @@
   min-height: 260px;
   left: 42%;
   top: 8%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(224, 242, 254, 0.18) 56%, transparent 74%);
+  background: radial-gradient(circle, rgba(191, 219, 254, 0.54) 0%, rgba(37, 99, 235, 0.22) 56%, transparent 76%);
 }
 
 .glowBottom {
@@ -58,7 +58,7 @@
   min-height: 280px;
   right: -8vw;
   bottom: -12vw;
-  background: radial-gradient(circle, rgba(186, 230, 253, 0.44) 0%, rgba(191, 219, 254, 0.12) 62%, transparent 80%);
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.52) 0%, rgba(14, 116, 144, 0.24) 62%, transparent 82%);
 }
 
 .bubbleField {
@@ -83,11 +83,11 @@
   height: 100%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.88) 16%, rgba(255, 255, 255, 0.4) 30%, var(--bubble-tint) 58%, rgba(191, 219, 254, 0.12) 78%, rgba(255, 255, 255, 0.04) 100%);
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.7) 14%, rgba(191, 219, 254, 0.46) 30%, var(--bubble-tint) 60%, rgba(30, 64, 175, 0.28) 82%, rgba(15, 23, 42, 0.18) 100%);
   border: 1px solid var(--bubble-edge);
   box-shadow:
-    inset 0 18px 28px rgba(255, 255, 255, 0.68),
-    inset 0 -16px 24px rgba(255, 255, 255, 0.2),
+    inset 0 18px 28px rgba(255, 255, 255, 0.56),
+    inset 0 -16px 24px rgba(30, 64, 175, 0.24),
     0 24px 44px var(--bubble-shadow);
   filter: blur(var(--bubble-blur));
   animation: bubbleWobble calc(var(--bubble-duration) * 0.38) ease-in-out infinite alternate;
@@ -103,7 +103,7 @@
 
 .bubbleRing {
   inset: 8%;
-  border: 1px solid rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(191, 219, 254, 0.56);
   opacity: 0.92;
 }
 
