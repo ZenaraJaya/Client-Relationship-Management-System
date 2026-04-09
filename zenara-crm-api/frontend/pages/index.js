@@ -394,18 +394,8 @@ export default function Home() {
         return
       }
 
-      outlookPopupRef.current = window.open(
-        json.url,
-        'zenara-outlook-auth',
-        'width=560,height=720,menubar=no,toolbar=no,location=yes,resizable=yes,scrollbars=yes,status=no'
-      )
-
-      if (!outlookPopupRef.current) {
-        setAuthError('The Outlook popup was blocked. Please allow popups for this site and try again.')
-        return
-      }
-
-      showToast('Complete the Outlook sign-in in the popup window.')
+      window.location.assign(json.url)
+      return
     } catch (err) {
       setAuthError(`Unable to connect to server at ${apiBase}.`)
     } finally {
