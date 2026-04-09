@@ -910,10 +910,6 @@ export default function Home() {
     })
     .filter(Boolean)
     .sort((a, b) => a.date - b.date)
-  const recentContacts = [...items]
-    .filter((item) => toDate(item.updated_at))
-    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-    .slice(0, 4)
 
   const formatTouchpointDate = (date) =>
     date.toLocaleDateString(undefined, {
@@ -1049,36 +1045,6 @@ export default function Home() {
                     ))}
                   </ul>
                 )}
-              </section>
-
-              <section className="panel dashboard-panel dashboard-panel-wide">
-                <div className="dashboard-panel-head">
-                  <h3>Pipeline Snapshot</h3>
-                  <span className="dashboard-count-chip">{totalLeads} tracked</span>
-                </div>
-                <div className="pipeline-track">
-                  <div
-                    className="pipeline-bar"
-                    style={{ width: `${totalLeads ? Math.max(8, Math.round((activeDeals / totalLeads) * 100)) : 8}%` }}
-                  ></div>
-                </div>
-                <div className="pipeline-meta">
-                  <span>{activeDeals} active deals</span>
-                  <span>{totalLeads > 0 ? Math.round((activeDeals / totalLeads) * 100) : 0}% conversion</span>
-                </div>
-
-                <div className="recent-grid">
-                  {recentContacts.length === 0 ? (
-                    <p className="dashboard-empty">No recent contact updates yet.</p>
-                  ) : (
-                    recentContacts.map((contact) => (
-                      <article key={contact.id} className="recent-card">
-                        <h4>{contact.company_name || 'Unnamed Company'}</h4>
-                        <p>{contact.contact_person || 'No contact person set'}</p>
-                      </article>
-                    ))
-                  )}
-                </div>
               </section>
             </div>
           </>
