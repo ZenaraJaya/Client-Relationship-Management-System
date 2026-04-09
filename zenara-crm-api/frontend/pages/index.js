@@ -975,8 +975,11 @@ export default function Home() {
 
   if (authChecking) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569' }}>
-        Checking session...
+      <div className="session-loader">
+        <div className="session-loader-track" role="progressbar" aria-label="Initializing CRM">
+          <div className="session-loader-bar" />
+        </div>
+        <p className="session-loader-text">Initializing CRM...</p>
       </div>
     )
   }
