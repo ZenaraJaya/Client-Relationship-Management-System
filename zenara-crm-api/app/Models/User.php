@@ -81,6 +81,11 @@ class User extends Authenticatable
         return $this->hasOne(MicrosoftCalendarConnection::class);
     }
 
+    public function profilePhoto(): HasOne
+    {
+        return $this->hasOne(UserProfilePhoto::class);
+    }
+
     public function crmCalendarEvents(): HasMany
     {
         return $this->hasMany(CrmCalendarEvent::class);

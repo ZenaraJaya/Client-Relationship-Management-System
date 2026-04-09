@@ -66,6 +66,9 @@ class ProfileUpdateTest extends TestCase
         $this->assertTrue(Hash::check('password', (string) $freshStaff?->password));
         $this->assertNotNull($freshStaff?->profile_photo_path);
         Storage::disk('public')->assertExists((string) $freshStaff?->profile_photo_path);
+        $this->assertDatabaseHas('user_profile_photos', [
+            'user_id' => $staff->id,
+        ]);
         $profilePhotoUrl = (string) $response->json('user.profile_photo_url');
         $this->assertStringContainsString('/api/auth/profile-photo/' . $staff->id, $profilePhotoUrl);
 
@@ -126,6 +129,50 @@ class ProfileUpdateTest extends TestCase
             ->assertHeader('Content-Type', 'image/svg+xml; charset=UTF-8');
 
         $this->assertStringContainsString('<svg', $response->getContent());
+    }
+
+    public function test_profile_photo_route_uses_database_backup_when_storage_file_is_missing(): void
+    {
+        Storage::fake('public');
+
+        $staff = User::factory()->create([
+            'role' => 'staff',
+            'password' => 'password',
+            'email' => 'staff-backup-photo@example.com',
+        ]);
+
+        $photo = UploadedFile::fake()->createWithContent(
+            'avatar.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9sX6lz0AAAAASUVORK5CYII=')
+        );
+
+        $uploadResponse = $this->withHeaders($this->authHeadersFor($staff, 'staff-profile-backup-token'))->post(
+            '/api/auth/profile',
+            [
+                '_method' => 'PUT',
+                'name' => 'Staff Backup',
+                'profile_photo' => $photo,
+            ]
+        );
+
+        $uploadResponse->assertOk();
+
+        $freshStaff = $staff->fresh();
+        $this->assertNotNull($freshStaff?->profile_photo_path);
+        $this->assertDatabaseHas('user_profile_photos', [
+            'user_id' => $staff->id,
+        ]);
+
+        Storage::disk('public')->delete((string) $freshStaff?->profile_photo_path);
+        Storage::disk('public')->assertMissing((string) $freshStaff?->profile_photo_path);
+
+        $response = $this->get('/api/auth/profile-photo/' . $staff->id);
+
+        $response
+            ->assertOk()
+            ->assertHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+        $this->assertStringNotContainsString('image/svg+xml', (string) $response->headers->get('Content-Type'));
     }
 
     public function test_admin_user_can_update_their_own_profile(): void

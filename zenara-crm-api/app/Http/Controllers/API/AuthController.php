@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\FirestoreService;
 use App\Services\MicrosoftCalendarOAuthService;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -38,6 +39,125 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Database schema is not up to date. Please run: php artisan migrate',
         ], 500);
+    }
+
+    protected function profilePhotoBackupTableReady(): bool
+    {
+        static $ready = null;
+
+        if ($ready === null) {
+            $ready = Schema::hasTable('user_profile_photos');
+        }
+
+        return (bool) $ready;
+    }
+
+    protected function saveProfilePhotoBackup(User $user, UploadedFile $uploadedPhoto): void
+    {
+        if (!$this->profilePhotoBackupTableReady()) {
+            return;
+        }
+
+        $realPath = $uploadedPhoto->getRealPath();
+        if (!$realPath) {
+            return;
+        }
+
+        $bytes = @file_get_contents($realPath);
+        if ($bytes === false || $bytes === '') {
+            return;
+        }
+
+        $mimeType = trim((string) ($uploadedPhoto->getMimeType() ?: 'image/png'));
+        if ($mimeType === '') {
+            $mimeType = 'image/png';
+        }
+
+        $user->profilePhoto()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'mime_type' => $mimeType,
+                'content_base64' => base64_encode($bytes),
+            ]
+        );
+    }
+
+    protected function getStoredProfilePhoto(User $user): ?array
+    {
+        if (!$this->profilePhotoBackupTableReady()) {
+            return null;
+        }
+
+        $photo = $user->relationLoaded('profilePhoto')
+            ? $user->profilePhoto
+            : $user->profilePhoto()->first();
+
+        $encoded = (string) ($photo?->content_base64 ?? '');
+        if ($encoded === '') {
+            return null;
+        }
+
+        $binary = base64_decode($encoded, true);
+        if ($binary === false || $binary === '') {
+            Log::warning('Profile photo backup is not valid base64.', [
+                'user_id' => $user->id,
+            ]);
+            return null;
+        }
+
+        $mimeType = trim((string) ($photo?->mime_type ?? 'image/png'));
+        if ($mimeType === '') {
+            $mimeType = 'image/png';
+        }
+
+        return [
+            'binary' => $binary,
+            'mime_type' => $mimeType,
+        ];
+    }
+
+    protected function backfillProfilePhotoBackupFromStorage(User $user): void
+    {
+        if (
+            !$this->profilePhotoBackupTableReady()
+            || !$user->profile_photo_path
+            || !Storage::disk('public')->exists($user->profile_photo_path)
+        ) {
+            return;
+        }
+
+        $existingBackup = $user->relationLoaded('profilePhoto')
+            ? $user->profilePhoto
+            : $user->profilePhoto()->first();
+
+        if ($existingBackup && trim((string) $existingBackup->content_base64) !== '') {
+            return;
+        }
+
+        try {
+            $bytes = Storage::disk('public')->get($user->profile_photo_path);
+            if (!is_string($bytes) || $bytes === '') {
+                return;
+            }
+
+            $mimeType = trim((string) (Storage::disk('public')->mimeType($user->profile_photo_path) ?: 'image/png'));
+            if ($mimeType === '') {
+                $mimeType = 'image/png';
+            }
+
+            $user->profilePhoto()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'mime_type' => $mimeType,
+                    'content_base64' => base64_encode($bytes),
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to backfill profile photo backup from storage.', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected function tokenTtlMinutes(): int
@@ -113,7 +233,13 @@ class AuthController extends Controller
     protected function profilePhotoUrlForUser(User $user, ?Request $request = null): ?string
     {
         if (!$user->profile_photo_path) {
-            return null;
+            $hasBackup = $this->profilePhotoBackupTableReady()
+                ? ($user->relationLoaded('profilePhoto') ? (bool) $user->profilePhoto : $user->profilePhoto()->exists())
+                : false;
+
+            if (!$hasBackup) {
+                return null;
+            }
         }
 
         $relativePath = route('auth.profile-photo', ['user' => $user->id], false);
@@ -432,11 +558,15 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             $user->name = trim((string) $request->input('name'));
 
             if ($request->hasFile('profile_photo')) {
+                /** @var UploadedFile $uploadedPhoto */
+                $uploadedPhoto = $request->file('profile_photo');
+
                 if ($user->profile_photo_path) {
                     Storage::disk('public')->delete($user->profile_photo_path);
                 }
 
-                $user->profile_photo_path = $request->file('profile_photo')->store('profile-photos', 'public');
+                $user->profile_photo_path = $uploadedPhoto->store('profile-photos', 'public');
+                $this->saveProfilePhotoBackup($user, $uploadedPhoto);
             }
 
             $user->save();
@@ -456,6 +586,36 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
 
     public function profilePhoto(User $user)
     {
+        $crossOriginHeaders = [
+            'Cache-Control' => 'public, max-age=3600',
+            'Cross-Origin-Resource-Policy' => 'cross-origin',
+        ];
+
+        if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
+            $this->backfillProfilePhotoBackupFromStorage($user);
+            return Storage::disk('public')->response(
+                $user->profile_photo_path,
+                null,
+                $crossOriginHeaders
+            );
+        }
+
+        if ($user->profile_photo_path && !Storage::disk('public')->exists($user->profile_photo_path)) {
+            Log::warning('Profile photo file is missing from storage.', [
+                'user_id' => $user->id,
+                'path' => $user->profile_photo_path,
+            ]);
+        }
+
+        $storedPhoto = $this->getStoredProfilePhoto($user);
+        if ($storedPhoto) {
+            return response($storedPhoto['binary'], 200, [
+                'Content-Type' => $storedPhoto['mime_type'],
+                'Cache-Control' => 'public, max-age=3600',
+                'Cross-Origin-Resource-Policy' => 'cross-origin',
+            ]);
+        }
+
         if (!$user->profile_photo_path) {
             return response($this->profilePhotoPlaceholderSvg($user), 200, [
                 'Content-Type' => 'image/svg+xml; charset=UTF-8',
@@ -464,27 +624,11 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             ]);
         }
 
-        if (!Storage::disk('public')->exists($user->profile_photo_path)) {
-            Log::warning('Profile photo file is missing from storage.', [
-                'user_id' => $user->id,
-                'path' => $user->profile_photo_path,
-            ]);
-
-            return response($this->profilePhotoPlaceholderSvg($user), 200, [
-                'Content-Type' => 'image/svg+xml; charset=UTF-8',
-                'Cache-Control' => 'no-store, max-age=0',
-                'Cross-Origin-Resource-Policy' => 'cross-origin',
-            ]);
-        }
-
-        return Storage::disk('public')->response(
-            $user->profile_photo_path,
-            null,
-            [
-                'Cache-Control' => 'public, max-age=3600',
-                'Cross-Origin-Resource-Policy' => 'cross-origin',
-            ]
-        );
+        return response($this->profilePhotoPlaceholderSvg($user), 200, [
+            'Content-Type' => 'image/svg+xml; charset=UTF-8',
+            'Cache-Control' => 'no-store, max-age=0',
+            'Cross-Origin-Resource-Policy' => 'cross-origin',
+        ]);
     }
 
     public function logout(Request $request): JsonResponse
