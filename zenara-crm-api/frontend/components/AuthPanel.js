@@ -123,16 +123,14 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [localError, setLocalError] = useState('')
+  const [rolePromptOpen, setRolePromptOpen] = useState(false)
 
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password])
   const isSignup = mode === 'signup'
 
   const showRoleRequiredPopup = () => {
-    const message = 'Please choose your role.'
-    setLocalError(message)
-    if (typeof window !== 'undefined') {
-      window.alert(message)
-    }
+    setLocalError('Please choose your role.')
+    setRolePromptOpen(true)
   }
 
   const handleSubmit = async (e) => {
@@ -180,6 +178,7 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
   const switchMode = (nextMode) => {
     if (isLoading) return
     setMode(nextMode)
+    setRolePromptOpen(false)
     setLocalError('')
   }
 
@@ -418,6 +417,51 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
           By continuing, you agree to secure session logging and account protection checks.
         </p>
       </section>
+
+      {rolePromptOpen && (
+        <div className={styles.rolePromptOverlay} role="dialog" aria-modal="true" aria-labelledby="role-prompt-title">
+          <div className={styles.rolePromptCard}>
+            <h3 id="role-prompt-title" className={styles.rolePromptTitle}>Please choose your role</h3>
+            <p className={styles.rolePromptCopy}>
+              Select how you want to use this workspace to continue signup.
+            </p>
+
+            <div className={styles.rolePromptActions}>
+              <button
+                type="button"
+                className={`${styles.rolePromptButton} ${styles.rolePromptPrimary}`}
+                onClick={() => {
+                  setRole('staff')
+                  setRolePromptOpen(false)
+                  setLocalError('')
+                }}
+                autoFocus
+              >
+                Continue as Staff
+              </button>
+              <button
+                type="button"
+                className={`${styles.rolePromptButton} ${styles.rolePromptSecondary}`}
+                onClick={() => {
+                  setRole('admin')
+                  setRolePromptOpen(false)
+                  setLocalError('')
+                }}
+              >
+                Continue as Admin
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className={styles.rolePromptDismiss}
+              onClick={() => setRolePromptOpen(false)}
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
