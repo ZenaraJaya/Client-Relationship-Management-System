@@ -128,8 +128,8 @@ body {
 }
 
 .brand-title {
-  font-size: 1.28rem;
-  line-height: 1.05;
+  font-size: 1.12rem;
+  line-height: 1.1;
   font-weight: 800;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -138,7 +138,7 @@ body {
 }
 
 .small {
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 1.2;
   color: var(--ink-soft);
   white-space: nowrap;
