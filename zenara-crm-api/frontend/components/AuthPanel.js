@@ -129,7 +129,7 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
   const isSignup = mode === 'signup'
 
   const showRoleRequiredPopup = () => {
-    setLocalError('Please choose your role.')
+    setLocalError('')
     setRolePromptOpen(true)
   }
 
