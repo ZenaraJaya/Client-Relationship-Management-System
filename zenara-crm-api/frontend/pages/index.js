@@ -87,6 +87,11 @@ export default function Home() {
   const outlookPopupRef = useRef(null)
   const dateFields = ['last_contact', 'appointment', 'follow_up']
 
+  const resolveLandingViewForUser = (user) => {
+    const normalizedRole = (user?.role || '').trim().toLowerCase()
+    return normalizedRole === 'admin' ? 'dashboard' : 'listing'
+  }
+
   const showToast = (message, type = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     setToast({ visible: true, message, type })
@@ -205,6 +210,7 @@ export default function Home() {
         if (!mounted) return
         setAuthToken(savedToken)
         setAuthUser(user)
+        setCurrentView(resolveLandingViewForUser(user))
         setAuthError('')
       } catch (err) {
         sessionStorage.removeItem(AUTH_TOKEN_KEY)
@@ -293,6 +299,7 @@ export default function Home() {
 
       setAuthToken(token)
       setAuthUser(user)
+      setCurrentView(resolveLandingViewForUser(user))
       setAuthError('')
       showToast(mode === 'signup' ? 'Account created. Welcome!' : 'Login successful.')
     } catch (err) {
@@ -513,6 +520,7 @@ export default function Home() {
         if (!active) return
         setAuthToken(token)
         setAuthUser(user)
+        setCurrentView(resolveLandingViewForUser(user))
         setAuthError('')
         showToast(payload.message || 'Outlook sign-in successful.', 'success')
         return
