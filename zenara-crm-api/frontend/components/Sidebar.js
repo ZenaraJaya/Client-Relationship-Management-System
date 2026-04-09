@@ -12,7 +12,9 @@ export default function Sidebar({
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
   const [spinningNavId, setSpinningNavId] = useState('')
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const spinTimerRef = useRef(null)
+  const profileMenuRef = useRef(null)
 
   const navItems = useMemo(
     () => [
@@ -76,7 +78,6 @@ export default function Sidebar({
     .slice(0, 2)
     .toUpperCase()
 
-  const firstName = (userName || 'User').trim().split(' ')[0]
   const roleLabel = (userRole || '').trim().toLowerCase() === 'admin' ? 'Admin' : 'Staff'
 
   useEffect(() => {
@@ -91,11 +92,42 @@ export default function Sidebar({
     }
   }, [])
 
+  useEffect(() => {
+    if (!profileMenuOpen) return
+
+    const handlePointerDown = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [profileMenuOpen])
+
+  useEffect(() => {
+    if (isCollapsed && profileMenuOpen) {
+      setProfileMenuOpen(false)
+    }
+  }, [isCollapsed, profileMenuOpen])
+
   const handleNavClick = (viewId) => {
     if (spinTimerRef.current) {
       clearTimeout(spinTimerRef.current)
     }
 
+    setProfileMenuOpen(false)
     setSpinningNavId(viewId)
     spinTimerRef.current = setTimeout(() => {
       setSpinningNavId('')
@@ -106,29 +138,54 @@ export default function Sidebar({
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="brand">
+      <div className="brand profile-switcher" ref={profileMenuRef}>
         <button
           type="button"
-          className="avatar profile-avatar-button"
-          onClick={onProfileClick}
-          title={`Open profile for ${userName}`}
-          aria-label="Open profile settings"
+          className={`profile-switcher-trigger ${profileMenuOpen ? 'open' : ''}`.trim()}
+          onClick={() => setProfileMenuOpen((prev) => !prev)}
+          title={`Account menu for ${userName}`}
+          aria-label="Open account dropdown"
+          aria-expanded={profileMenuOpen}
+          aria-haspopup="menu"
         >
-          {profilePhotoUrl && !avatarLoadFailed ? (
-            <img
-              src={profilePhotoUrl}
-              alt={`${userName} profile`}
-              className="avatar-image"
-              onError={() => setAvatarLoadFailed(true)}
-            />
-          ) : (
-            initials
-          )}
+          <span className="profile-switcher-avatar" aria-hidden="true">
+            {profilePhotoUrl && !avatarLoadFailed ? (
+              <img
+                src={profilePhotoUrl}
+                alt={`${userName} profile`}
+                className="profile-switcher-avatar-image"
+                onError={() => setAvatarLoadFailed(true)}
+              />
+            ) : (
+              <span className="profile-switcher-avatar-fallback">{initials}</span>
+            )}
+          </span>
+
+          <span className="profile-switcher-name">{userName || 'User'}</span>
+
+          <span className={`profile-switcher-caret ${profileMenuOpen ? 'open' : ''}`}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="8 15 12 19 16 15"></polyline>
+              <polyline points="8 9 12 5 16 9"></polyline>
+            </svg>
+          </span>
         </button>
-        <div className="brand-copy">
-          <div className="brand-title">{roleLabel} Dashboard</div>
-          <div className="small">Welcome back, {firstName}</div>
-        </div>
+
+        {!isCollapsed && profileMenuOpen && (
+          <div className="profile-switcher-menu" role="menu" aria-label="Account dropdown">
+            <button
+              type="button"
+              className="profile-switcher-menu-item"
+              onClick={() => {
+                setProfileMenuOpen(false)
+                onProfileClick()
+              }}
+            >
+              Profile settings
+            </button>
+            <div className="profile-switcher-menu-role">{roleLabel}</div>
+          </div>
+        )}
       </div>
 
       <nav className="nav" aria-label="Main navigation">
@@ -152,7 +209,7 @@ export default function Sidebar({
         <button
           type="button"
           className="sidebar-ghost-btn"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
         >
           <span className={`collapse-arrow ${isCollapsed ? 'rotate' : ''}`}>
