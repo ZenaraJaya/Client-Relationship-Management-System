@@ -34,12 +34,14 @@ export default function App({ Component, pageProps }) {
       {themeReady && (
         <button
           type="button"
-          className="theme-toggle-button"
+          className={`theme-toggle-button ${theme === 'dark' ? 'is-dark' : 'is-light'}`}
           onClick={toggleTheme}
           aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to night mode'}
           title={theme === 'dark' ? 'Switch to light mode' : 'Switch to night mode'}
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          <span className="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">☀️</span>
+          <span className="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">🌙✨</span>
+          <span className="theme-toggle-thumb" aria-hidden="true" />
         </button>
       )}
     </>
