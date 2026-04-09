@@ -21,10 +21,10 @@ export default function TopBar({
           </svg>
           <input
             className="command-search-input"
-            placeholder="Search Company"
+            placeholder="Search all fields"
             value={searchCompany}
             onChange={(e) => onSearchCompanyChange(e.target.value)}
-            aria-label="Search company"
+            aria-label="Search records"
           />
         </div>
         {canQuickAdd && (

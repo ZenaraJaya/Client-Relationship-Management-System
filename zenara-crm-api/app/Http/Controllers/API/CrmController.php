@@ -44,6 +44,40 @@ class CrmController extends Controller
         ];
     }
 
+    protected function searchableCrmFields(): array
+    {
+        return array_values(array_unique(array_merge(
+            $this->allowedCrmFields(),
+            ['created_at', 'updated_at']
+        )));
+    }
+
+    protected function crmMatchesSearch(array $payload, string $search): bool
+    {
+        $needle = strtolower(trim($search));
+        if ($needle === '') {
+            return true;
+        }
+
+        $candidates = [(string) ($payload['id'] ?? '')];
+        foreach ($this->searchableCrmFields() as $field) {
+            $value = $payload[$field] ?? '';
+            if (is_scalar($value) || $value === null) {
+                $candidates[] = (string) ($value ?? '');
+            } else {
+                $candidates[] = (string) json_encode($value);
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($candidate !== '' && str_contains(strtolower($candidate), $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     protected function extractCrmPayload(Request $request): array
     {
         return $request->only($this->allowedCrmFields());
@@ -147,15 +181,40 @@ class CrmController extends Controller
      */
     public function index(): JsonResponse
     {
+        $search = trim((string) request()->query('search', ''));
+
         if ($this->firestore->isConfigured()) {
             $firestoreCrms = $this->firestore->list();
             if (is_array($firestoreCrms)) {
+                if ($search !== '') {
+                    $firestoreCrms = array_values(array_filter(
+                        $firestoreCrms,
+                        fn ($item) => is_array($item) && $this->crmMatchesSearch($item, $search)
+                    ));
+                }
+
                 $page = max(1, (int) request()->query('page', 1));
                 return response()->json($this->paginateFirestoreCrms($firestoreCrms, $page, 10));
             }
         }
 
-        $crms = Crm::query()
+        $crmsQuery = Crm::query();
+        if ($search !== '') {
+            $searchLike = '%' . $search . '%';
+            $searchFields = $this->searchableCrmFields();
+
+            $crmsQuery->where(function ($query) use ($searchLike, $searchFields, $search): void {
+                foreach ($searchFields as $field) {
+                    $query->orWhere($field, 'like', $searchLike);
+                }
+
+                if (is_numeric($search)) {
+                    $query->orWhere('id', (int) $search);
+                }
+            });
+        }
+
+        $crms = $crmsQuery
             ->orderByRaw("
                 CASE LOWER(priority)
                     WHEN 'high' THEN 3

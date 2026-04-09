@@ -83,6 +83,39 @@ const normalizeProfilePhotoUrl = (value, apiBase, userId, updatedAt) => {
   }
 }
 
+const CRM_SEARCH_FIELDS = [
+  'company_name',
+  'industry',
+  'location',
+  'contact_person',
+  'role',
+  'phone',
+  'email',
+  'source',
+  'pain_point',
+  'remarks',
+  'priority',
+  'status',
+  'last_contact',
+  'next_action',
+  'appointment',
+  'follow_up',
+  'created_at',
+  'updated_at',
+]
+
+const matchesCrmSearch = (item, rawKeyword) => {
+  const keyword = String(rawKeyword || '').trim().toLowerCase()
+  if (!keyword) return true
+  if (!item || typeof item !== 'object') return false
+
+  const searchableValues = [item.id, ...CRM_SEARCH_FIELDS.map((field) => item[field])]
+  return searchableValues.some((value) => {
+    if (value === null || value === undefined) return false
+    return String(value).toLowerCase().includes(keyword)
+  })
+}
+
 export default function Home() {
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || getDefaultApiBase()).replace(/\/+$/, '')
 
@@ -328,13 +361,19 @@ export default function Home() {
     }
   }, [apiBase])
 
-  const fetchCrms = async ({ showLoader = true, page = serverPage } = {}) => {
+  const fetchCrms = async ({ showLoader = true, page = serverPage, searchTerm = searchCompany } = {}) => {
     if (!authToken) return
 
     if (showLoader) setLoading(true)
     try {
       const pageNumber = Math.max(1, Number(page) || 1)
-      const res = await authFetch(`${apiBase}/crms?page=${pageNumber}`)
+      const params = new URLSearchParams({ page: String(pageNumber) })
+      const trimmedSearch = String(searchTerm || '').trim()
+      if (trimmedSearch) {
+        params.set('search', trimmedSearch)
+      }
+
+      const res = await authFetch(`${apiBase}/crms?${params.toString()}`)
       if (res.status === 401) {
         handleUnauthorized()
         return
@@ -362,12 +401,12 @@ export default function Home() {
       return
     }
 
-    fetchCrms({ showLoader: true, page: serverPage })
+    fetchCrms({ showLoader: true, page: serverPage, searchTerm: searchCompany })
     const intervalId = setInterval(() => {
-      fetchCrms({ showLoader: false, page: serverPage })
+      fetchCrms({ showLoader: false, page: serverPage, searchTerm: searchCompany })
     }, 30000)
     return () => clearInterval(intervalId)
-  }, [apiBase, authToken, serverPage])
+  }, [apiBase, authToken, serverPage, searchCompany])
 
   const handleAuthSubmit = async ({ mode, name, role, email, password }) => {
     setAuthSubmitting(true)
@@ -808,9 +847,9 @@ export default function Home() {
   }
 
   const items = getMergedItems()
-  const companyKeyword = searchCompany.trim().toLowerCase()
-  const filteredItems = companyKeyword
-    ? items.filter((item) => (item.company_name || '').toLowerCase().includes(companyKeyword))
+  const searchKeyword = searchCompany.trim().toLowerCase()
+  const filteredItems = searchKeyword
+    ? items.filter((item) => matchesCrmSearch(item, searchKeyword))
     : items
   const totalLeads = Number(data?.total) || items.length
   const activeDeals = items.filter((item) => item.status === 'Qualified').length
@@ -928,7 +967,11 @@ export default function Home() {
       <main className="main">
         <TopBar
           searchCompany={searchCompany}
-          onSearchCompanyChange={setSearchCompany}
+          onSearchCompanyChange={(value) => {
+            setSearchCompany(value)
+            setSelectedIds([])
+            setServerPage(1)
+          }}
           canQuickAdd={isAdmin}
           onQuickAdd={() => {
             setEditingItem(null)
