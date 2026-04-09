@@ -268,9 +268,46 @@ SVG;
   <script>
     (function () {
       var payload = {$payload};
-      if (window.opener && typeof window.opener.postMessage === 'function') {
-        window.opener.postMessage(payload, {$targetOriginJson});
+      var targetOrigin = {$targetOriginJson};
+      var hasOpener = !!(window.opener && !window.opener.closed && typeof window.opener.postMessage === 'function');
+      var canRedirectBack = targetOrigin !== '*';
+      var shouldRedirectForAuthFlow = payload && payload.type === 'zenara:outlook-auth';
+      var payloadHash = '';
+      var redirectUrl = '';
+
+      try {
+        payloadHash = encodeURIComponent(JSON.stringify(payload));
+        redirectUrl = (canRedirectBack && shouldRedirectForAuthFlow) ? (targetOrigin + '/#zenara_oauth_payload=' + payloadHash) : '';
+      } catch (e) {
+        payloadHash = '';
+        redirectUrl = '';
+      }
+
+      if (hasOpener) {
+        try {
+          window.opener.postMessage(payload, targetOrigin);
+        } catch (e) {
+          // Ignore and fallback below.
+        }
+
+        try {
+          window.close();
+        } catch (e) {
+          // Ignore close failures.
+        }
+
+        return;
+      }
+
+      if (redirectUrl) {
+        window.location.replace(redirectUrl);
+        return;
+      }
+
+      try {
         window.close();
+      } catch (e) {
+        // Ignore close failures.
       }
     })();
   </script>

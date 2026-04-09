@@ -81,11 +81,12 @@ class MicrosoftCalendarOAuthTest extends TestCase
 
         $callbackResponse
             ->assertOk()
+            ->assertHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
             ->assertSee('Outlook Connected')
             ->assertSee('Outlook calendar connected successfully.');
 
         $this->assertStringContainsString(
-            'window.opener.postMessage(payload, "https:\/\/frontend.example.test")',
+            'window.opener.postMessage(payload, targetOrigin);',
             $callbackResponse->getContent()
         );
 

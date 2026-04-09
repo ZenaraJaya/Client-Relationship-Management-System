@@ -22,7 +22,11 @@ class SecurityHeaders
         } elseif (!$response->headers->has('Cross-Origin-Resource-Policy')) {
             $response->headers->set('Cross-Origin-Resource-Policy', 'same-site');
         }
-        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+        if ($request->is('api/auth/microsoft/callback')) {
+            $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        } else {
+            $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+        }
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
 
         if ($request->isSecure()) {

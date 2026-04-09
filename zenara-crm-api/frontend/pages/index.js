@@ -91,6 +91,63 @@ export default function Home() {
     return 'dashboard'
   }
 
+  const extractOutlookAuthPayloadFromHash = () => {
+    if (typeof window === 'undefined') return null
+
+    const prefix = '#zenara_oauth_payload='
+    const { hash } = window.location
+    if (!hash || !hash.startsWith(prefix)) return null
+
+    const encodedPayload = hash.slice(prefix.length)
+    if (!encodedPayload) return null
+
+    try {
+      return JSON.parse(decodeURIComponent(encodedPayload))
+    } catch {
+      return null
+    }
+  }
+
+  const clearOutlookAuthPayloadHash = () => {
+    if (typeof window === 'undefined') return
+    const prefix = '#zenara_oauth_payload='
+    if (!window.location.hash.startsWith(prefix)) return
+
+    const cleanUrl = `${window.location.pathname}${window.location.search}`
+    window.history.replaceState(null, '', cleanUrl)
+  }
+
+  const applyOutlookAuthPayload = (payload) => {
+    if (!payload || typeof payload !== 'object' || payload.type !== 'zenara:outlook-auth') {
+      return false
+    }
+
+    if (!payload.ok) {
+      setAuthError(payload.message || 'Outlook sign-in failed.')
+      showToast(payload.message || 'Outlook sign-in failed.', 'error')
+      return true
+    }
+
+    const token = payload.token
+    const user = payload.user
+    if (!token || !user) {
+      setAuthError('Outlook sign-in response is invalid.')
+      showToast('Outlook sign-in response is invalid.', 'error')
+      return true
+    }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+    }
+
+    setAuthToken(token)
+    setAuthUser(user)
+    setCurrentView(resolveLandingViewForUser(user))
+    setAuthError('')
+    showToast(payload.message || 'Outlook sign-in successful.', 'success')
+    return true
+  }
+
   const showToast = (message, type = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     setToast({ visible: true, message, type })
@@ -195,6 +252,16 @@ export default function Home() {
       if (typeof window === 'undefined') {
         if (mounted) setAuthChecking(false)
         return
+      }
+
+      const hashPayload = extractOutlookAuthPayloadFromHash()
+      if (hashPayload) {
+        clearOutlookAuthPayloadHash()
+        if (!mounted) return
+        if (applyOutlookAuthPayload(hashPayload)) {
+          setAuthChecking(false)
+          return
+        }
       }
 
       const savedToken = sessionStorage.getItem(AUTH_TOKEN_KEY)
@@ -494,34 +561,8 @@ export default function Home() {
           outlookPopupRef.current.close()
         }
 
-        if (!payload.ok) {
-          if (active) {
-            setAuthError(payload.message || 'Outlook sign-in failed.')
-          }
-          showToast(payload.message || 'Outlook sign-in failed.', 'error')
-          return
-        }
-
-        const token = payload.token
-        const user = payload.user
-        if (!token || !user) {
-          if (active) {
-            setAuthError('Outlook sign-in response is invalid.')
-          }
-          showToast('Outlook sign-in response is invalid.', 'error')
-          return
-        }
-
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem(AUTH_TOKEN_KEY, token)
-        }
-
         if (!active) return
-        setAuthToken(token)
-        setAuthUser(user)
-        setCurrentView(resolveLandingViewForUser(user))
-        setAuthError('')
-        showToast(payload.message || 'Outlook sign-in successful.', 'success')
+        applyOutlookAuthPayload(payload)
         return
       }
 
