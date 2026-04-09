@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 export default function Sidebar({
   currentView,
@@ -11,6 +11,8 @@ export default function Sidebar({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
+  const [spinningNavId, setSpinningNavId] = useState('')
+  const spinTimerRef = useRef(null)
 
   const navItems = useMemo(
     () => [
@@ -81,6 +83,27 @@ export default function Sidebar({
     setAvatarLoadFailed(false)
   }, [profilePhotoUrl])
 
+  useEffect(() => {
+    return () => {
+      if (spinTimerRef.current) {
+        clearTimeout(spinTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleNavClick = (viewId) => {
+    if (spinTimerRef.current) {
+      clearTimeout(spinTimerRef.current)
+    }
+
+    setSpinningNavId(viewId)
+    spinTimerRef.current = setTimeout(() => {
+      setSpinningNavId('')
+    }, 560)
+
+    onViewChange(viewId)
+  }
+
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="brand">
@@ -113,8 +136,10 @@ export default function Sidebar({
           <button
             key={item.id}
             type="button"
-            className={`nav-link ${currentView === item.id ? 'active' : ''}`}
-            onClick={() => onViewChange(item.id)}
+            className={`nav-link ${currentView === item.id ? 'active' : ''} ${
+              spinningNavId === item.id ? 'spin-active' : ''
+            }`.trim()}
+            onClick={() => handleNavClick(item.id)}
             title={isCollapsed ? item.label : ''}
           >
             <span className="nav-icon">{item.icon}</span>
