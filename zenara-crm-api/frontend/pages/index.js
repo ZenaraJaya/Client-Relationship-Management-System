@@ -88,8 +88,7 @@ export default function Home() {
   const dateFields = ['last_contact', 'appointment', 'follow_up']
 
   const resolveLandingViewForUser = (user) => {
-    const normalizedRole = (user?.role || '').trim().toLowerCase()
-    return normalizedRole === 'admin' ? 'dashboard' : 'listing'
+    return 'dashboard'
   }
 
   const showToast = (message, type = 'success') => {
