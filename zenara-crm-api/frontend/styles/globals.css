@@ -494,7 +494,7 @@ td {
 
 .profile-switcher-trigger {
   width: 100%;
-  border: 1px solid #d8e3de;
+  border: 0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
@@ -505,22 +505,17 @@ td {
   cursor: pointer;
   font: inherit;
   box-shadow: 0 8px 16px rgba(17, 35, 31, 0.08);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .profile-switcher-trigger:hover {
   transform: translateY(-1px);
-  border-color: #bfd3ca;
   box-shadow: 0 10px 18px rgba(17, 35, 31, 0.12);
 }
 
 .profile-switcher-trigger:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus), 0 10px 18px rgba(17, 35, 31, 0.12);
-}
-
-.profile-switcher-trigger.open {
-  border-color: #b6cec4;
 }
 
 .profile-switcher-avatar {
@@ -1739,18 +1734,10 @@ td {
 }
 
 [data-theme='dark'] .profile-switcher-trigger {
-  border-color: #314757;
+  border: 0;
   background: rgba(16, 32, 43, 0.9);
   color: #d9e9f2;
   box-shadow: 0 10px 18px rgba(2, 6, 23, 0.36);
-}
-
-[data-theme='dark'] .profile-switcher-trigger:hover {
-  border-color: #436176;
-}
-
-[data-theme='dark'] .profile-switcher-trigger.open {
-  border-color: #4a6981;
 }
 
 [data-theme='dark'] .profile-switcher-caret {
