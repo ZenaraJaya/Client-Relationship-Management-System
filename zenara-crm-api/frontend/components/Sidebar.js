@@ -6,7 +6,6 @@ export default function Sidebar({
   onLogout,
   onProfileClick = () => {},
   userName = 'User',
-  userRole = '',
   profilePhotoUrl = '',
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -77,8 +76,6 @@ export default function Sidebar({
     .join('')
     .slice(0, 2)
     .toUpperCase()
-
-  const roleLabel = (userRole || '').trim().toLowerCase() === 'admin' ? 'Admin' : 'Staff'
 
   useEffect(() => {
     setAvatarLoadFailed(false)
@@ -173,17 +170,41 @@ export default function Sidebar({
 
         {!isCollapsed && profileMenuOpen && (
           <div className="profile-switcher-menu" role="menu" aria-label="Account dropdown">
+            <div className="profile-switcher-menu-title">Teams</div>
             <button
               type="button"
-              className="profile-switcher-menu-item"
+              className="profile-switcher-team-row"
+              onClick={() => {
+                setProfileMenuOpen(false)
+              }}
+            >
+              <span className="profile-switcher-team-avatar" aria-hidden="true">
+                {profilePhotoUrl && !avatarLoadFailed ? (
+                  <img
+                    src={profilePhotoUrl}
+                    alt={`${userName} team avatar`}
+                    className="profile-switcher-avatar-image"
+                    onError={() => setAvatarLoadFailed(true)}
+                  />
+                ) : (
+                  <span className="profile-switcher-avatar-fallback">{initials}</span>
+                )}
+              </span>
+              <span className="profile-switcher-team-name">{userName || 'User'}</span>
+              <span className="profile-switcher-team-check">✓</span>
+            </button>
+
+            <button
+              type="button"
+              className="profile-switcher-create-team-btn"
               onClick={() => {
                 setProfileMenuOpen(false)
                 onProfileClick()
               }}
             >
-              Profile settings
+              <span className="profile-switcher-create-team-icon" aria-hidden="true">+</span>
+              <span>Create Team</span>
             </button>
-            <div className="profile-switcher-menu-role">{roleLabel}</div>
           </div>
         )}
       </div>
