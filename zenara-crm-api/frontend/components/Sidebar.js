@@ -1,18 +1,38 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
+const getInitials = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return 'U'
+
+  const initials = text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 2)
+
+  if (initials) return initials
+
+  return text.slice(0, 2).toUpperCase() || 'U'
+}
+
 export default function Sidebar({
   currentView,
   onViewChange,
   onLogout,
   onProfileClick = () => {},
+  userId = null,
   userName = 'User',
   userRole = '',
   profilePhotoUrl = '',
+  teamMembers = [],
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
   const [spinningNavId, setSpinningNavId] = useState('')
+  const [teamMenuOpen, setTeamMenuOpen] = useState(false)
   const spinTimerRef = useRef(null)
+  const teamMenuRef = useRef(null)
 
   const navItems = useMemo(
     () => [
@@ -69,19 +89,96 @@ export default function Sidebar({
     []
   )
 
-  const initials = (userName || 'U')
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-
+  const initials = getInitials(userName || 'U')
   const firstName = (userName || 'User').trim().split(' ')[0]
-  const roleLabel = (userRole || '').trim().toLowerCase() === 'admin' ? 'Admin' : 'Staff'
+  const role = (userRole || '').trim().toLowerCase()
+  const isAdmin = role === 'admin'
+  const roleLabel = isAdmin ? 'Admin' : 'Staff'
+
+  const normalizedTeamMembers = useMemo(() => {
+    const source = Array.isArray(teamMembers) ? teamMembers : []
+    const seen = new Set()
+    const normalized = []
+
+    source.forEach((member, index) => {
+      if (!member || typeof member !== 'object') return
+
+      const rawId = member.id ?? member.email ?? member.name ?? `member-${index}`
+      const key = String(rawId)
+      if (seen.has(key)) return
+      seen.add(key)
+
+      const resolvedName =
+        String(member.name || '').trim() ||
+        String(member.email || '').trim().split('@')[0] ||
+        'Team Member'
+
+      normalized.push({
+        id: rawId,
+        name: resolvedName,
+        email: String(member.email || '').trim(),
+        role: String(member.role || 'staff').trim().toLowerCase() || 'staff',
+        initials: String(member.initials || '').trim() || getInitials(resolvedName),
+        profilePhotoUrl: String(member.profile_photo_url || '').trim(),
+        isSessionActive: Boolean(member.is_session_active),
+      })
+    })
+
+    if (normalized.length === 0) {
+      normalized.push({
+        id: userId || 'current-user',
+        name: userName || 'User',
+        email: '',
+        role: role || 'staff',
+        initials: getInitials(userName || 'U'),
+        profilePhotoUrl: profilePhotoUrl || '',
+        isSessionActive: true,
+      })
+    }
+
+    return normalized
+  }, [teamMembers, userId, userName, role, profilePhotoUrl])
+
+  const selectedTeam = useMemo(() => {
+    if (normalizedTeamMembers.length === 0) return null
+
+    const currentMember = normalizedTeamMembers.find((member) => String(member.id) === String(userId))
+    return currentMember || normalizedTeamMembers[0]
+  }, [normalizedTeamMembers, userId])
 
   useEffect(() => {
     setAvatarLoadFailed(false)
   }, [profilePhotoUrl])
+
+  useEffect(() => {
+    if (!teamMenuOpen) return
+
+    const handlePointerDown = (event) => {
+      if (teamMenuRef.current && !teamMenuRef.current.contains(event.target)) {
+        setTeamMenuOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setTeamMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [teamMenuOpen])
+
+  useEffect(() => {
+    if (isCollapsed || !isAdmin) {
+      setTeamMenuOpen(false)
+    }
+  }, [isCollapsed, isAdmin])
 
   useEffect(() => {
     return () => {
@@ -96,6 +193,7 @@ export default function Sidebar({
       clearTimeout(spinTimerRef.current)
     }
 
+    setTeamMenuOpen(false)
     setSpinningNavId(viewId)
     spinTimerRef.current = setTimeout(() => {
       setSpinningNavId('')
@@ -131,6 +229,69 @@ export default function Sidebar({
         </div>
       </div>
 
+      {isAdmin && (
+        <div className="team-switcher-wrap" ref={teamMenuRef}>
+          <button
+            type="button"
+            className={`team-switcher-trigger ${teamMenuOpen ? 'open' : ''}`.trim()}
+            onClick={() => setTeamMenuOpen((prev) => !prev)}
+            aria-expanded={teamMenuOpen}
+            aria-haspopup="dialog"
+          >
+            <span className="team-switcher-avatar">
+              <span className="team-switcher-avatar-fallback">{selectedTeam?.initials || initials}</span>
+              {selectedTeam?.profilePhotoUrl ? (
+                <img
+                  src={selectedTeam.profilePhotoUrl}
+                  alt={`${selectedTeam.name} avatar`}
+                  className="team-switcher-avatar-image"
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none'
+                  }}
+                />
+              ) : null}
+            </span>
+            <span className="team-switcher-name">{selectedTeam?.name || userName}</span>
+            <span className={`team-switcher-caret ${teamMenuOpen ? 'open' : ''}`}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="8 15 12 19 16 15"></polyline>
+                <polyline points="8 9 12 5 16 9"></polyline>
+              </svg>
+            </span>
+          </button>
+
+          {!isCollapsed && teamMenuOpen && (
+            <div className="team-switcher-popover" role="dialog" aria-label="Teams list">
+              <div className="team-switcher-popover-title">Teams</div>
+              <ul className="team-switcher-list">
+                {normalizedTeamMembers.map((member) => {
+                  const isCurrent = String(member.id) === String(userId)
+                  return (
+                    <li key={`team-member-${member.id}`} className={`team-switcher-item ${isCurrent ? 'active' : ''}`.trim()}>
+                      <span className="team-member-avatar">
+                        <span className="team-member-avatar-fallback">{member.initials}</span>
+                        {member.profilePhotoUrl ? (
+                          <img
+                            src={member.profilePhotoUrl}
+                            alt={`${member.name} avatar`}
+                            className="team-member-avatar-image"
+                            onError={(event) => {
+                              event.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ) : null}
+                      </span>
+                      <span className="team-member-name">{member.name}</span>
+                      {isCurrent && <span className="team-member-check">✓</span>}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       <nav className="nav" aria-label="Main navigation">
         {navItems.map((item) => (
           <button
@@ -152,7 +313,7 @@ export default function Sidebar({
         <button
           type="button"
           className="sidebar-ghost-btn"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => setIsCollapsed((prev) => !prev)}
           title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
         >
           <span className={`collapse-arrow ${isCollapsed ? 'rotate' : ''}`}>

@@ -492,6 +492,169 @@ td {
   display: none;
 }
 
+.team-switcher-wrap {
+  position: relative;
+  z-index: 3;
+}
+
+.team-switcher-trigger {
+  width: 100%;
+  border: 1px solid #d8e3de;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1f3630;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  cursor: pointer;
+  font: inherit;
+  min-height: 52px;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.07);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.team-switcher-trigger:hover {
+  transform: translateY(-1px);
+  border-color: #bfd3ca;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.11);
+}
+
+.team-switcher-trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus), 0 10px 18px rgba(15, 23, 42, 0.12);
+}
+
+.team-switcher-trigger.open {
+  border-color: #b9d4c8;
+  box-shadow: 0 11px 20px rgba(15, 23, 42, 0.12);
+}
+
+.team-switcher-avatar,
+.team-member-avatar {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(140deg, #2f6cc9, #1d4fb8);
+  color: #eff6ff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+.team-switcher-avatar-fallback,
+.team-member-avatar-fallback {
+  position: relative;
+  z-index: 1;
+  line-height: 1;
+}
+
+.team-switcher-avatar-image,
+.team-member-avatar-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+}
+
+.team-switcher-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-switcher-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #677c75;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.team-switcher-caret.open {
+  transform: rotate(180deg);
+  color: #1f4e42;
+}
+
+.team-switcher-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  border: 1px solid #d8e3de;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 34px rgba(2, 6, 23, 0.16);
+  overflow: hidden;
+  animation: fadeIn 0.18s ease;
+}
+
+.team-switcher-popover-title {
+  padding: 12px 14px 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #314740;
+  border-bottom: 1px solid #e2ebe6;
+}
+
+.team-switcher-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team-switcher-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf2ef;
+}
+
+.team-switcher-item:last-child {
+  border-bottom: 0;
+}
+
+.team-switcher-item.active {
+  background: #f2f8f5;
+}
+
+.team-member-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.04rem;
+  font-weight: 700;
+  color: #253b34;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-member-check {
+  color: #1f5e4f;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sidebar.collapsed .team-switcher-wrap {
+  display: none;
+}
+
 .nav {
   flex: 1;
   display: flex;
@@ -1556,6 +1719,56 @@ td {
   background: linear-gradient(135deg, #1f7a63, #1f5f4d);
   color: #e6f8f1;
   box-shadow: 0 10px 20px rgba(12, 74, 62, 0.34);
+}
+
+[data-theme='dark'] .team-switcher-trigger {
+  border-color: #314757;
+  background: #10202b;
+  color: #d6e6f0;
+  box-shadow: 0 10px 18px rgba(2, 6, 23, 0.36);
+}
+
+[data-theme='dark'] .team-switcher-trigger:hover {
+  border-color: #3e5b70;
+}
+
+[data-theme='dark'] .team-switcher-trigger.open {
+  border-color: #43657d;
+}
+
+[data-theme='dark'] .team-switcher-caret {
+  color: #98afbe;
+}
+
+[data-theme='dark'] .team-switcher-caret.open {
+  color: #d7e7f1;
+}
+
+[data-theme='dark'] .team-switcher-popover {
+  border-color: #2f4656;
+  background: #0f1a24;
+  box-shadow: 0 20px 36px rgba(2, 6, 23, 0.62);
+}
+
+[data-theme='dark'] .team-switcher-popover-title {
+  color: #d3e5f0;
+  border-bottom-color: #293f4e;
+}
+
+[data-theme='dark'] .team-switcher-item {
+  border-bottom-color: #223746;
+}
+
+[data-theme='dark'] .team-switcher-item.active {
+  background: #162733;
+}
+
+[data-theme='dark'] .team-member-name {
+  color: #d5e6f0;
+}
+
+[data-theme='dark'] .team-member-check {
+  color: #9dd6c3;
 }
 
 [data-theme='dark'] .outlook-connect-btn {

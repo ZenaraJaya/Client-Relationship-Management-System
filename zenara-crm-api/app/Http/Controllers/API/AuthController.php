@@ -536,6 +536,88 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
         return response()->json($this->serializeAuthUser($request->user(), $request));
     }
 
+    protected function teamMemberInitials(User $user): string
+    {
+        $initials = collect(preg_split('/\s+/', trim((string) $user->name)) ?: [])
+            ->filter()
+            ->map(fn (string $part): string => Str::upper(Str::substr($part, 0, 1)))
+            ->take(2)
+            ->implode('');
+
+        if ($initials !== '') {
+            return $initials;
+        }
+
+        $emailLocalPart = Str::before((string) $user->email, '@');
+        $fallback = Str::upper(Str::substr($emailLocalPart, 0, 2));
+        return $fallback !== '' ? $fallback : 'U';
+    }
+
+    protected function serializeTeamMember(User $user, Request $request): array
+    {
+        $expiresAt = $user->api_token_expires_at;
+        $isSessionActive = !empty($user->api_token)
+            && ($expiresAt === null || $expiresAt->isFuture());
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => strtolower(trim((string) $user->role ?: 'staff')) ?: 'staff',
+            'initials' => $this->teamMemberInitials($user),
+            'profile_photo_url' => $this->profilePhotoUrlForUser($user, $request),
+            'is_session_active' => $isSessionActive,
+        ];
+    }
+
+    public function teamMembers(Request $request): JsonResponse
+    {
+        if (!$this->tokenColumnReady()) {
+            return $this->schemaOutOfDateResponse();
+        }
+
+        /** @var User $currentUser */
+        $currentUser = $request->user();
+        if (!$currentUser) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        if (!$currentUser->isAdmin()) {
+            $member = $currentUser->fresh() ?? $currentUser;
+
+            return response()->json([
+                'members' => [$this->serializeTeamMember($member, $request)],
+                'current_user_id' => $currentUser->id,
+            ]);
+        }
+
+        $now = Carbon::now();
+
+        $members = User::query()
+            ->whereNotNull('api_token')
+            ->where(function ($query) use ($now): void {
+                $query
+                    ->whereNull('api_token_expires_at')
+                    ->orWhere('api_token_expires_at', '>', $now);
+            })
+            ->orderBy('name')
+            ->get();
+
+        if (!$members->contains(fn (User $member): bool => $member->id === $currentUser->id)) {
+            $members->prepend($currentUser->fresh() ?? $currentUser);
+        }
+
+        $serializedMembers = $members
+            ->unique('id')
+            ->values()
+            ->map(fn (User $member): array => $this->serializeTeamMember($member, $request));
+
+        return response()->json([
+            'members' => $serializedMembers,
+            'current_user_id' => $currentUser->id,
+        ]);
+    }
+
     public function updateProfile(Request $request): JsonResponse
     {
         if (!$this->tokenColumnReady()) {
