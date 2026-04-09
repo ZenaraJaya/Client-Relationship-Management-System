@@ -894,6 +894,22 @@ export default function Home() {
     .sort((a, b) => a.date - b.date)
 
   const sevenDayAppointments = upcomingTouchpoints.filter((entry) => entry.date <= nextSevenDays)
+  const upcomingAppointmentClients = items
+    .map((item) => {
+      const appointmentDate = toDate(item.appointment)
+      if (!appointmentDate || appointmentDate < now || appointmentDate > nextSevenDays) {
+        return null
+      }
+
+      return {
+        id: item.id,
+        company_name: item.company_name || 'Unnamed Company',
+        contact_person: item.contact_person || '',
+        date: appointmentDate,
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date - b.date)
   const recentContacts = [...items]
     .filter((item) => toDate(item.updated_at))
     .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
@@ -989,7 +1005,8 @@ export default function Home() {
               totalLeads={totalLeads}
               activeDeals={activeDeals}
               followUpsToday={todayFollowUps}
-              upcomingAppointments={sevenDayAppointments.length}
+              upcomingAppointments={upcomingAppointmentClients.length}
+              upcomingAppointmentClients={upcomingAppointmentClients}
               onOpenListing={() => setCurrentView('listing')}
             />
 

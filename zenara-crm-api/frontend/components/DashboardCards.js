@@ -1,13 +1,40 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 export default function DashboardCards({
   totalLeads = 0,
   activeDeals = 0,
   followUpsToday = 0,
   upcomingAppointments = 0,
+  upcomingAppointmentClients = [],
   onOpenListing = () => {},
 }) {
+  const [appointmentPopupOpen, setAppointmentPopupOpen] = useState(false)
   const conversionRate = totalLeads > 0 ? Math.round((activeDeals / totalLeads) * 100) : 0
+
+  useEffect(() => {
+    if (!appointmentPopupOpen) return
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setAppointmentPopupOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [appointmentPopupOpen])
+
+  const formatAppointmentDate = (value) => {
+    const date = value instanceof Date ? value : new Date(value)
+    if (Number.isNaN(date.getTime())) return 'Date not available'
+
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }
 
   const metrics = [
     {
@@ -67,7 +94,15 @@ export default function DashboardCards({
             <button type="button" className="hero-primary-btn" onClick={onOpenListing}>
               Open Listing
             </button>
-            <div className="hero-meta-chip">{upcomingAppointments} upcoming appointment(s)</div>
+            <button
+              type="button"
+              className="hero-meta-chip hero-meta-chip-button"
+              onClick={() => setAppointmentPopupOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={appointmentPopupOpen}
+            >
+              {upcomingAppointments} upcoming appointment(s)
+            </button>
           </div>
         </div>
       </div>
@@ -81,6 +116,51 @@ export default function DashboardCards({
           </div>
         ))}
       </div>
+
+      {appointmentPopupOpen && (
+        <div
+          className="appointment-popup-overlay"
+          role="presentation"
+          onClick={() => setAppointmentPopupOpen(false)}
+        >
+          <div
+            className="appointment-popup-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appointment-popup-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="appointment-popup-head">
+              <h3 id="appointment-popup-title">Clients with upcoming appointments</h3>
+              <button
+                type="button"
+                className="appointment-popup-close"
+                onClick={() => setAppointmentPopupOpen(false)}
+                aria-label="Close upcoming appointments popup"
+              >
+                &times;
+              </button>
+            </div>
+
+            {upcomingAppointmentClients.length === 0 ? (
+              <p className="appointment-popup-empty">No upcoming appointments in the next 7 days.</p>
+            ) : (
+              <ul className="appointment-popup-list">
+                {upcomingAppointmentClients.map((entry) => (
+                  <li
+                    key={`${entry.id}-${entry.date instanceof Date ? entry.date.getTime() : String(entry.date)}`}
+                    className="appointment-popup-item"
+                  >
+                    <div className="appointment-popup-company">{entry.company_name || 'Unnamed Company'}</div>
+                    <div className="appointment-popup-meta">{entry.contact_person || 'No contact person set'}</div>
+                    <div className="appointment-popup-time">{formatAppointmentDate(entry.date)}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
