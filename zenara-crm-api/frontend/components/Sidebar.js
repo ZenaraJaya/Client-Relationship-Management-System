@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 export default function Sidebar({
   currentView,
@@ -10,6 +10,7 @@ export default function Sidebar({
   profilePhotoUrl = '',
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
 
   const navItems = useMemo(
     () => [
@@ -76,6 +77,10 @@ export default function Sidebar({
   const firstName = (userName || 'User').trim().split(' ')[0]
   const roleLabel = (userRole || '').trim().toLowerCase() === 'admin' ? 'Admin' : 'Staff'
 
+  useEffect(() => {
+    setAvatarLoadFailed(false)
+  }, [profilePhotoUrl])
+
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="brand">
@@ -86,8 +91,13 @@ export default function Sidebar({
           title={`Open profile for ${userName}`}
           aria-label="Open profile settings"
         >
-          {profilePhotoUrl ? (
-            <img src={profilePhotoUrl} alt={`${userName} profile`} className="avatar-image" />
+          {profilePhotoUrl && !avatarLoadFailed ? (
+            <img
+              src={profilePhotoUrl}
+              alt={`${userName} profile`}
+              className="avatar-image"
+              onError={() => setAvatarLoadFailed(true)}
+            />
           ) : (
             initials
           )}

@@ -18,8 +18,11 @@ const getDefaultApiBase = () => {
   return 'http://localhost:8000/api'
 }
 
-const normalizeProfilePhotoUrl = (value, apiBase) => {
+const normalizeProfilePhotoUrl = (value, apiBase, userId, updatedAt) => {
   if (!value) return ''
+
+  const numericUserId = Number(userId)
+  const hasUserId = Number.isInteger(numericUserId) && numericUserId > 0
 
   let apiOrigin = ''
   try {
@@ -28,13 +31,39 @@ const normalizeProfilePhotoUrl = (value, apiBase) => {
     apiOrigin = ''
   }
 
+  const buildApiProfilePhotoUrl = () => {
+    if (!hasUserId || !apiOrigin) return ''
+
+    let version = ''
+    const updatedAtTimestampMs = Date.parse(String(updatedAt || ''))
+    if (!Number.isNaN(updatedAtTimestampMs)) {
+      version = `?v=${Math.floor(updatedAtTimestampMs / 1000)}`
+    }
+
+    return `${apiOrigin}/api/auth/profile-photo/${numericUserId}${version}`
+  }
+
+  const rawValue = String(value).trim()
+  const looksLikeMalformedIdUrl = /^\d+(\?.*)?$/.test(rawValue)
+
+  if (looksLikeMalformedIdUrl) {
+    const fallback = buildApiProfilePhotoUrl()
+    if (fallback) return fallback
+  }
+
   try {
-    const resolved = new URL(value, apiOrigin || undefined)
+    const resolved = new URL(rawValue, apiOrigin || undefined)
 
     if (resolved.pathname.startsWith('/api/auth/profile-photo/') && apiOrigin) {
       const apiUrl = new URL(apiOrigin)
       resolved.protocol = apiUrl.protocol
       resolved.host = apiUrl.host
+    }
+
+    const isStoragePath = resolved.pathname.startsWith('/storage/')
+    if (isStoragePath) {
+      const fallback = buildApiProfilePhotoUrl()
+      if (fallback) return fallback
     }
 
     if (typeof window !== 'undefined' && window.location.protocol === 'https:' && resolved.protocol === 'http:') {
@@ -43,11 +72,14 @@ const normalizeProfilePhotoUrl = (value, apiBase) => {
 
     return resolved.toString()
   } catch {
-    if (typeof value === 'string' && value.startsWith('http://') && typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return value.replace(/^http:\/\//i, 'https://')
+    const fallback = buildApiProfilePhotoUrl()
+    if (fallback) return fallback
+
+    if (rawValue.startsWith('http://') && typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      return rawValue.replace(/^http:\/\//i, 'https://')
     }
 
-    return value
+    return rawValue
   }
 }
 
@@ -81,7 +113,12 @@ export default function Home() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
-  const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(authUser?.profile_photo_url || '', apiBase)
+  const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(
+    authUser?.profile_photo_url || '',
+    apiBase,
+    authUser?.id,
+    authUser?.updated_at
+  )
 
   const toastTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)

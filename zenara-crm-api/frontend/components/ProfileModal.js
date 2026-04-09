@@ -10,6 +10,7 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
   const [error, setError] = useState('')
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
+  const [photoLoadFailed, setPhotoLoadFailed] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
     })
     setSelectedPhoto(null)
     setPreviewUrl(user?.profile_photo_url || '')
+    setPhotoLoadFailed(false)
     setError('')
   }, [isOpen, user])
 
@@ -84,6 +86,7 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
 
     setSelectedPhoto(file)
     setPreviewUrl(URL.createObjectURL(file))
+    setPhotoLoadFailed(false)
     if (error) setError('')
   }
 
@@ -167,11 +170,12 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                 flexShrink: 0,
                 boxShadow: '0 12px 24px rgba(180, 96, 60, 0.16)',
               }}>
-                {previewUrl ? (
+                {previewUrl && !photoLoadFailed ? (
                   <img
                     src={previewUrl}
                     alt={`${form.name || user?.name || 'User'} profile`}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={() => setPhotoLoadFailed(true)}
                   />
                 ) : (
                   initials
