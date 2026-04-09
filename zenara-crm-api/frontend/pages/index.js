@@ -143,7 +143,6 @@ export default function Home() {
   const [authChecking, setAuthChecking] = useState(true)
   const [authSubmitting, setAuthSubmitting] = useState(false)
   const [authError, setAuthError] = useState('')
-  const [teamMembers, setTeamMembers] = useState([])
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
@@ -231,7 +230,6 @@ export default function Home() {
     setData(null)
     setLoading(false)
     setError(null)
-    setTeamMembers([])
     setSelectedIds([])
     setSearchCompany('')
     setCurrentView('dashboard')
@@ -316,53 +314,6 @@ export default function Home() {
       setSelectedIds([])
     }
   }, [isAdmin, selectedIds.length])
-
-  useEffect(() => {
-    if (!authToken) {
-      setTeamMembers([])
-      return undefined
-    }
-
-    let cancelled = false
-
-    const fetchTeamMembers = async () => {
-      try {
-        const res = await fetch(`${apiBase}/auth/team-members`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        })
-
-        if (res.status === 401) {
-          if (!cancelled) {
-            handleUnauthorized()
-          }
-          return
-        }
-
-        if (!res.ok) {
-          return
-        }
-
-        const json = await res.json().catch(() => null)
-        if (cancelled || !json || !Array.isArray(json.members)) {
-          return
-        }
-
-        setTeamMembers(json.members)
-      } catch (err) {
-        if (!cancelled) {
-          setTeamMembers((prev) => prev)
-        }
-      }
-    }
-
-    fetchTeamMembers()
-    const intervalId = setInterval(fetchTeamMembers, 30000)
-
-    return () => {
-      cancelled = true
-      clearInterval(intervalId)
-    }
-  }, [apiBase, authToken])
 
   useEffect(() => {
     let mounted = true
@@ -1055,11 +1006,9 @@ export default function Home() {
         }}
         onLogout={handleLogout}
         onProfileClick={() => setProfileOpen(true)}
-        userId={authUser?.id}
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
         profilePhotoUrl={normalizedProfilePhotoUrl}
-        teamMembers={teamMembers}
       />
       <main className="main">
         <TopBar
