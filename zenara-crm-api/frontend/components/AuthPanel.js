@@ -116,7 +116,7 @@ function getPasswordStrength(password) {
 export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, isLoading, error }) {
   const [mode, setMode] = useState('login')
   const [name, setName] = useState('')
-  const [role, setRole] = useState('staff')
+  const [role, setRole] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -126,6 +126,14 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
 
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password])
   const isSignup = mode === 'signup'
+
+  const showRoleRequiredPopup = () => {
+    const message = 'Please choose your role.'
+    setLocalError(message)
+    if (typeof window !== 'undefined') {
+      window.alert(message)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -142,6 +150,10 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
     }
 
     if (isSignup) {
+      if (!role) {
+        showRoleRequiredPopup()
+        return
+      }
       if (!name.trim()) {
         setLocalError('Name is required.')
         return
@@ -174,6 +186,12 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
   const handleOutlookAuth = async () => {
     if (isLoading) return
     setLocalError('')
+
+    if (isSignup && !role) {
+      showRoleRequiredPopup()
+      return
+    }
+
     await onOutlookAuth({
       mode,
       role: isSignup ? role : 'staff',
