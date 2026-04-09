@@ -1099,10 +1099,10 @@ export default function Home() {
                   <button
                     onClick={handleBulkDelete}
                     style={{
-                      background: '#fee2e2',
-                      color: '#991b1b',
+                      background: 'var(--table-action-delete-bg)',
+                      color: 'var(--table-action-delete-text)',
                       padding: '8px 16px',
-                      border: '1px solid #fecaca',
+                      border: '1px solid var(--table-head-border)',
                       borderRadius: 6,
                       cursor: 'pointer',
                       fontWeight: 600,
@@ -1115,7 +1115,7 @@ export default function Home() {
             </div>
 
             {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
-            {error && <div style={{ marginTop: 12, color: '#dc2626' }}>Data Sync Error: {String(error.message || error)}</div>}
+            {error && <div style={{ marginTop: 12, color: 'var(--table-action-delete-text)' }}>Data Sync Error: {String(error.message || error)}</div>}
             {!loading && (
               <div style={{ marginTop: 12 }}>
                 <CrmList
@@ -1131,7 +1131,7 @@ export default function Home() {
                 />
                 {data && (
                   <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--table-cell-muted)' }}>
                       Showing page {currentPage} of {lastPage}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1142,9 +1142,9 @@ export default function Home() {
                         style={{
                           padding: '6px 12px',
                           borderRadius: 6,
-                          border: '1px solid #d1d5db',
-                          background: '#fff',
-                          color: '#374151',
+                          border: '1px solid var(--modal-btn-secondary-border)',
+                          background: 'var(--modal-btn-secondary-bg)',
+                          color: 'var(--modal-btn-secondary-text)',
                           cursor: !hasPrevPage || loading ? 'not-allowed' : 'pointer',
                           opacity: !hasPrevPage || loading ? 0.5 : 1,
                         }}
@@ -1158,9 +1158,9 @@ export default function Home() {
                         style={{
                           padding: '6px 12px',
                           borderRadius: 6,
-                          border: '1px solid #d1d5db',
-                          background: '#fff',
-                          color: '#374151',
+                          border: '1px solid var(--modal-btn-secondary-border)',
+                          background: 'var(--modal-btn-secondary-bg)',
+                          color: 'var(--modal-btn-secondary-text)',
                           cursor: !hasNextPage || loading ? 'not-allowed' : 'pointer',
                           opacity: !hasNextPage || loading ? 0.5 : 1,
                         }}
@@ -1218,7 +1218,7 @@ export default function Home() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(2, 6, 23, 0.45)',
+            background: 'var(--modal-overlay-bg)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1230,15 +1230,15 @@ export default function Home() {
             style={{
               width: '100%',
               maxWidth: 420,
-              background: '#fff',
+              background: 'var(--modal-card-bg)',
               borderRadius: 12,
-              boxShadow: '0 20px 30px rgba(15,23,42,0.2)',
+              boxShadow: 'var(--modal-card-shadow)',
               padding: 20,
-              border: '1px solid #e5e7eb',
+              border: '1px solid var(--modal-card-border)',
             }}
           >
-            <h3 style={{ margin: 0, marginBottom: 8, color: '#0f172a' }}>Confirm Delete</h3>
-            <p style={{ margin: 0, marginBottom: 18, color: '#475569', lineHeight: 1.5, fontSize: 14 }}>
+            <h3 style={{ margin: 0, marginBottom: 8, color: 'var(--modal-heading)' }}>Confirm Delete</h3>
+            <p style={{ margin: 0, marginBottom: 18, color: 'var(--modal-copy)', lineHeight: 1.5, fontSize: 14 }}>
               {deleteConfirm.mode === 'single'
                 ? 'Are you sure you want to delete this contact?'
                 : `Are you sure you want to delete ${deleteConfirm.count} selected contacts?`}
@@ -1252,9 +1252,9 @@ export default function Home() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: 8,
-                  border: '1px solid #d1d5db',
-                  background: '#fff',
-                  color: '#374151',
+                  border: '1px solid var(--modal-btn-secondary-border)',
+                  background: 'var(--modal-btn-secondary-bg)',
+                  color: 'var(--modal-btn-secondary-text)',
                   cursor: deleteConfirm.isDeleting ? 'not-allowed' : 'pointer',
                   fontWeight: 600,
                   opacity: deleteConfirm.isDeleting ? 0.7 : 1,
@@ -1269,8 +1269,8 @@ export default function Home() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: 8,
-                  border: '1px solid #dc2626',
-                  background: '#dc2626',
+                  border: '1px solid var(--table-action-delete-text)',
+                  background: 'var(--table-action-delete-text)',
                   color: '#fff',
                   cursor: deleteConfirm.isDeleting ? 'not-allowed' : 'pointer',
                   fontWeight: 700,

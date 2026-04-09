@@ -696,3 +696,137 @@
     font-size: 10px;
   }
 }
+
+:global([data-theme='dark']) .shell {
+  background:
+    radial-gradient(circle at 14% 10%, rgba(30, 58, 138, 0.44), transparent 36%),
+    radial-gradient(circle at 84% 88%, rgba(3, 105, 161, 0.3), transparent 40%),
+    linear-gradient(155deg, #0d1622 0%, #111d2a 52%, #0d1723 100%);
+}
+
+:global([data-theme='dark']) .formPane {
+  background: rgba(14, 24, 34, 0.95);
+  border-color: #2c4050;
+  box-shadow: 0 26px 54px rgba(2, 6, 23, 0.5);
+}
+
+:global([data-theme='dark']) .modeSwitch {
+  background: #1b2e3e;
+}
+
+:global([data-theme='dark']) .modeButton {
+  color: #9db3c4;
+}
+
+:global([data-theme='dark']) .modeButtonActive {
+  background: #ecf6ff;
+  color: #102432;
+}
+
+:global([data-theme='dark']) .formTitle {
+  color: #e6f0f7;
+}
+
+:global([data-theme='dark']) .formSubtitle,
+:global([data-theme='dark']) .label,
+:global([data-theme='dark']) .strengthLabel,
+:global([data-theme='dark']) .footnote {
+  color: #9fb4c4;
+}
+
+:global([data-theme='dark']) .input {
+  border-color: #345061;
+  background: #10202d;
+  color: #e3edf5;
+}
+
+:global([data-theme='dark']) .input::placeholder {
+  color: #7f99ab;
+}
+
+:global([data-theme='dark']) .input:hover {
+  border-color: #4e6a7d;
+}
+
+:global([data-theme='dark']) .input:focus {
+  border-color: #74d6b6;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+}
+
+:global([data-theme='dark']) .ghostAction {
+  background: #1f3647;
+  color: #dce9f2;
+}
+
+:global([data-theme='dark']) .ghostAction:hover {
+  background: #294457;
+}
+
+:global([data-theme='dark']) .strengthTrack {
+  background: #1f3343;
+}
+
+:global([data-theme='dark']) .oauthDivider {
+  color: #8ea5b6;
+}
+
+:global([data-theme='dark']) .oauthDivider::before {
+  border-top-color: #2e4656;
+}
+
+:global([data-theme='dark']) .oauthDivider span {
+  background: rgba(14, 24, 34, 0.95);
+}
+
+:global([data-theme='dark']) .outlookAuthButton {
+  border-color: #355364;
+  background: linear-gradient(135deg, #122536 0%, #132a3f 100%);
+  color: #c5ddf2;
+}
+
+:global([data-theme='dark']) .outlookAuthButton:hover {
+  border-color: #4a6a80;
+  box-shadow: 0 10px 18px rgba(2, 6, 23, 0.34);
+}
+
+:global([data-theme='dark']) .roleSwitch {
+  background: #1f3445;
+}
+
+:global([data-theme='dark']) .roleButton {
+  color: #aac0cf;
+}
+
+:global([data-theme='dark']) .roleButtonActive {
+  background: #ecf6ff;
+  color: #102432;
+}
+
+:global([data-theme='dark']) .errorCard {
+  border-color: #7f1d1d;
+  background: #3a1217;
+  color: #fecaca;
+}
+
+:global([data-theme='dark']) .rolePromptOverlay {
+  background: rgba(2, 6, 23, 0.68);
+}
+
+:global([data-theme='dark']) .rolePromptCard {
+  background: #0f1a24;
+  border-color: #2a3f4d;
+  box-shadow: 0 26px 46px rgba(2, 6, 23, 0.62);
+}
+
+:global([data-theme='dark']) .rolePromptTitle {
+  color: #e2edf4;
+}
+
+:global([data-theme='dark']) .rolePromptCopy,
+:global([data-theme='dark']) .rolePromptDismiss {
+  color: #9fb3c0;
+}
+
+:global([data-theme='dark']) .rolePromptDismiss:hover {
+  color: #d8e6ef;
+}

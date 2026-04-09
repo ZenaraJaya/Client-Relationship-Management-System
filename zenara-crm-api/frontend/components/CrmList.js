@@ -2,27 +2,27 @@ import React, { useState } from 'react'
 
 const priorityColor = (priority) => {
   switch (priority?.toLowerCase()) {
-    case 'high': return '#fca5a5'
-    case 'medium': return '#fcd34d'
-    case 'low': return '#d1d5db'
-    default: return '#e5e7eb'
+    case 'high': return 'var(--priority-high-bg)'
+    case 'medium': return 'var(--priority-medium-bg)'
+    case 'low': return 'var(--priority-low-bg)'
+    default: return 'var(--priority-default-bg)'
   }
 }
 
 const statusColor = (status) => {
   switch (status?.toLowerCase()) {
-    case 'new': return '#3b82f6'
-    case 'contacted': return '#f59e0b'
-    case 'qualified': return '#10b981'
-    case 'closed': return '#ff0000ff'
-    default: return '#9ca3af'
+    case 'new': return 'var(--status-new-bg)'
+    case 'contacted': return 'var(--status-contacted-bg)'
+    case 'qualified': return 'var(--status-qualified-bg)'
+    case 'closed': return 'var(--status-closed-bg)'
+    default: return 'var(--status-default-bg)'
   }
 }
 
 const statusTextColor = (status) => {
   switch (status?.toLowerCase()) {
-    case 'new': return '#0f172a'
-    default: return '#ffffff'
+    case 'new': return 'var(--status-new-text)'
+    default: return 'var(--status-default-text)'
   }
 }
 
@@ -435,7 +435,7 @@ export default function CrmList({
 
   if (items.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '24px', color: '#9ca3af' }}>
+      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--table-empty-text)' }}>
         No CRM contacts found.
       </div>
     )
@@ -443,7 +443,7 @@ export default function CrmList({
 
   const truncatedStyle = {
     padding: '12px 10px',
-    color: '#6b7280',
+    color: 'var(--table-cell-muted)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -458,7 +458,7 @@ export default function CrmList({
     color: textColor,
     textAlign: 'center',
     width: '100%',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+    boxShadow: '0 1px 2px rgba(0,0,0,0.08)'
   })
 
   const priorityOptions = [
@@ -478,7 +478,7 @@ export default function CrmList({
     <div style={{ overflowX: 'auto', minHeight: '400px' }}>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '13px', tableLayout: 'fixed' }}>
         <thead>
-          <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+          <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
             <th style={{ padding: '12px 10px', width: '40px' }}>
               {canDelete ? (
                 <input
@@ -488,17 +488,17 @@ export default function CrmList({
                   style={{ cursor: 'pointer' }}
                 />
               ) : (
-                <span style={{ color: '#cbd5e1' }}>-</span>
+                <span style={{ color: 'var(--table-viewonly-text)' }}>-</span>
               )}
             </th>
-            <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>No</th>
-            <th style={{ padding: '12px 10px', width: 'auto', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Company Name</th>
-            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Appointment</th>
-            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Follow Up</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Priority</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Status</th>
-            <th style={{ padding: '12px 10px', width: '180px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Remarks</th>
-            <th style={{ padding: '12px 10px', width: '120px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Actions</th>
+            <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>No</th>
+            <th style={{ padding: '12px 10px', width: 'auto', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Company Name</th>
+            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Appointment</th>
+            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Follow Up</th>
+            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Priority</th>
+            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Status</th>
+            <th style={{ padding: '12px 10px', width: '180px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Remarks</th>
+            <th style={{ padding: '12px 10px', width: '120px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -508,14 +508,14 @@ export default function CrmList({
               <React.Fragment key={row.id || idx}>
                 <tr
                   style={{
-                    borderBottom: isExpanded ? 'none' : '1px solid #f3f4f6',
-                    background: isExpanded ? '#f8fafc' : (selectedIds.includes(row.id) ? '#f0f9ff' : 'transparent'),
+                    borderBottom: isExpanded ? 'none' : '1px solid var(--table-row-border)',
+                    background: isExpanded ? 'var(--table-row-expanded-bg)' : (selectedIds.includes(row.id) ? 'var(--table-row-selected-bg)' : 'transparent'),
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     boxShadow: isExpanded ? 'inset 0 2px 4px rgba(0,0,0,0.02)' : 'none'
                   }}
                   onClick={() => toggleExpand(row.id)}
-                  onMouseEnter={(e) => { if (!selectedIds.includes(row.id) && !isExpanded) e.currentTarget.style.background = '#f9fafb' }}
+                  onMouseEnter={(e) => { if (!selectedIds.includes(row.id) && !isExpanded) e.currentTarget.style.background = 'var(--table-row-hover-bg)' }}
                   onMouseLeave={(e) => { if (!selectedIds.includes(row.id) && !isExpanded) e.currentTarget.style.background = 'transparent' }}
                 >
                   <td style={{ padding: '12px 10px', textAlign: 'center', width: '40px' }} onClick={(e) => e.stopPropagation()}>
@@ -527,11 +527,11 @@ export default function CrmList({
                         style={{ cursor: 'pointer' }}
                       />
                     ) : (
-                      <span style={{ color: '#cbd5e1' }}>-</span>
+                      <span style={{ color: 'var(--table-viewonly-text)' }}>-</span>
                     )}
                   </td>
-                  <td style={{ ...truncatedStyle, width: '40px', color: '#94a3b8', fontSize: '11px' }}>{rowOffset + idx + 1}</td>
-                  <td style={{ ...truncatedStyle, fontWeight: 600, color: '#111827' }}>
+                  <td style={{ ...truncatedStyle, width: '40px', color: 'var(--table-row-number)', fontSize: '11px' }}>{rowOffset + idx + 1}</td>
+                  <td style={{ ...truncatedStyle, fontWeight: 600, color: 'var(--ink)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{
                         display: 'flex',
@@ -540,18 +540,18 @@ export default function CrmList({
                         width: '20px',
                         height: '20px',
                         borderRadius: '4px',
-                        background: isExpanded ? '#eff6ff' : 'transparent',
+                        background: isExpanded ? 'var(--table-expand-icon-bg)' : 'transparent',
                         transition: 'background 0.2s'
                       }}>
                         <svg
-                          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isExpanded ? "#2563eb" : "#94a3b8"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isExpanded ? 'var(--table-expand-icon-stroke)' : 'var(--table-row-number)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                           style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
                         >
                           <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                       </div>
-                      <span style={{ color: isExpanded ? '#1e40af' : '#0369a1', transition: 'color 0.2s' }}>{row.company_name}</span>
-                      {isExpanded && <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500, marginLeft: 'auto', marginRight: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viewing Details</span>}
+                      <span style={{ color: isExpanded ? 'var(--table-company-active)' : 'var(--table-company)', transition: 'color 0.2s' }}>{row.company_name}</span>
+                      {isExpanded && <span style={{ fontSize: '10px', color: 'var(--table-viewing-tag)', fontWeight: 500, marginLeft: 'auto', marginRight: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viewing Details</span>}
                     </div>
                   </td>
                   <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
@@ -566,11 +566,11 @@ export default function CrmList({
                         value={row.priority || 'Low'}
                         options={priorityOptions}
                         onChange={(val) => onUpdate(row, 'priority', val)}
-                        badgeStyle={badgeStyle(priorityColor(row.priority), '#111827')}
+                        badgeStyle={badgeStyle(priorityColor(row.priority), 'var(--priority-text)')}
                         colorClassPrefix=""
                       />
                     ) : (
-                      <div style={badgeStyle(priorityColor(row.priority), '#111827')}>
+                      <div style={badgeStyle(priorityColor(row.priority), 'var(--priority-text)')}>
                         {row.priority || 'Low'}
                       </div>
                     )}
@@ -591,7 +591,7 @@ export default function CrmList({
                     )}
                   </td>
                   <td
-                    style={{ ...truncatedStyle, width: '180px', fontSize: '12px', color: '#475569' }}
+                    style={{ ...truncatedStyle, width: '180px', fontSize: '12px', color: 'var(--table-remark)' }}
                     title={row.remarks || ''}
                   >
                     {row.remarks || '-'}
@@ -603,8 +603,8 @@ export default function CrmList({
                           onClick={() => onEdit(row)}
                           style={{
                             padding: '4px 8px',
-                            background: '#e0f2fe',
-                            color: '#0369a1',
+                            background: 'var(--table-action-edit-bg)',
+                            color: 'var(--table-action-edit-text)',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer',
@@ -620,8 +620,8 @@ export default function CrmList({
                           onClick={() => onDelete(row.id)}
                           style={{
                             padding: '4px 8px',
-                            background: '#fef2f2',
-                            color: '#991b1b',
+                            background: 'var(--table-action-delete-bg)',
+                            color: 'var(--table-action-delete-text)',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer',
@@ -633,7 +633,7 @@ export default function CrmList({
                         </button>
                       )}
                       {!canEdit && !canDelete && (
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--table-viewonly-text)' }}>
                           View only
                         </span>
                       )}
@@ -641,104 +641,104 @@ export default function CrmList({
                   </td>
                 </tr>
                 {isExpanded && (
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <tr style={{ background: 'var(--table-row-expanded-bg)', borderBottom: '1px solid var(--table-head-border)' }}>
                     <td colSpan="9" style={{ padding: '24px 40px 32px 60px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
 
                         {/* Contact Card */}
                         <div style={{
-                          background: '#fff',
+                          background: 'var(--table-expanded-card-bg)',
                           padding: '20px',
                           borderRadius: '12px',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.06)',
-                          border: '1px solid #f1f5f9'
+                          boxShadow: 'var(--table-expanded-card-shadow)',
+                          border: '1px solid var(--table-expanded-card-border)'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                            <div style={{ background: '#eff6ff', padding: 6, borderRadius: 8 }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <div style={{ background: 'var(--table-expand-icon-bg)', padding: 6, borderRadius: 8 }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--table-expand-icon-stroke)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Client Contact</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--table-cell-muted)', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Client Contact</span>
                           </div>
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <div>
-                              <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>{row.contact_person}</div>
-                              <div style={{ fontSize: '13px', color: '#64748b' }}>{row.role}</div>
+                              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>{row.contact_person}</div>
+                              <div style={{ fontSize: '13px', color: 'var(--table-cell-muted)' }}>{row.role}</div>
                             </div>
 
-                            <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }}></div>
+                            <div style={{ height: '1px', background: 'var(--table-divider)', margin: '4px 0' }}></div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                              <a href={`tel:${row.phone}`} style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px', fontWeight: 500 }}>{row.phone}</a>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--table-row-number)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                              <a href={`tel:${row.phone}`} style={{ color: 'var(--table-link)', textDecoration: 'none', fontSize: '13px', fontWeight: 500 }}>{row.phone}</a>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                              <a href={`mailto:${row.email}`} style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px', fontWeight: 500 }}>{row.email}</a>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--table-row-number)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                              <a href={`mailto:${row.email}`} style={{ color: 'var(--table-link)', textDecoration: 'none', fontSize: '13px', fontWeight: 500 }}>{row.email}</a>
                             </div>
                           </div>
                         </div>
 
                         {/* Business Card */}
                         <div style={{
-                          background: '#fff',
+                          background: 'var(--table-expanded-card-bg)',
                           padding: '20px',
                           borderRadius: '12px',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.06)',
-                          border: '1px solid #f1f5f9'
+                          boxShadow: 'var(--table-expanded-card-shadow)',
+                          border: '1px solid var(--table-expanded-card-border)'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                            <div style={{ background: '#f0fdf4', padding: 6, borderRadius: 8 }}>
+                            <div style={{ background: 'var(--table-expand-icon-bg)', padding: 6, borderRadius: 8 }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                             </div>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Business Profile</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--table-cell-muted)', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Business Profile</span>
                           </div>
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ color: '#94a3b8', fontSize: '12px' }}>Industry</span>
-                              <span style={{ color: '#475569', fontSize: '13px', fontWeight: 500 }}>{row.industry}</span>
+                              <span style={{ color: 'var(--table-row-number)', fontSize: '12px' }}>Industry</span>
+                              <span style={{ color: 'var(--table-remark)', fontSize: '13px', fontWeight: 500 }}>{row.industry}</span>
                             </div>
-                            <div style={{ height: '1px', background: '#f8fafc' }}></div>
+                            <div style={{ height: '1px', background: 'var(--table-subtle-divider)' }}></div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ color: '#94a3b8', fontSize: '12px' }}>Location</span>
-                              <span style={{ color: '#475569', fontSize: '13px', fontWeight: 500 }}>{row.location}</span>
+                              <span style={{ color: 'var(--table-row-number)', fontSize: '12px' }}>Location</span>
+                              <span style={{ color: 'var(--table-remark)', fontSize: '13px', fontWeight: 500 }}>{row.location}</span>
                             </div>
-                            <div style={{ height: '1px', background: '#f8fafc' }}></div>
+                            <div style={{ height: '1px', background: 'var(--table-subtle-divider)' }}></div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ color: '#94a3b8', fontSize: '12px' }}>Lead Source</span>
-                              <span style={{ color: '#475569', fontSize: '13px', fontWeight: 500 }}>{row.source}</span>
+                              <span style={{ color: 'var(--table-row-number)', fontSize: '12px' }}>Lead Source</span>
+                              <span style={{ color: 'var(--table-remark)', fontSize: '13px', fontWeight: 500 }}>{row.source}</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Strategy Card */}
                         <div style={{
-                          background: '#fff',
+                          background: 'var(--table-expanded-card-bg)',
                           padding: '20px',
                           borderRadius: '12px',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.06)',
-                          border: '1px solid #f1f5f9',
+                          boxShadow: 'var(--table-expanded-card-shadow)',
+                          border: '1px solid var(--table-expanded-card-border)',
                           display: 'flex',
                           flexDirection: 'column'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                            <div style={{ background: '#fff7ed', padding: 6, borderRadius: 8 }}>
+                            <div style={{ background: 'var(--table-expand-icon-bg)', padding: 6, borderRadius: 8 }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                             </div>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Pain Points & Timeline</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--table-cell-muted)', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Pain Points & Timeline</span>
                           </div>
 
                           <div style={{ flexGrow: 1, marginBottom: 12 }}>
-                            <div style={{ color: '#475569', fontSize: '13px', fontWeight: '600', lineHeight: 1.5, background: '#fcfcfd', padding: '10px', borderRadius: '8px', borderLeft: '3px solid #fdba74' }}>
+                            <div style={{ color: 'var(--table-remark)', fontSize: '13px', fontWeight: '600', lineHeight: 1.5, background: 'var(--table-row-hover-bg)', padding: '10px', borderRadius: '8px', borderLeft: '3px solid #fdba74' }}>
                               {row.pain_point ? `"${row.pain_point}"` : 'No pain point added'}
                             </div>
                           </div>
 
-                          <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>LAST CONTACT</span>
-                            <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
+                          <div style={{ background: 'var(--table-row-hover-bg)', padding: '8px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: 'var(--table-row-number)', fontSize: '11px', fontWeight: 600 }}>LAST CONTACT</span>
+                            <span style={{ color: 'var(--table-cell-muted)', fontSize: '12px', fontWeight: 500 }}>
                               {row.last_contact ? new Date(row.last_contact).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}
                             </span>
                           </div>

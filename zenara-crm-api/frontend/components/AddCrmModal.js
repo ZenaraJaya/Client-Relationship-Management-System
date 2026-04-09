@@ -137,16 +137,18 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
     <div style={{
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.5)',
+      background: 'var(--modal-overlay-bg)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
     }}>
       <div style={{
-        background: '#fff',
+        background: 'var(--modal-card-bg)',
         borderRadius: 12,
-        boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+        boxShadow: 'var(--modal-card-shadow)',
+        border: '1px solid var(--modal-card-border)',
+        color: 'var(--ink)',
         maxHeight: '90vh',
         overflowY: 'auto',
         width: '90%',
@@ -162,7 +164,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
               border: 'none',
               fontSize: 24,
               cursor: 'pointer',
-              color: '#6b7280',
+              color: 'var(--table-cell-muted)',
             }}
           >
             &times;
@@ -173,7 +175,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 500 }}>
-                Company Name <span style={{ color: '#dc2626' }}>*</span>
+                Company Name <span style={{ color: 'var(--table-action-delete-text)' }}>*</span>
               </label>
               <input
                 type="text"
@@ -184,7 +186,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -202,7 +204,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -220,7 +222,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -238,7 +240,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -256,7 +258,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -274,7 +276,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -292,7 +294,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -308,7 +310,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -330,7 +332,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -350,7 +352,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -374,7 +376,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -392,7 +394,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -410,7 +412,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                 }}
@@ -430,7 +432,9 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  border: isPainPointFocused ? '1px solid #0f766e' : '1px solid #e5e7eb',
+                  border: isPainPointFocused ? '1px solid var(--date-cell-card-focus-border)' : '1px solid var(--line)',
+                  background: 'var(--panel)',
+                  color: 'var(--ink)',
                   borderRadius: 6,
                   fontSize: isPainPointFocused ? 15 : 13,
                   lineHeight: 1.5,
@@ -453,13 +457,15 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--line)',
                   borderRadius: 6,
                   fontSize: 13,
                   lineHeight: 1.5,
                   fontFamily: 'inherit',
                   resize: 'vertical',
                   minHeight: 38,
+                  background: 'var(--panel)',
+                  color: 'var(--ink)',
                 }}
               />
             </div>
@@ -471,8 +477,9 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
               onClick={onClose}
               style={{
                 padding: '8px 16px',
-                border: '1px solid #e5e7eb',
-                background: '#fff',
+                border: '1px solid var(--modal-btn-secondary-border)',
+                background: 'var(--modal-btn-secondary-bg)',
+                color: 'var(--modal-btn-secondary-text)',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontSize: 13,
@@ -486,7 +493,7 @@ export default function AddCrmModal({ isOpen, onClose, onSubmit, isLoading, edit
               disabled={isLoading}
               style={{
                 padding: '8px 16px',
-                background: '#064e3b',
+                background: 'linear-gradient(135deg, #1f7a63, #235948)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 6,

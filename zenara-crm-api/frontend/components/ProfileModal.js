@@ -94,7 +94,7 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(15, 23, 42, 0.42)',
+      background: 'var(--modal-overlay-bg)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -104,22 +104,23 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
       <div style={{
         width: '100%',
         maxWidth: 480,
-        background: '#ffffff',
+        background: 'var(--modal-card-bg)',
         borderRadius: 18,
-        border: '1px solid #dbe7e0',
-        boxShadow: '0 24px 48px rgba(15, 23, 42, 0.16)',
+        border: '1px solid var(--modal-card-border)',
+        boxShadow: 'var(--modal-card-shadow)',
+        color: 'var(--ink)',
         overflow: 'hidden',
       }}>
         <div style={{
           padding: '22px 22px 18px',
-          borderBottom: '1px solid #e6eeea',
-          background: 'linear-gradient(180deg, #f7fbf9 0%, #ffffff 100%)',
+          borderBottom: '1px solid var(--line)',
+          background: 'linear-gradient(180deg, var(--panel-strong) 0%, var(--modal-card-bg) 100%)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#2f6a5b', letterSpacing: '0.08em' }}>PROFILE</div>
-              <h2 style={{ margin: '6px 0 4px', fontSize: 24, color: '#10231f' }}>Update your account</h2>
-              <p style={{ margin: 0, color: '#5d736d', fontSize: 14, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.08em' }}>PROFILE</div>
+              <h2 style={{ margin: '6px 0 4px', fontSize: 24, color: 'var(--modal-heading)' }}>Update your account</h2>
+              <p style={{ margin: 0, color: 'var(--modal-copy)', fontSize: 14, lineHeight: 1.5 }}>
                 Both staff and admin can update their own profile details here.
               </p>
             </div>
@@ -130,9 +131,9 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                 width: 38,
                 height: 38,
                 borderRadius: 12,
-                border: '1px solid #dbe7e0',
-                background: '#ffffff',
-                color: '#4e6762',
+                border: '1px solid var(--line)',
+                background: 'var(--panel)',
+                color: 'var(--table-cell-muted)',
                 cursor: 'pointer',
                 fontSize: 22,
                 lineHeight: 1,
@@ -152,8 +153,8 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
               gap: 16,
               padding: '14px',
               borderRadius: 16,
-              background: '#f8fcfa',
-              border: '1px solid #e0ebe5',
+              background: 'var(--panel-strong)',
+              border: '1px solid var(--line)',
             }}>
               <div style={{
                 width: 74,
@@ -183,8 +184,8 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
               </div>
 
               <div style={{ display: 'grid', gap: 6 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: '#17372f' }}>Profile picture</div>
-                <div style={{ fontSize: 13, color: '#60746f', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)' }}>Profile picture</div>
+                <div style={{ fontSize: 13, color: 'var(--table-cell-muted)', lineHeight: 1.5 }}>
                   Upload a square image for the best result. PNG and JPG work well.
                 </div>
                 <div>
@@ -201,9 +202,9 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                     style={{
                       padding: '9px 13px',
                       borderRadius: 12,
-                      border: '1px solid #cfe0d8',
-                      background: '#ffffff',
-                      color: '#295248',
+                      border: '1px solid var(--line)',
+                      background: 'var(--panel)',
+                      color: 'var(--ink)',
                       fontWeight: 800,
                       cursor: 'pointer',
                     }}
@@ -221,18 +222,18 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
               gap: 12,
               padding: '12px 14px',
               borderRadius: 14,
-              background: '#f6faf8',
-              border: '1px solid #e0ebe5',
+              background: 'var(--panel-strong)',
+              border: '1px solid var(--line)',
             }}>
               <div>
-                <div style={{ fontSize: 12, color: '#60746f', fontWeight: 700 }}>Access role</div>
-                <div style={{ fontSize: 15, color: '#17372f', fontWeight: 800 }}>{roleLabel}</div>
+                <div style={{ fontSize: 12, color: 'var(--table-cell-muted)', fontWeight: 700 }}>Access role</div>
+                <div style={{ fontSize: 15, color: 'var(--ink)', fontWeight: 800 }}>{roleLabel}</div>
               </div>
               <div style={{
                 padding: '6px 10px',
                 borderRadius: 999,
-                background: '#ddede6',
-                color: '#1a5c4d',
+                background: 'var(--accent-soft)',
+                color: 'var(--accent)',
                 fontWeight: 800,
                 fontSize: 12,
                 letterSpacing: '0.04em',
@@ -242,7 +243,7 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
             </div>
 
             <label style={{ display: 'grid', gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#26463d' }}>Full name</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>Full name</span>
               <input
                 type="text"
                 name="name"
@@ -253,15 +254,16 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                   width: '100%',
                   padding: '11px 13px',
                   borderRadius: 12,
-                  border: '1px solid #d7e4dd',
+                  border: '1px solid var(--line)',
                   fontSize: 14,
-                  color: '#16312b',
+                  color: 'var(--ink)',
+                  background: 'var(--panel)',
                 }}
               />
             </label>
 
             <label style={{ display: 'grid', gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#26463d' }}>Email address</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>Email address</span>
               <input
                 type="email"
                 name="email"
@@ -272,14 +274,14 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                   width: '100%',
                   padding: '11px 13px',
                   borderRadius: 12,
-                  border: '1px solid #d7e4dd',
+                  border: '1px solid var(--line)',
                   fontSize: 14,
-                  color: '#4e6762',
-                  background: '#f5f8f7',
+                  color: 'var(--table-cell-muted)',
+                  background: 'var(--panel-strong)',
                   cursor: 'default',
                 }}
               />
-              <span style={{ fontSize: 12, color: '#728680', fontWeight: 600 }}>
+              <span style={{ fontSize: 12, color: 'var(--table-cell-muted)', fontWeight: 600 }}>
                 Email is view only for this profile form.
               </span>
             </label>
@@ -306,9 +308,9 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
               style={{
                 padding: '10px 14px',
                 borderRadius: 12,
-                border: '1px solid #d7e4dd',
-                background: '#ffffff',
-                color: '#35544b',
+                border: '1px solid var(--modal-btn-secondary-border)',
+                background: 'var(--modal-btn-secondary-bg)',
+                color: 'var(--modal-btn-secondary-text)',
                 fontWeight: 700,
                 cursor: 'pointer',
               }}
