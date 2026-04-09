@@ -851,8 +851,6 @@ export default function Home() {
   const filteredItems = searchKeyword
     ? items.filter((item) => matchesCrmSearch(item, searchKeyword))
     : items
-  const totalLeads = Number(data?.total) || items.length
-  const activeDeals = items.filter((item) => item.status === 'Qualified').length
 
   const toDate = (value) => {
     if (!value) return null
@@ -865,10 +863,43 @@ export default function Home() {
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
   const nextSevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-  const todayFollowUps = items.filter((item) => {
-    const followUpDate = toDate(item.follow_up)
-    return followUpDate && followUpDate >= startOfToday && followUpDate <= endOfToday
-  }).length
+  const totalLeadClients = items.map((item) => ({
+    id: item.id,
+    company_name: item.company_name || 'Unnamed Company',
+    contact_person: item.contact_person || 'No contact person set',
+    status: item.status || 'No status',
+  }))
+
+  const activeDealClients = items
+    .filter((item) => item.status === 'Qualified')
+    .map((item) => ({
+      id: item.id,
+      company_name: item.company_name || 'Unnamed Company',
+      contact_person: item.contact_person || 'No contact person set',
+      status: item.status || 'No status',
+    }))
+
+  const totalLeads = Number(data?.total) || items.length
+  const activeDeals = activeDealClients.length
+
+  const todayFollowUpClients = items
+    .map((item) => {
+      const followUpDate = toDate(item.follow_up)
+      if (!followUpDate || followUpDate < startOfToday || followUpDate > endOfToday) {
+        return null
+      }
+
+      return {
+        id: item.id,
+        company_name: item.company_name || 'Unnamed Company',
+        contact_person: item.contact_person || 'No contact person set',
+        date: followUpDate,
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date - b.date)
+
+  const todayFollowUps = todayFollowUpClients.length
 
   const upcomingTouchpoints = items
     .map((item) => {
@@ -1003,6 +1034,9 @@ export default function Home() {
               followUpsToday={todayFollowUps}
               upcomingAppointments={upcomingAppointmentClients.length}
               upcomingAppointmentClients={upcomingAppointmentClients}
+              totalLeadClients={totalLeadClients}
+              activeDealClients={activeDealClients}
+              todayFollowUpClients={todayFollowUpClients}
               onOpenListing={() => setCurrentView('listing')}
             />
 
