@@ -5,6 +5,10 @@ export default function TopBar({
   onSearchCompanyChange = () => {},
   onQuickAdd = () => {},
   canQuickAdd = true,
+  showFilterToggle = false,
+  onToggleFilters = () => {},
+  filtersOpen = false,
+  activeFilterCount = 0,
 }) {
   return (
     <header className="topbar premium-topbar">
@@ -22,6 +26,18 @@ export default function TopBar({
             aria-label="Search records"
           />
         </div>
+        {showFilterToggle && (
+          <button
+            type="button"
+            className={`topbar-filter-btn ${filtersOpen ? 'active' : ''}`}
+            onClick={onToggleFilters}
+          >
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="topbar-filter-count">{activeFilterCount}</span>
+            )}
+          </button>
+        )}
         {canQuickAdd && (
           <button type="button" className="topbar-action-btn" onClick={onQuickAdd}>
             + New Contact
