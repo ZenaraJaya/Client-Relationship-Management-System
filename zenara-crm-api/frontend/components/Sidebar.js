@@ -191,7 +191,11 @@ export default function Sidebar({
                 )}
               </span>
               <span className="profile-switcher-team-name">{userName || 'User'}</span>
-              <span className="profile-switcher-team-check">✓</span>
+              <span className="profile-switcher-team-check" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </span>
             </button>
 
             <button

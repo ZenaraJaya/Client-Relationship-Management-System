@@ -639,10 +639,22 @@ td {
 }
 
 .profile-switcher-team-check {
-  color: #2f3836;
-  font-size: 1.18rem;
-  font-weight: 700;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #e6f2ed;
+  color: #1c6a53;
+  box-shadow: inset 0 0 0 1px rgba(28, 106, 83, 0.18);
+}
+
+.profile-switcher-team-check svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .profile-switcher-create-team-btn {
@@ -1831,9 +1843,14 @@ td {
 }
 
 [data-theme='dark'] .profile-switcher-team-name,
-[data-theme='dark'] .profile-switcher-team-check,
 [data-theme='dark'] .profile-switcher-create-team-btn {
   color: #d5e2eb;
+}
+
+[data-theme='dark'] .profile-switcher-team-check {
+  background: #17372e;
+  color: #8bdcc1;
+  box-shadow: inset 0 0 0 1px rgba(66, 181, 142, 0.3);
 }
 
 [data-theme='dark'] .profile-switcher-create-team-btn {
