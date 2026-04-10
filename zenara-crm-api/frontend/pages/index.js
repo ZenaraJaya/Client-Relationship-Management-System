@@ -315,6 +315,15 @@ export default function Home() {
     return ''
   }
 
+  const hasReminderDateValue = (value) => {
+    if (value === null || value === undefined) return false
+    if (typeof value === 'string') return value.trim().length > 0
+    return true
+  }
+
+  const hasOutlookReminderDate = (payload) =>
+    hasReminderDateValue(payload?.appointment) || hasReminderDateValue(payload?.follow_up)
+
   const authFetch = async (url, options = {}) => {
     const headers = { ...(options.headers || {}) }
     if (authToken) headers.Authorization = `Bearer ${authToken}`
@@ -563,6 +572,53 @@ export default function Home() {
     }
   }
 
+  const handleOutlookCalendarConnect = async () => {
+    if (typeof window === 'undefined' || !authToken) return false
+
+    try {
+      const origin = encodeURIComponent(window.location.origin)
+      const res = await authFetch(`${apiBase}/auth/microsoft/connect-url?origin=${origin}`)
+      const json = await res.json().catch(() => null)
+
+      if (res.status === 401) {
+        handleUnauthorized()
+        return false
+      }
+
+      if (!res.ok || !json?.url) {
+        throw new Error(extractErrorMessage(json, 'Unable to start Outlook connection.'))
+      }
+
+      outlookPopupRef.current = window.open(
+        json.url,
+        'zenara-outlook-connect',
+        'width=560,height=720,menubar=no,toolbar=no,location=yes,resizable=yes,scrollbars=yes,status=no'
+      )
+
+      if (!outlookPopupRef.current) {
+        showToast('The Outlook popup was blocked. Please allow popups for this site and try again.', 'error')
+        return false
+      }
+
+      showToast('Complete the Outlook sign-in in the popup window.')
+      return true
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error')
+      return false
+    }
+  }
+
+  const promptOutlookCalendarConnectIfNeeded = async (payload) => {
+    if (typeof window === 'undefined' || !authToken) return
+    if (authUser?.microsoft_calendar_connected) return
+    if (!hasOutlookReminderDate(payload)) return
+
+    const confirmed = window.confirm('Would you like to connect to Outlook? Reminders only appear after Outlook is connected.')
+    if (!confirmed) return
+
+    await handleOutlookCalendarConnect()
+  }
+
   const handleLogout = async () => {
     try {
       if (authToken) {
@@ -792,6 +848,8 @@ export default function Home() {
       const url = editingItem ? `${apiBase}/crms/${editingItem.id}` : `${apiBase}/crms`
       const payload = normalizeDateFields(formData)
 
+      await promptOutlookCalendarConnectIfNeeded(payload)
+
       const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -921,6 +979,10 @@ export default function Home() {
 
     const normalizedValue = dateFields.includes(field) && value === '' ? null : value
     const previousValue = item[field]
+
+    if ((field === 'appointment' || field === 'follow_up') && hasReminderDateValue(normalizedValue)) {
+      await promptOutlookCalendarConnectIfNeeded({ [field]: normalizedValue })
+    }
 
     setData((prev) => {
       if (!prev || !prev.data) return prev
