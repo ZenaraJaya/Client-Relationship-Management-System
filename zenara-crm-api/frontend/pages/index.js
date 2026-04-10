@@ -143,6 +143,8 @@ export default function Home() {
   const [authChecking, setAuthChecking] = useState(true)
   const [authSubmitting, setAuthSubmitting] = useState(false)
   const [authError, setAuthError] = useState('')
+  const [authPanelInitialMode, setAuthPanelInitialMode] = useState('login')
+  const [authPanelInitialRole, setAuthPanelInitialRole] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [teamUsers, setTeamUsers] = useState([])
@@ -259,6 +261,8 @@ export default function Home() {
     setAuthToken('')
     setAuthUser(null)
     setTeamUsers([])
+    setAuthPanelInitialMode('login')
+    setAuthPanelInitialRole('')
     setAuthError('Your session has expired. Please login again.')
     resetCrmUiState()
   }
@@ -546,9 +550,26 @@ export default function Home() {
       }
       setAuthToken('')
       setAuthUser(null)
+      setTeamUsers([])
+      setAuthPanelInitialMode('login')
+      setAuthPanelInitialRole('')
       resetCrmUiState()
       showToast('Logged out successfully.')
     }
+  }
+
+  const handleAddAdmin = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(AUTH_TOKEN_KEY)
+    }
+
+    setAuthToken('')
+    setAuthUser(null)
+    setTeamUsers([])
+    setAuthError('')
+    setAuthPanelInitialMode('signup')
+    setAuthPanelInitialRole('admin')
+    resetCrmUiState()
   }
 
   const handleProfileSubmit = async ({ name, profilePhotoFile }) => {
@@ -1052,6 +1073,8 @@ export default function Home() {
         onOutlookAuth={handleOutlookAuthStart}
         isLoading={authSubmitting}
         error={authError}
+        initialMode={authPanelInitialMode}
+        initialRole={authPanelInitialRole}
       />
     )
   }
@@ -1066,7 +1089,7 @@ export default function Home() {
           if (v !== 'listing') setSearchCompany('')
         }}
         onLogout={handleLogout}
-        onProfileClick={() => setProfileOpen(true)}
+        onAddAdminClick={handleAddAdmin}
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
         profilePhotoUrl={normalizedProfilePhotoUrl}

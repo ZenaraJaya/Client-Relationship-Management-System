@@ -4,7 +4,7 @@ export default function Sidebar({
   currentView,
   onViewChange,
   onLogout,
-  onProfileClick = () => {},
+  onAddAdminClick = () => {},
   userName = 'User',
   profilePhotoUrl = '',
   teamUsers = [],
@@ -272,11 +272,11 @@ export default function Sidebar({
               className="profile-switcher-create-team-btn"
               onClick={() => {
                 setProfileMenuOpen(false)
-                onProfileClick()
+                onAddAdminClick()
               }}
             >
               <span className="profile-switcher-create-team-icon" aria-hidden="true">+</span>
-              <span>Create Team</span>
+              <span>Add Admin</span>
             </button>
           </div>
         )}

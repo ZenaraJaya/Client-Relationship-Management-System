@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import styles from './AuthPanel.module.css'
 
 const BACKGROUND_BUBBLES = [
@@ -113,10 +113,20 @@ function getPasswordStrength(password) {
   return { score, label: 'Excellent password', percent: 100, tone: 'great' }
 }
 
-export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, isLoading, error }) {
-  const [mode, setMode] = useState('login')
+export default function AuthPanel({
+  onSubmit,
+  onOutlookAuth = async () => {},
+  isLoading,
+  error,
+  initialMode = 'login',
+  initialRole = '',
+}) {
+  const normalizedInitialMode = initialMode === 'signup' ? 'signup' : 'login'
+  const normalizedInitialRole = ['admin', 'staff'].includes(initialRole) ? initialRole : ''
+
+  const [mode, setMode] = useState(normalizedInitialMode)
   const [name, setName] = useState('')
-  const [role, setRole] = useState('')
+  const [role, setRole] = useState(normalizedInitialMode === 'signup' ? normalizedInitialRole : '')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -127,6 +137,15 @@ export default function AuthPanel({ onSubmit, onOutlookAuth = async () => {}, is
 
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password])
   const isSignup = mode === 'signup'
+
+  useEffect(() => {
+    const nextMode = initialMode === 'signup' ? 'signup' : 'login'
+    const nextRole = ['admin', 'staff'].includes(initialRole) ? initialRole : ''
+    setMode(nextMode)
+    setRole(nextMode === 'signup' ? nextRole : '')
+    setLocalError('')
+    setRolePromptOpen(false)
+  }, [initialMode, initialRole])
 
   const showRoleRequiredPopup = () => {
     setLocalError('')
