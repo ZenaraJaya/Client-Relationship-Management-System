@@ -97,6 +97,31 @@
   --modal-btn-secondary-bg: #fff;
   --modal-btn-secondary-border: #d1d5db;
   --modal-btn-secondary-text: #374151;
+  --switch-login-overlay-top: rgba(59, 130, 246, 0.2);
+  --switch-login-overlay-bottom: rgba(45, 212, 191, 0.14);
+  --switch-login-card-shadow: 0 28px 56px rgba(15, 23, 42, 0.22);
+  --switch-login-title: #0f172a;
+  --switch-login-subtitle: #55647a;
+  --switch-login-target: #1f4a87;
+  --switch-login-label: #334155;
+  --switch-login-input-bg: #f8fbff;
+  --switch-login-input-border: #cfd9e6;
+  --switch-login-input-text: #0f172a;
+  --switch-login-input-placeholder: #8ca0b5;
+  --switch-login-input-hover-border: #9fb2ca;
+  --switch-login-input-focus-bg: #ffffff;
+  --switch-login-input-focus-border: #3b82f6;
+  --switch-login-input-focus-ring: 0 0 0 4px rgba(59, 130, 246, 0.22);
+  --switch-login-btn-secondary-bg: #ffffff;
+  --switch-login-btn-secondary-hover: #f5f8fc;
+  --switch-login-btn-secondary-border: #cfd8e4;
+  --switch-login-btn-secondary-text: #334155;
+  --switch-login-btn-primary-bg: linear-gradient(140deg, #0f766e, #0d9488);
+  --switch-login-btn-primary-hover: linear-gradient(140deg, #0e857b, #14a89b);
+  --switch-login-btn-primary-text: #f8fffd;
+  --switch-login-error-bg: rgba(254, 226, 226, 0.9);
+  --switch-login-error-border: rgba(248, 113, 113, 0.55);
+  --switch-login-error-text: #b91c1c;
   --radius-xl: 20px;
   --radius-lg: 14px;
   --radius-md: 10px;
@@ -202,6 +227,31 @@
   --modal-btn-secondary-bg: #132431;
   --modal-btn-secondary-border: #375061;
   --modal-btn-secondary-text: #d7e5ef;
+  --switch-login-overlay-top: rgba(56, 189, 248, 0.14);
+  --switch-login-overlay-bottom: rgba(45, 212, 191, 0.12);
+  --switch-login-card-shadow: 0 28px 60px rgba(2, 6, 23, 0.72);
+  --switch-login-title: #e2edf4;
+  --switch-login-subtitle: #9cb0bd;
+  --switch-login-target: #c1e4ff;
+  --switch-login-label: #b7c9d5;
+  --switch-login-input-bg: #112231;
+  --switch-login-input-border: #355266;
+  --switch-login-input-text: #e4edf5;
+  --switch-login-input-placeholder: #7f97a8;
+  --switch-login-input-hover-border: #486a81;
+  --switch-login-input-focus-bg: #152a3b;
+  --switch-login-input-focus-border: #60a5fa;
+  --switch-login-input-focus-ring: 0 0 0 4px rgba(96, 165, 250, 0.24);
+  --switch-login-btn-secondary-bg: #142534;
+  --switch-login-btn-secondary-hover: #1a3144;
+  --switch-login-btn-secondary-border: #395971;
+  --switch-login-btn-secondary-text: #d6e5ef;
+  --switch-login-btn-primary-bg: linear-gradient(140deg, #0f766e, #0f8f84);
+  --switch-login-btn-primary-hover: linear-gradient(140deg, #119285, #14b09f);
+  --switch-login-btn-primary-text: #e9fffb;
+  --switch-login-error-bg: rgba(127, 29, 29, 0.35);
+  --switch-login-error-border: rgba(248, 113, 113, 0.45);
+  --switch-login-error-text: #fecaca;
 }
 
 * {
@@ -1176,6 +1226,188 @@ td {
   box-shadow: var(--shadow-focus), 0 10px 20px rgba(44, 95, 83, 0.16);
 }
 
+.switch-login-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 18%, var(--switch-login-overlay-top), transparent 44%),
+    radial-gradient(circle at 82% 84%, var(--switch-login-overlay-bottom), transparent 46%),
+    var(--modal-overlay-bg);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 1450;
+  animation: fadeIn 0.2s ease;
+}
+
+.switch-login-card {
+  width: min(100%, 500px);
+  border-radius: 18px;
+  border: 1px solid var(--modal-card-border);
+  background: var(--modal-card-bg);
+  box-shadow: var(--switch-login-card-shadow);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: switchLoginPop 0.22s ease;
+}
+
+.switch-login-header {
+  display: grid;
+  gap: 8px;
+}
+
+.switch-login-title {
+  margin: 0;
+  color: var(--switch-login-title);
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.switch-login-subtitle {
+  margin: 0;
+  color: var(--switch-login-subtitle);
+  font-size: 1.05rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.switch-login-target {
+  color: var(--switch-login-target);
+  font-weight: 700;
+}
+
+.switch-login-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.switch-login-field {
+  display: grid;
+  gap: 7px;
+}
+
+.switch-login-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--switch-login-label);
+}
+
+.switch-login-input {
+  width: 100%;
+  border-radius: 11px;
+  border: 1px solid var(--switch-login-input-border);
+  background: var(--switch-login-input-bg);
+  color: var(--switch-login-input-text);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 11px 13px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.switch-login-input::placeholder {
+  color: var(--switch-login-input-placeholder);
+}
+
+.switch-login-input:hover {
+  border-color: var(--switch-login-input-hover-border);
+}
+
+.switch-login-input:focus-visible {
+  outline: none;
+  border-color: var(--switch-login-input-focus-border);
+  background: var(--switch-login-input-focus-bg);
+  box-shadow: var(--switch-login-input-focus-ring);
+}
+
+.switch-login-error {
+  border-radius: 10px;
+  border: 1px solid var(--switch-login-error-border);
+  background: var(--switch-login-error-bg);
+  color: var(--switch-login-error-text);
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.switch-login-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.switch-login-btn {
+  border-radius: 11px;
+  padding: 10px 18px;
+  font-size: 1.04rem;
+  line-height: 1;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.switch-login-btn:hover {
+  transform: translateY(-1px);
+}
+
+.switch-login-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--switch-login-input-focus-ring);
+}
+
+.switch-login-btn-secondary {
+  border-color: var(--switch-login-btn-secondary-border);
+  background: var(--switch-login-btn-secondary-bg);
+  color: var(--switch-login-btn-secondary-text);
+}
+
+.switch-login-btn-secondary:hover {
+  background: var(--switch-login-btn-secondary-hover);
+  border-color: var(--switch-login-input-hover-border);
+}
+
+.switch-login-btn-primary {
+  background: var(--switch-login-btn-primary-bg);
+  color: var(--switch-login-btn-primary-text);
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.26);
+}
+
+.switch-login-btn-primary:hover {
+  background: var(--switch-login-btn-primary-hover);
+  filter: brightness(1.02);
+}
+
+.switch-login-btn:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.switch-login-btn-primary:disabled {
+  box-shadow: none;
+}
+
 .appointment-popup-overlay {
   position: fixed;
   inset: 0;
@@ -1608,6 +1840,17 @@ td {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes switchLoginPop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -2076,6 +2319,29 @@ td {
 }
 
 @media (max-width: 640px) {
+  .switch-login-overlay {
+    padding: 12px;
+  }
+
+  .switch-login-card {
+    border-radius: 14px;
+    padding: 18px;
+    gap: 12px;
+  }
+
+  .switch-login-title {
+    font-size: 1.68rem;
+  }
+
+  .switch-login-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .switch-login-btn {
+    font-size: 0.96rem;
+    padding: 10px 14px;
+  }
+
   .theme-toggle-button {
     width: 60px;
     height: 30px;
