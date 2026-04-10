@@ -254,8 +254,8 @@ td {
   box-shadow: var(--theme-toggle-shadow);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0;
+  justify-content: space-between;
+  gap: 4px;
   cursor: pointer;
   z-index: 1700;
   overflow: hidden;
@@ -273,15 +273,29 @@ td {
 }
 
 .theme-toggle-icon {
-  display: none;
+  position: relative;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  color: var(--theme-toggle-text);
+  background: transparent;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .theme-toggle-icon-sun {
-  background: radial-gradient(circle at 30% 30%, #131b24, #080b10);
+  background: transparent;
 }
 
 .theme-toggle-icon-moon {
-  background: radial-gradient(circle at 30% 30%, #131b24, #080b10);
+  background: transparent;
 }
 
 .theme-toggle-thumb {
@@ -297,24 +311,24 @@ td {
 }
 
 .theme-toggle-button.is-light .theme-toggle-icon-sun {
-  opacity: 0;
-  transform: none;
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 .theme-toggle-button.is-light .theme-toggle-icon-moon {
   opacity: 0;
-  transform: none;
+  transform: translateX(4px);
   color: #ffffff;
 }
 
 .theme-toggle-button.is-dark .theme-toggle-icon-sun {
   opacity: 0;
-  transform: none;
+  transform: translateX(-4px);
 }
 
 .theme-toggle-button.is-dark .theme-toggle-icon-moon {
-  opacity: 0;
-  transform: none;
+  opacity: 1;
+  transform: translateX(-2px);
 }
 
 .session-loader {
@@ -2054,7 +2068,9 @@ td {
   }
 
   .theme-toggle-icon {
-    display: none;
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
   }
 
   .theme-toggle-thumb {
