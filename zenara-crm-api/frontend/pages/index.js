@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
 import DashboardCards from '../components/DashboardCards'
@@ -8,6 +8,15 @@ import AuthPanel from '../components/AuthPanel'
 import ProfileModal from '../components/ProfileModal'
 
 const AUTH_TOKEN_KEY = 'zenara_crm_auth_token'
+const DEFAULT_ADVANCED_FILTERS = {
+  location: '',
+  industry: '',
+  source: '',
+  status: '',
+  priority: '',
+  appointment: 'any',
+  followUp: 'any',
+}
 
 const getSwitchUserLoginState = (overrides = {}) => ({
   open: false,
@@ -138,6 +147,8 @@ export default function Home() {
   const [editingItem, setEditingItem] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
   const [searchCompany, setSearchCompany] = useState('')
+  const [advancedFilters, setAdvancedFilters] = useState(DEFAULT_ADVANCED_FILTERS)
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
   const [serverPage, setServerPage] = useState(1)
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' })
   const [deleteConfirm, setDeleteConfirm] = useState({
@@ -327,6 +338,8 @@ export default function Home() {
     setError(null)
     setSelectedIds([])
     setSearchCompany('')
+    setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)
+    setAdvancedFiltersOpen(false)
     setCurrentView('dashboard')
     setModalOpen(false)
     setEditingItem(null)
@@ -1121,16 +1134,120 @@ export default function Home() {
     }
   }
 
-  const getMergedItems = () => {
-    const items = data?.data || (Array.isArray(data) ? data : [])
-    return [...items].sort((a, b) => (a.company_name || '').localeCompare(b.company_name || ''))
+  const items = useMemo(() => {
+    const rows = data?.data || (Array.isArray(data) ? data : [])
+    return [...rows].sort((a, b) => (a.company_name || '').localeCompare(b.company_name || ''))
+  }, [data])
+
+  const normalizeFilterValue = (value) => String(value || '').trim().toLowerCase()
+  const buildFilterOptions = (rows, field) => {
+    const optionMap = new Map()
+
+    rows.forEach((row) => {
+      const rawLabel = String(row?.[field] || '').trim()
+      if (!rawLabel) return
+
+      const normalizedValue = normalizeFilterValue(rawLabel)
+      if (!normalizedValue || optionMap.has(normalizedValue)) return
+      optionMap.set(normalizedValue, rawLabel)
+    })
+
+    return Array.from(optionMap.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label))
   }
 
-  const items = getMergedItems()
+  const doesItemMatchAdvancedFilters = (item) => {
+    if (advancedFilters.location && normalizeFilterValue(item.location) !== advancedFilters.location) {
+      return false
+    }
+
+    if (advancedFilters.industry && normalizeFilterValue(item.industry) !== advancedFilters.industry) {
+      return false
+    }
+
+    if (advancedFilters.source && normalizeFilterValue(item.source) !== advancedFilters.source) {
+      return false
+    }
+
+    if (advancedFilters.status && normalizeFilterValue(item.status) !== advancedFilters.status) {
+      return false
+    }
+
+    if (advancedFilters.priority && normalizeFilterValue(item.priority) !== advancedFilters.priority) {
+      return false
+    }
+
+    if (advancedFilters.appointment === 'yes' && !hasReminderDateValue(item.appointment)) {
+      return false
+    }
+
+    if (advancedFilters.appointment === 'no' && hasReminderDateValue(item.appointment)) {
+      return false
+    }
+
+    if (advancedFilters.followUp === 'yes' && !hasReminderDateValue(item.follow_up)) {
+      return false
+    }
+
+    if (advancedFilters.followUp === 'no' && hasReminderDateValue(item.follow_up)) {
+      return false
+    }
+
+    return true
+  }
+
+  const updateAdvancedFilter = (field, value) => {
+    setAdvancedFilters((prev) => ({ ...prev, [field]: value }))
+    setSelectedIds([])
+  }
+
+  const clearAdvancedFilters = () => {
+    setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)
+    setSelectedIds([])
+  }
+
+  const filterOptions = useMemo(
+    () => ({
+      locations: buildFilterOptions(items, 'location'),
+      industries: buildFilterOptions(items, 'industry'),
+      sources: buildFilterOptions(items, 'source'),
+      statuses: buildFilterOptions(items, 'status'),
+      priorities: buildFilterOptions(items, 'priority'),
+    }),
+    [items]
+  )
+
+  const activeAdvancedFilterCount =
+    (advancedFilters.location ? 1 : 0) +
+    (advancedFilters.industry ? 1 : 0) +
+    (advancedFilters.source ? 1 : 0) +
+    (advancedFilters.status ? 1 : 0) +
+    (advancedFilters.priority ? 1 : 0) +
+    (advancedFilters.appointment !== 'any' ? 1 : 0) +
+    (advancedFilters.followUp !== 'any' ? 1 : 0)
+  const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
+
   const searchKeyword = searchCompany.trim().toLowerCase()
-  const filteredItems = searchKeyword
-    ? items.filter((item) => matchesCrmSearch(item, searchKeyword))
-    : items
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        if (searchKeyword && !matchesCrmSearch(item, searchKeyword)) return false
+        return doesItemMatchAdvancedFilters(item)
+      }),
+    [items, searchKeyword, advancedFilters]
+  )
+
+  useEffect(() => {
+    const visibleIds = new Set(filteredItems.map((item) => item.id))
+    setSelectedIds((prev) => {
+      const next = prev.filter((id) => visibleIds.has(id))
+      if (next.length === prev.length && next.every((id, index) => id === prev[index])) {
+        return prev
+      }
+      return next
+    })
+  }, [filteredItems])
 
   const toDate = (value) => {
     if (!value) return null
@@ -1293,7 +1410,10 @@ export default function Home() {
         onViewChange={(v) => {
           setCurrentView(v)
           setSelectedIds([])
-          if (v !== 'listing') setSearchCompany('')
+          if (v !== 'listing') {
+            setSearchCompany('')
+            setAdvancedFiltersOpen(false)
+          }
         }}
         onLogout={handleLogout}
         onProfileClick={() => setProfileOpen(true)}
@@ -1406,12 +1526,143 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="advanced-filters-bar">
+              <div className="advanced-filters-actions">
+                <button
+                  type="button"
+                  className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
+                  onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
+                >
+                  Advanced Filters
+                  {activeAdvancedFilterCount > 0 && (
+                    <span className="advanced-filters-count">{activeAdvancedFilterCount}</span>
+                  )}
+                </button>
+                {hasAnyAdvancedFilters && (
+                  <button type="button" className="advanced-filters-clear" onClick={clearAdvancedFilters}>
+                    Clear filters
+                  </button>
+                )}
+              </div>
+              <div className="advanced-filters-summary">
+                Showing {filteredItems.length} of {items.length} contacts on this page
+              </div>
+            </div>
+
+            {advancedFiltersOpen && (
+              <div className="advanced-filters-panel">
+                <label className="advanced-filter-field">
+                  <span>Location</span>
+                  <select
+                    value={advancedFilters.location}
+                    onChange={(event) => updateAdvancedFilter('location', event.target.value)}
+                  >
+                    <option value="">All locations</option>
+                    {filterOptions.locations.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="advanced-filter-field">
+                  <span>Industry</span>
+                  <select
+                    value={advancedFilters.industry}
+                    onChange={(event) => updateAdvancedFilter('industry', event.target.value)}
+                  >
+                    <option value="">All industries</option>
+                    {filterOptions.industries.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="advanced-filter-field">
+                  <span>Lead Source</span>
+                  <select
+                    value={advancedFilters.source}
+                    onChange={(event) => updateAdvancedFilter('source', event.target.value)}
+                  >
+                    <option value="">All sources</option>
+                    {filterOptions.sources.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="advanced-filter-field">
+                  <span>Status</span>
+                  <select
+                    value={advancedFilters.status}
+                    onChange={(event) => updateAdvancedFilter('status', event.target.value)}
+                  >
+                    <option value="">All statuses</option>
+                    {filterOptions.statuses.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="advanced-filter-field">
+                  <span>Priority</span>
+                  <select
+                    value={advancedFilters.priority}
+                    onChange={(event) => updateAdvancedFilter('priority', event.target.value)}
+                  >
+                    <option value="">All priorities</option>
+                    {filterOptions.priorities.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="advanced-filter-field">
+                  <span>Appointment</span>
+                  <select
+                    value={advancedFilters.appointment}
+                    onChange={(event) => updateAdvancedFilter('appointment', event.target.value)}
+                  >
+                    <option value="any">Any</option>
+                    <option value="yes">Has appointment</option>
+                    <option value="no">No appointment</option>
+                  </select>
+                </label>
+
+                <label className="advanced-filter-field">
+                  <span>Follow Up</span>
+                  <select
+                    value={advancedFilters.followUp}
+                    onChange={(event) => updateAdvancedFilter('followUp', event.target.value)}
+                  >
+                    <option value="any">Any</option>
+                    <option value="yes">Has follow up</option>
+                    <option value="no">No follow up</option>
+                  </select>
+                </label>
+              </div>
+            )}
+
             {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
             {error && <div style={{ marginTop: 12, color: 'var(--table-action-delete-text)' }}>Data Sync Error: {String(error.message || error)}</div>}
             {!loading && (
               <div style={{ marginTop: 12 }}>
                 <CrmList
                   items={filteredItems}
+                  emptyMessage={
+                    searchKeyword || hasAnyAdvancedFilters
+                      ? 'No contacts match your current search and filters.'
+                      : 'No CRM contacts found.'
+                  }
                   onEdit={handleEditCrm}
                   onDelete={handleDeleteCrm}
                   onUpdate={handleUpdateField}

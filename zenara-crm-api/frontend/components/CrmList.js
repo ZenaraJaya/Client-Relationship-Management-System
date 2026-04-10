@@ -186,6 +186,7 @@ const buildDateDraftKey = (rowId, field) => `${rowId}:${field}`
 
 export default function CrmList({
   items = [],
+  emptyMessage = 'No CRM contacts found.',
   onEdit,
   onDelete,
   onUpdate,
@@ -436,7 +437,7 @@ export default function CrmList({
   if (items.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '24px', color: 'var(--table-empty-text)' }}>
-        No CRM contacts found.
+        {emptyMessage}
       </div>
     )
   }
