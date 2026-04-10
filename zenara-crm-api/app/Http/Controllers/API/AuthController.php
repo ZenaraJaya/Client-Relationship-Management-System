@@ -312,12 +312,16 @@ SVG;
             return;
         }
 
-        $existsInFirestore = $this->firestore->exists($user->id, 'users');
-        if ($existsInFirestore !== false) {
-            return;
-        }
+        $this->removeLocalUserIfMissingInFirestore($user, 'registration');
+    }
 
+    protected function deleteLocalUser(User $user, string $reason): void
+    {
         DB::transaction(function () use ($user): void {
+            CrmCalendarEvent::query()->where('user_id', $user->id)->delete();
+            $user->microsoftCalendarConnection()->delete();
+            $user->profilePhoto()->delete();
+
             DB::table('password_reset_tokens')
                 ->where('email', $user->email)
                 ->delete();
@@ -329,10 +333,37 @@ SVG;
             $user->delete();
         });
 
-        Log::info('Removed stale local user missing from Firestore during registration.', [
+        Log::info('Removed stale local user missing from Firestore.', [
             'user_id' => $user->id,
-            'email' => $normalizedEmail,
+            'email' => strtolower(trim((string) $user->email)),
+            'reason' => $reason,
         ]);
+    }
+
+    protected function removeLocalUserIfMissingInFirestore(User $user, string $reason): bool
+    {
+        if (!$this->firestore->isConfigured()) {
+            return true;
+        }
+
+        $existsInFirestore = $this->firestore->exists($user->id, 'users');
+        if ($existsInFirestore !== false) {
+            return true;
+        }
+
+        try {
+            $this->deleteLocalUser($user, $reason);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to remove stale local user missing from Firestore.', [
+                'user_id' => $user->id,
+                'email' => strtolower(trim((string) $user->email)),
+                'reason' => $reason,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Hide users that are deleted in Firestore even if local DB cleanup fails.
+        return false;
     }
 
     protected function resolveFrontendOrigin(Request $request): ?string
@@ -533,7 +564,15 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             return $this->schemaOutOfDateResponse();
         }
 
-        return response()->json($this->serializeAuthUser($request->user(), $request));
+        /** @var User $currentUser */
+        $currentUser = $request->user();
+        if (!$this->removeLocalUserIfMissingInFirestore($currentUser, 'me')) {
+            return response()->json([
+                'message' => 'This account no longer exists.',
+            ], 401);
+        }
+
+        return response()->json($this->serializeAuthUser($currentUser, $request));
     }
 
     public function users(Request $request): JsonResponse
@@ -553,8 +592,12 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
             return response()->json(['message' => 'Unable to load users right now. Please try again.'], 500);
         }
 
+        $visibleUsers = $users
+            ->filter(fn (User $user): bool => $this->removeLocalUserIfMissingInFirestore($user, 'users-list'))
+            ->values();
+
         return response()->json([
-            'users' => $users
+            'users' => $visibleUsers
                 ->map(fn (User $user): array => [
                     'id' => $user->id,
                     'name' => $user->name,

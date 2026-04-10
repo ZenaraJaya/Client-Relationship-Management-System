@@ -454,9 +454,11 @@ export default function Home() {
     }
 
     fetchRegisteredUsers()
+    const intervalId = setInterval(fetchRegisteredUsers, 30000)
 
     return () => {
       mounted = false
+      clearInterval(intervalId)
     }
   }, [apiBase, authToken])
 
