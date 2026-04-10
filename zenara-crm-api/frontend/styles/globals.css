@@ -245,9 +245,9 @@ td {
   position: fixed;
   right: 20px;
   bottom: 20px;
-  width: 84px;
-  height: 44px;
-  padding: 4px 6px;
+  width: 74px;
+  height: 38px;
+  padding: 3px 5px;
   border-radius: 999px;
   border: 1px solid rgba(17, 24, 39, 0.94);
   background: linear-gradient(140deg, #0b1119 0%, #05080f 100%);
@@ -276,13 +276,13 @@ td {
   position: absolute;
   top: 50%;
   z-index: 1;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   line-height: 1;
   user-select: none;
   pointer-events: none;
@@ -292,21 +292,21 @@ td {
 }
 
 .theme-toggle-icon-sun {
-  left: 12px;
+  left: 10px;
   background: transparent;
 }
 
 .theme-toggle-icon-moon {
-  right: 12px;
+  right: 10px;
   background: transparent;
 }
 
 .theme-toggle-thumb {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 36px;
-  height: 36px;
+  top: 3px;
+  left: 3px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
   background: #ffffff;
   box-shadow: 0 3px 10px rgba(2, 6, 23, 0.34);
@@ -314,7 +314,7 @@ td {
 }
 
 .theme-toggle-button.is-light .theme-toggle-thumb {
-  transform: translateX(40px);
+  transform: translateX(38px);
 }
 
 .theme-toggle-button.is-dark .theme-toggle-thumb {
@@ -2072,30 +2072,32 @@ td {
 
 @media (max-width: 640px) {
   .theme-toggle-button {
-    width: 76px;
-    height: 40px;
-    padding: 4px 5px;
+    width: 68px;
+    height: 34px;
+    padding: 3px 4px;
     right: 14px;
     bottom: 14px;
   }
 
   .theme-toggle-icon {
-    width: 22px;
-    height: 22px;
-    font-size: 0.95rem;
+    width: 18px;
+    height: 18px;
+    font-size: 0.85rem;
   }
 
   .theme-toggle-icon-sun {
-    left: 10px;
+    left: 9px;
   }
 
   .theme-toggle-icon-moon {
-    right: 10px;
+    right: 9px;
   }
 
   .theme-toggle-thumb {
-    width: 32px;
-    height: 32px;
+    top: 3px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
   }
 
   .theme-toggle-button.is-light .theme-toggle-thumb {
