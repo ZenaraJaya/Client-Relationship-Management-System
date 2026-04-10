@@ -158,6 +158,7 @@ export default function Home() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [switchUserLogin, setSwitchUserLogin] = useState(getSwitchUserLoginState())
+  const [outlookConnectPromptOpen, setOutlookConnectPromptOpen] = useState(false)
   const [teamUsers, setTeamUsers] = useState([])
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
   const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(
@@ -180,6 +181,7 @@ export default function Home() {
 
   const toastTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)
+  const outlookPromptResolveRef = useRef(null)
   const dateFields = ['last_contact', 'appointment', 'follow_up']
 
   const resolveLandingViewForUser = (user) => {
@@ -356,8 +358,30 @@ export default function Home() {
       if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
         outlookPopupRef.current.close()
       }
+      if (outlookPromptResolveRef.current) {
+        outlookPromptResolveRef.current(false)
+        outlookPromptResolveRef.current = null
+      }
     }
   }, [])
+
+  useEffect(() => {
+    if (!outlookConnectPromptOpen || typeof window === 'undefined') return undefined
+
+    const handleEscape = (event) => {
+      if (event.key !== 'Escape') return
+      setOutlookConnectPromptOpen(false)
+      if (outlookPromptResolveRef.current) {
+        outlookPromptResolveRef.current(false)
+        outlookPromptResolveRef.current = null
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [outlookConnectPromptOpen])
 
   useEffect(() => {
     if (!isAdmin && selectedIds.length > 0) {
@@ -615,10 +639,22 @@ export default function Home() {
     if (authUser?.microsoft_calendar_connected) return
     if (!hasOutlookReminderDate(payload)) return
 
-    const confirmed = window.confirm('Would you like to connect to Outlook? Reminders only appear after Outlook is connected.')
+    const confirmed = await new Promise((resolve) => {
+      outlookPromptResolveRef.current = resolve
+      setOutlookConnectPromptOpen(true)
+    })
     if (!confirmed) return
 
     await handleOutlookCalendarConnect()
+  }
+
+  const resolveOutlookConnectPrompt = (shouldConnect) => {
+    setOutlookConnectPromptOpen(false)
+    if (outlookPromptResolveRef.current) {
+      const resolve = outlookPromptResolveRef.current
+      outlookPromptResolveRef.current = null
+      resolve(Boolean(shouldConnect))
+    }
   }
 
   const handleLogout = async () => {
@@ -1478,6 +1514,51 @@ export default function Home() {
                 className="switch-login-btn switch-login-btn-primary"
               >
                 {switchUserLogin.isSubmitting ? 'Logging in...' : 'Login'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {outlookConnectPromptOpen && (
+        <div
+          className="outlook-connect-overlay"
+          onClick={() => resolveOutlookConnectPrompt(false)}
+        >
+          <div
+            className="outlook-connect-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="outlook-connect-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="outlook-connect-kicker">Smart Reminder</div>
+            <h3 id="outlook-connect-title" className="outlook-connect-title">
+              Enable Outlook Reminder Sync
+            </h3>
+            <p className="outlook-connect-copy">
+              Enable calendar integration so appointment and follow-up reminders sync to Outlook.
+            </p>
+
+            <div className="outlook-connect-benefits">
+              <div className="outlook-connect-benefit">Keep all client reminders in one calendar.</div>
+              <div className="outlook-connect-benefit">Avoid missed follow-ups with smarter scheduling.</div>
+            </div>
+
+            <div className="outlook-connect-actions">
+              <button
+                type="button"
+                className="outlook-prompt-btn outlook-prompt-btn-secondary"
+                onClick={() => resolveOutlookConnectPrompt(false)}
+              >
+                Skip for now
+              </button>
+              <button
+                type="button"
+                className="outlook-prompt-btn outlook-prompt-btn-primary"
+                onClick={() => resolveOutlookConnectPrompt(true)}
+              >
+                Connect Outlook
               </button>
             </div>
           </div>

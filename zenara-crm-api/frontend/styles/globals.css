@@ -1408,6 +1408,146 @@ td {
   box-shadow: none;
 }
 
+.outlook-connect-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(16, 185, 129, 0.2), transparent 42%),
+    radial-gradient(circle at 82% 80%, rgba(59, 130, 246, 0.18), transparent 46%),
+    var(--modal-overlay-bg);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 1460;
+  animation: fadeIn 0.2s ease;
+}
+
+.outlook-connect-card {
+  width: min(100%, 540px);
+  border-radius: 18px;
+  border: 1px solid var(--modal-card-border);
+  background: var(--modal-card-bg);
+  box-shadow: var(--switch-login-card-shadow);
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+  animation: switchLoginPop 0.22s ease;
+}
+
+.outlook-connect-kicker {
+  justify-self: start;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  background: rgba(15, 118, 110, 0.1);
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.outlook-connect-title {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  color: var(--modal-heading);
+}
+
+.outlook-connect-copy {
+  margin: 0;
+  color: var(--modal-copy);
+  font-size: 1rem;
+  line-height: 1.55;
+  max-width: 48ch;
+}
+
+.outlook-connect-benefits {
+  display: grid;
+  gap: 8px;
+}
+
+.outlook-connect-benefit {
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 11px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.45;
+  padding: 9px 11px 9px 35px;
+  position: relative;
+}
+
+.outlook-connect-benefit::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: radial-gradient(circle at 32% 30%, #a7f3d0, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.outlook-connect-actions {
+  margin-top: 4px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.outlook-prompt-btn {
+  border-radius: 11px;
+  border: 1px solid transparent;
+  padding: 10px 16px;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.outlook-prompt-btn:hover {
+  transform: translateY(-1px);
+}
+
+.outlook-prompt-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--switch-login-input-focus-ring);
+}
+
+.outlook-prompt-btn-secondary {
+  background: var(--modal-btn-secondary-bg);
+  border-color: var(--modal-btn-secondary-border);
+  color: var(--modal-btn-secondary-text);
+}
+
+.outlook-prompt-btn-secondary:hover {
+  filter: brightness(1.02);
+}
+
+.outlook-prompt-btn-primary {
+  color: #f2fffb;
+  background: linear-gradient(140deg, #0f766e, #0d9488);
+  box-shadow: 0 10px 20px rgba(15, 118, 110, 0.24);
+}
+
+.outlook-prompt-btn-primary:hover {
+  filter: brightness(1.04);
+}
+
 .appointment-popup-overlay {
   position: fixed;
   inset: 0;
@@ -2026,6 +2166,22 @@ td {
   box-shadow: 0 10px 20px rgba(12, 74, 62, 0.34);
 }
 
+[data-theme='dark'] .outlook-connect-kicker {
+  color: #7ce8c3;
+  border-color: rgba(52, 211, 153, 0.38);
+  background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme='dark'] .outlook-connect-benefit {
+  border-color: rgba(45, 212, 191, 0.36);
+  background: rgba(13, 148, 136, 0.17);
+  color: #d6efe5;
+}
+
+[data-theme='dark'] .outlook-prompt-btn-primary {
+  box-shadow: 0 12px 24px rgba(8, 47, 44, 0.5);
+}
+
 [data-theme='dark'] .outlook-connect-btn {
   border-color: #3a5568;
   background: linear-gradient(135deg, #10263a, #17344a);
@@ -2340,6 +2496,31 @@ td {
   .switch-login-btn {
     font-size: 0.96rem;
     padding: 10px 14px;
+  }
+
+  .outlook-connect-overlay {
+    padding: 12px;
+  }
+
+  .outlook-connect-card {
+    border-radius: 14px;
+    padding: 18px;
+    gap: 10px;
+  }
+
+  .outlook-connect-copy {
+    font-size: 0.95rem;
+  }
+
+  .outlook-connect-actions {
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .outlook-prompt-btn {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 0.9rem;
   }
 
   .theme-toggle-button {
