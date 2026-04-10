@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import '../styles/globals.css'
 
 const THEME_STORAGE_KEY = 'zenara_crm_theme'
+const AUTH_TOKEN_KEY = 'zenara_crm_auth_token'
 
 export default function App({ Component, pageProps }) {
   const [theme, setTheme] = useState('light')
   const [themeReady, setThemeReady] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -24,6 +26,28 @@ export default function App({ Component, pageProps }) {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme)
   }, [theme, themeReady])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const syncAuthState = () => {
+      setIsAuthenticated(Boolean(window.sessionStorage.getItem(AUTH_TOKEN_KEY)))
+    }
+
+    const handleStorageChange = (event) => {
+      if (event.key && event.key !== AUTH_TOKEN_KEY) return
+      syncAuthState()
+    }
+
+    syncAuthState()
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('zenara:auth-token-changed', syncAuthState)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('zenara:auth-token-changed', syncAuthState)
+    }
+  }, [])
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
   }
@@ -31,7 +55,7 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <Component {...pageProps} />
-      {themeReady && (
+      {themeReady && isAuthenticated && (
         <button
           type="button"
           className={`theme-toggle-button ${theme === 'dark' ? 'is-dark' : 'is-light'}`}

@@ -184,6 +184,23 @@ export default function Home() {
   const outlookPromptResolveRef = useRef(null)
   const dateFields = ['last_contact', 'appointment', 'follow_up']
 
+  const notifyAuthTokenChanged = () => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new Event('zenara:auth-token-changed'))
+  }
+
+  const saveAuthTokenToSession = (token) => {
+    if (typeof window === 'undefined') return
+    sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+    notifyAuthTokenChanged()
+  }
+
+  const clearAuthTokenFromSession = () => {
+    if (typeof window === 'undefined') return
+    sessionStorage.removeItem(AUTH_TOKEN_KEY)
+    notifyAuthTokenChanged()
+  }
+
   const resolveLandingViewForUser = (user) => {
     return 'dashboard'
   }
@@ -233,9 +250,7 @@ export default function Home() {
       return true
     }
 
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(AUTH_TOKEN_KEY, token)
-    }
+    saveAuthTokenToSession(token)
 
     setAuthToken(token)
     setAuthUser(user)
@@ -280,9 +295,7 @@ export default function Home() {
   }
 
   const handleUnauthorized = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(AUTH_TOKEN_KEY)
-    }
+    clearAuthTokenFromSession()
     setAuthToken('')
     setAuthUser(null)
     setTeamUsers([])
@@ -424,7 +437,7 @@ export default function Home() {
         setCurrentView(resolveLandingViewForUser(user))
         setAuthError('')
       } catch (err) {
-        sessionStorage.removeItem(AUTH_TOKEN_KEY)
+        clearAuthTokenFromSession()
       } finally {
         if (mounted) setAuthChecking(false)
       }
@@ -565,9 +578,7 @@ export default function Home() {
         return
       }
 
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(AUTH_TOKEN_KEY, token)
-      }
+      saveAuthTokenToSession(token)
 
       setAuthToken(token)
       setAuthUser(user)
@@ -665,9 +676,7 @@ export default function Home() {
     } catch (err) {
       // Ignore logout request failures and still clear local auth state.
     } finally {
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem(AUTH_TOKEN_KEY)
-      }
+      clearAuthTokenFromSession()
       setAuthToken('')
       setAuthUser(null)
       setTeamUsers([])
@@ -741,9 +750,7 @@ export default function Home() {
         return
       }
 
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(AUTH_TOKEN_KEY, token)
-      }
+      saveAuthTokenToSession(token)
 
       setAuthToken(token)
       setAuthUser(user)
@@ -761,9 +768,7 @@ export default function Home() {
   }
 
   const handleAddAdmin = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(AUTH_TOKEN_KEY)
-    }
+    clearAuthTokenFromSession()
 
     setAuthToken('')
     setAuthUser(null)
