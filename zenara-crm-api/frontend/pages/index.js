@@ -726,74 +726,6 @@ export default function Home() {
     }
   }
 
-  const handleOutlookConnect = async () => {
-    if (typeof window === 'undefined' || !authToken) return
-
-    try {
-      const origin = encodeURIComponent(window.location.origin)
-      const res = await authFetch(`${apiBase}/auth/microsoft/connect-url?origin=${origin}`)
-      const json = await res.json().catch(() => null)
-
-      if (res.status === 401) {
-        handleUnauthorized()
-        return
-      }
-
-      if (!res.ok || !json?.url) {
-        throw new Error(extractErrorMessage(json, 'Unable to start Outlook connection.'))
-      }
-
-      outlookPopupRef.current = window.open(
-        json.url,
-        'zenara-outlook-connect',
-        'width=560,height=720,menubar=no,toolbar=no,location=yes,resizable=yes,scrollbars=yes,status=no'
-      )
-
-      if (!outlookPopupRef.current) {
-        showToast('The Outlook popup was blocked. Please allow popups for this site and try again.', 'error')
-        return
-      }
-
-      showToast('Complete the Outlook sign-in in the popup window.')
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'error')
-    }
-  }
-
-  const handleOutlookDisconnect = async () => {
-    if (!authToken) return
-
-    if (typeof window !== 'undefined') {
-      const confirmed = window.confirm('Disconnect Outlook calendar for this account? Existing Outlook events will stay in Outlook, but new CRM reminders will stop syncing there.')
-      if (!confirmed) return
-    }
-
-    try {
-      const res = await authFetch(`${apiBase}/auth/microsoft/connection`, { method: 'DELETE' })
-      const json = await res.json().catch(() => null)
-
-      if (res.status === 401) {
-        handleUnauthorized()
-        return
-      }
-
-      if (!res.ok) {
-        throw new Error(extractErrorMessage(json, 'Unable to disconnect Outlook.'))
-      }
-
-      if (json?.user) {
-        setAuthUser(json.user)
-      } else {
-        const refreshedUser = await fetchCurrentUser(authToken)
-        setAuthUser(refreshedUser)
-      }
-
-      showToast(json?.message || 'Outlook calendar disconnected.')
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'error')
-    }
-  }
-
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
 
@@ -1146,11 +1078,6 @@ export default function Home() {
   const rowOffset = (currentPage - 1) * perPage
   const hasPrevPage = currentPage > 1
   const hasNextPage = currentPage < lastPage
-  const outlookConnected = Boolean(authUser?.microsoft_calendar_connected)
-  const outlookButtonLabel = outlookConnected ? 'Disconnect Outlook' : 'Connect Outlook'
-  const outlookButtonState = outlookConnected ? 'active' : 'idle'
-  const handleOutlookButtonClick = outlookConnected ? handleOutlookDisconnect : handleOutlookConnect
-
   const goToPreviousPage = () => {
     if (!hasPrevPage || loading) return
     setSelectedIds([])
@@ -1220,9 +1147,6 @@ export default function Home() {
             setModalOpen(true)
             if (currentView !== 'listing') setCurrentView('listing')
           }}
-          outlookButtonLabel={outlookButtonLabel}
-          outlookButtonState={outlookButtonState}
-          onOutlookButtonClick={handleOutlookButtonClick}
         />
 
         {currentView === 'dashboard' && (

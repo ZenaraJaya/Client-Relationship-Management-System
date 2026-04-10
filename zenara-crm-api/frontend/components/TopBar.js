@@ -5,12 +5,7 @@ export default function TopBar({
   onSearchCompanyChange = () => {},
   onQuickAdd = () => {},
   canQuickAdd = true,
-  outlookButtonLabel = 'Connect Outlook',
-  outlookButtonState = 'idle',
-  onOutlookButtonClick = () => {},
 }) {
-  const outlookButtonClassName = `outlook-connect-btn${outlookButtonState === 'active' ? ' active' : ''}${outlookButtonState === 'blocked' ? ' blocked' : ''}`
-
   return (
     <header className="topbar premium-topbar">
       <div className="command-left">
@@ -32,12 +27,6 @@ export default function TopBar({
             + New Contact
           </button>
         )}
-      </div>
-
-      <div className="command-right">
-        <button type="button" className={outlookButtonClassName} onClick={onOutlookButtonClick}>
-          {outlookButtonLabel}
-        </button>
       </div>
     </header>
   )
