@@ -385,7 +385,7 @@ td {
 
 .sidebar {
   width: var(--sidebar-width);
-  padding: 30px 20px;
+  padding: 16px 20px 30px;
   border-right: 1px solid var(--line);
   background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
   box-shadow: var(--shadow-soft);
@@ -409,7 +409,7 @@ td {
 
 .sidebar.collapsed {
   --sidebar-width: 88px;
-  padding: 30px 12px;
+  padding: 16px 12px 30px;
 }
 
 .brand {
