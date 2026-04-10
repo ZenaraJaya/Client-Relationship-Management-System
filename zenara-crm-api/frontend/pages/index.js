@@ -1320,11 +1320,81 @@ export default function Home() {
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
+  const renderFilterGroupIcon = (iconClass) => {
+    if (iconClass === 'location') {
+      return (
+        <svg
+          className={`advanced-filter-group-icon-svg ${iconClass}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 21s-6-5.1-6-10a6 6 0 1 1 12 0c0 4.9-6 10-6 10z" />
+          <circle cx="12" cy="11" r="2.3" />
+        </svg>
+      )
+    }
+
+    if (iconClass === 'industry') {
+      return (
+        <svg
+          className={`advanced-filter-group-icon-svg ${iconClass}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="4.5" y="3.5" width="15" height="17" rx="2.5" />
+          <path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8" />
+        </svg>
+      )
+    }
+
+    if (iconClass === 'priority') {
+      return (
+        <svg
+          className={`advanced-filter-group-icon-svg ${iconClass}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M13 2L6 14h5l-1 8 8-12h-5l0-8z" />
+        </svg>
+      )
+    }
+
+    return (
+      <svg
+        className={`advanced-filter-group-icon-svg ${iconClass}`}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="8" />
+        <path d="m8.5 12.5 2.2 2.2 4.8-4.8" />
+      </svg>
+    )
+  }
+
   const filterPanelGroups = [
     {
       field: 'locations',
       title: 'Location',
-      iconGlyph: '⌖',
       iconClass: 'location',
       options: visibleFilterOptions.locations,
       emptyLabel: 'No location options on this page.',
@@ -1332,7 +1402,6 @@ export default function Home() {
     {
       field: 'industries',
       title: 'Industry',
-      iconGlyph: '▦',
       iconClass: 'industry',
       options: visibleFilterOptions.industries,
       emptyLabel: 'No industry options on this page.',
@@ -1340,7 +1409,6 @@ export default function Home() {
     {
       field: 'priorities',
       title: 'Priority',
-      iconGlyph: '⚡',
       iconClass: 'priority',
       options: visibleFilterOptions.priorities,
       emptyLabel: 'No priority options on this page.',
@@ -1348,7 +1416,6 @@ export default function Home() {
     {
       field: 'statuses',
       title: 'Status',
-      iconGlyph: '✓',
       iconClass: 'status',
       options: visibleFilterOptions.statuses,
       emptyLabel: 'No status options on this page.',
@@ -1379,12 +1446,12 @@ export default function Home() {
     )
   }
 
-  const renderFilterGroup = ({ field, title, iconGlyph, iconClass, options, emptyLabel }) => (
+  const renderFilterGroup = ({ field, title, iconClass, options, emptyLabel }) => (
     <section key={field} className="advanced-filter-group">
       <div className="advanced-filter-group-head">
         <h4 className="advanced-filter-group-title">
           <span className={`advanced-filter-group-icon ${iconClass}`} aria-hidden="true">
-            {iconGlyph}
+            {renderFilterGroupIcon(iconClass)}
           </span>
           <span>{title}</span>
         </h4>
@@ -1688,14 +1755,19 @@ export default function Home() {
               <div className="advanced-filters-toolbar-left">
                 <button
                   type="button"
-                  className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
+                  className={`advanced-filters-toggle ${advancedFiltersOpen ? '^' : 'v'}`}
                   onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
                   aria-expanded={advancedFiltersOpen}
                 >
-                  <span className="advanced-filters-toggle-icon" aria-hidden="true">⌕</span>
+                  <span className="advanced-filters-toggle-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="5.5" />
+                      <path d="m15.5 15.5 4 4" />
+                    </svg>
+                  </span>
                   <span>Filters</span>
                   <span className="advanced-filters-toggle-caret" aria-hidden="true">
-                    {advancedFiltersOpen ? '▲' : '▼'}
+                    {advancedFiltersOpen ? '^' : 'v'}
                   </span>
                   {activeAdvancedFilterCount > 0 && (
                     <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
@@ -2077,3 +2149,5 @@ export default function Home() {
     </div>
   )
 }
+
+
