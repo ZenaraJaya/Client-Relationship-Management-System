@@ -599,13 +599,13 @@ export default function Home() {
     }
   }, [switchUserLogin.open, switchUserLogin.isSubmitting])
 
-  const handleAuthSubmit = async ({ mode, name, role, email, password }) => {
+  const handleAuthSubmit = async ({ mode, name, email, password }) => {
     setAuthSubmitting(true)
     setAuthError('')
 
     try {
       const endpoint = mode === 'signup' ? '/auth/register' : '/auth/login'
-      const payload = mode === 'signup' ? { name, role, email, password } : { email, password }
+      const payload = mode === 'signup' ? { name, role: 'admin', email, password } : { email, password }
 
       const res = await fetch(`${apiBase}${endpoint}`, {
         method: 'POST',
@@ -641,7 +641,7 @@ export default function Home() {
     }
   }
 
-  const handleOutlookAuthStart = async ({ mode, role }) => {
+  const handleOutlookAuthStart = async ({ mode }) => {
     if (typeof window === 'undefined') return
 
     setAuthSubmitting(true)
@@ -649,7 +649,7 @@ export default function Home() {
 
     try {
       const authMode = mode === 'signup' ? 'signup' : 'login'
-      const authRole = authMode === 'signup' && role === 'admin' ? 'admin' : 'staff'
+      const authRole = authMode === 'signup' ? 'admin' : 'staff'
       const origin = encodeURIComponent(window.location.origin)
 
       const res = await fetch(`${apiBase}/auth/microsoft/auth-url?origin=${origin}&mode=${authMode}&role=${authRole}`)

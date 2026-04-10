@@ -119,38 +119,26 @@ export default function AuthPanel({
   isLoading,
   error,
   initialMode = 'login',
-  initialRole = '',
 }) {
   const normalizedInitialMode = initialMode === 'signup' ? 'signup' : 'login'
-  const normalizedInitialRole = ['admin', 'staff'].includes(initialRole) ? initialRole : ''
 
   const [mode, setMode] = useState(normalizedInitialMode)
   const [name, setName] = useState('')
-  const [role, setRole] = useState(normalizedInitialMode === 'signup' ? normalizedInitialRole : '')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [localError, setLocalError] = useState('')
-  const [rolePromptOpen, setRolePromptOpen] = useState(false)
 
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password])
   const isSignup = mode === 'signup'
 
   useEffect(() => {
     const nextMode = initialMode === 'signup' ? 'signup' : 'login'
-    const nextRole = ['admin', 'staff'].includes(initialRole) ? initialRole : ''
     setMode(nextMode)
-    setRole(nextMode === 'signup' ? nextRole : '')
     setLocalError('')
-    setRolePromptOpen(false)
-  }, [initialMode, initialRole])
-
-  const showRoleRequiredPopup = () => {
-    setLocalError('')
-    setRolePromptOpen(true)
-  }
+  }, [initialMode])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -167,10 +155,6 @@ export default function AuthPanel({
     }
 
     if (isSignup) {
-      if (!role) {
-        showRoleRequiredPopup()
-        return
-      }
       if (!name.trim()) {
         setLocalError('Name is required.')
         return
@@ -188,7 +172,7 @@ export default function AuthPanel({
     await onSubmit({
       mode,
       name: name.trim(),
-      role,
+      role: isSignup ? 'admin' : 'staff',
       email: email.trim(),
       password,
     })
@@ -197,7 +181,6 @@ export default function AuthPanel({
   const switchMode = (nextMode) => {
     if (isLoading) return
     setMode(nextMode)
-    setRolePromptOpen(false)
     setLocalError('')
   }
 
@@ -205,14 +188,9 @@ export default function AuthPanel({
     if (isLoading) return
     setLocalError('')
 
-    if (isSignup && !role) {
-      showRoleRequiredPopup()
-      return
-    }
-
     await onOutlookAuth({
       mode,
-      role: isSignup ? role : 'staff',
+      role: isSignup ? 'admin' : 'staff',
     })
   }
 
@@ -306,30 +284,6 @@ export default function AuthPanel({
                 className={styles.input}
                 autoComplete="name"
               />
-            </div>
-          )}
-
-          {isSignup && (
-            <div className={styles.fieldGroup}>
-              <span className={styles.label}>Account Role</span>
-              <div className={styles.roleSwitch} role="tablist" aria-label="Signup role">
-                <button
-                  type="button"
-                  onClick={() => setRole('staff')}
-                  className={`${styles.roleButton} ${role === 'staff' ? styles.roleButtonActive : ''}`}
-                  aria-selected={role === 'staff'}
-                >
-                  Staff
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('admin')}
-                  className={`${styles.roleButton} ${role === 'admin' ? styles.roleButtonActive : ''}`}
-                  aria-selected={role === 'admin'}
-                >
-                  Admin
-                </button>
-              </div>
             </div>
           )}
 
@@ -436,51 +390,6 @@ export default function AuthPanel({
           By continuing, you agree to secure session logging and account protection checks.
         </p>
       </section>
-
-      {rolePromptOpen && (
-        <div className={styles.rolePromptOverlay} role="dialog" aria-modal="true" aria-labelledby="role-prompt-title">
-          <div className={styles.rolePromptCard}>
-            <h3 id="role-prompt-title" className={styles.rolePromptTitle}>Please choose your role</h3>
-            <p className={styles.rolePromptCopy}>
-              Select how you want to use this workspace to continue signup.
-            </p>
-
-            <div className={styles.rolePromptActions}>
-              <button
-                type="button"
-                className={`${styles.rolePromptButton} ${styles.rolePromptPrimary}`}
-                onClick={() => {
-                  setRole('staff')
-                  setRolePromptOpen(false)
-                  setLocalError('')
-                }}
-                autoFocus
-              >
-                Continue as Staff
-              </button>
-              <button
-                type="button"
-                className={`${styles.rolePromptButton} ${styles.rolePromptSecondary}`}
-                onClick={() => {
-                  setRole('admin')
-                  setRolePromptOpen(false)
-                  setLocalError('')
-                }}
-              >
-                Continue as Admin
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className={styles.rolePromptDismiss}
-              onClick={() => setRolePromptOpen(false)}
-            >
-              Not now
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
