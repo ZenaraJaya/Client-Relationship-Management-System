@@ -254,8 +254,8 @@ td {
   box-shadow: 0 14px 24px rgba(2, 6, 23, 0.46);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
+  justify-content: center;
+  gap: 0;
   cursor: pointer;
   z-index: 1700;
   overflow: hidden;
@@ -273,15 +273,16 @@ td {
 }
 
 .theme-toggle-icon {
-  position: relative;
+  position: absolute;
+  top: 50%;
   z-index: 1;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1;
   user-select: none;
   pointer-events: none;
@@ -291,10 +292,12 @@ td {
 }
 
 .theme-toggle-icon-sun {
+  left: 12px;
   background: transparent;
 }
 
 .theme-toggle-icon-moon {
+  right: 12px;
   background: transparent;
 }
 
@@ -315,29 +318,29 @@ td {
 }
 
 .theme-toggle-button.is-dark .theme-toggle-thumb {
-  transform: translateX(40px);
+  transform: translateX(0);
 }
 
 .theme-toggle-button.is-light .theme-toggle-icon-sun {
   opacity: 1;
-  transform: translateX(3px);
+  transform: translateY(-50%) scale(1);
 }
 
 .theme-toggle-button.is-light .theme-toggle-icon-moon {
   opacity: 0;
-  transform: translateX(0);
-  color: transparent;
+  transform: translateY(-50%) scale(0.92);
+  color: #ffe066;
 }
 
 .theme-toggle-button.is-dark .theme-toggle-icon-sun {
-  opacity: 1;
-  transform: translateX(3px);
+  opacity: 0;
+  transform: translateY(-50%) scale(0.92);
 }
 
 .theme-toggle-button.is-dark .theme-toggle-icon-moon {
-  opacity: 0;
-  transform: translateX(0);
-  color: transparent;
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+  color: #ffe066;
 }
 
 .session-loader {
@@ -2077,9 +2080,17 @@ td {
   }
 
   .theme-toggle-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
+    width: 22px;
+    height: 22px;
+    font-size: 0.95rem;
+  }
+
+  .theme-toggle-icon-sun {
+    left: 10px;
+  }
+
+  .theme-toggle-icon-moon {
+    right: 10px;
   }
 
   .theme-toggle-thumb {
@@ -2092,7 +2103,7 @@ td {
   }
 
   .theme-toggle-button.is-dark .theme-toggle-thumb {
-    transform: translateX(34px);
+    transform: translateX(0);
   }
 
   .metric-grid {

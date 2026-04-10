@@ -39,11 +39,12 @@ export default function App({ Component, pageProps }) {
           aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to night mode'}
           title={theme === 'dark' ? 'Switch to light mode' : 'Switch to night mode'}
         >
-          <span className="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">☀️</span>
-          <span className="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">🌙✨</span>
+          <span className="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">{'\u2600\uFE0F'}</span>
+          <span className="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">{'\uD83C\uDF19\u2728'}</span>
           <span className="theme-toggle-thumb" aria-hidden="true" />
         </button>
       )}
     </>
   )
 }
+
