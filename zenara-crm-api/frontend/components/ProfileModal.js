@@ -61,7 +61,6 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
 
   if (!isOpen) return null
 
-  const roleLabel = ((user?.role || 'staff').trim() || 'staff').toUpperCase()
   const initials = (form.name || user?.name || 'U')
     .trim()
     .split(' ')
@@ -212,33 +211,6 @@ export default function ProfileModal({ isOpen, onClose, onSubmit, isLoading, use
                     Upload profile pic
                   </button>
                 </div>
-              </div>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              padding: '12px 14px',
-              borderRadius: 14,
-              background: 'var(--panel-strong)',
-              border: '1px solid var(--line)',
-            }}>
-              <div>
-                <div style={{ fontSize: 12, color: 'var(--table-cell-muted)', fontWeight: 700 }}>Access role</div>
-                <div style={{ fontSize: 15, color: 'var(--ink)', fontWeight: 800 }}>{roleLabel}</div>
-              </div>
-              <div style={{
-                padding: '6px 10px',
-                borderRadius: 999,
-                background: 'var(--accent-soft)',
-                color: 'var(--accent)',
-                fontWeight: 800,
-                fontSize: 12,
-                letterSpacing: '0.04em',
-              }}>
-                READ ONLY
               </div>
             </div>
 
