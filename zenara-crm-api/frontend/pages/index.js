@@ -243,6 +243,18 @@ export default function Home() {
     return true
   }
 
+  const applyOutlookCalendarPayload = (payload) => {
+    if (!payload || typeof payload !== 'object' || payload.type !== 'zenara:outlook-calendar-auth') {
+      return false
+    }
+
+    showToast(
+      payload.message || (payload.ok ? 'Outlook calendar connected.' : 'Outlook calendar connection failed.'),
+      payload.ok ? 'success' : 'error'
+    )
+    return true
+  }
+
   const showToast = (message, type = 'success') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     setToast({ visible: true, message, type })
@@ -370,6 +382,7 @@ export default function Home() {
           setAuthChecking(false)
           return
         }
+        applyOutlookCalendarPayload(hashPayload)
       }
 
       const savedToken = sessionStorage.getItem(AUTH_TOKEN_KEY)
@@ -589,18 +602,7 @@ export default function Home() {
         throw new Error(extractErrorMessage(json, 'Unable to start Outlook connection.'))
       }
 
-      outlookPopupRef.current = window.open(
-        json.url,
-        'zenara-outlook-connect',
-        'width=560,height=720,menubar=no,toolbar=no,location=yes,resizable=yes,scrollbars=yes,status=no'
-      )
-
-      if (!outlookPopupRef.current) {
-        showToast('The Outlook popup was blocked. Please allow popups for this site and try again.', 'error')
-        return false
-      }
-
-      showToast('Complete the Outlook sign-in in the popup window.')
+      window.location.assign(json.url)
       return true
     } catch (err) {
       showToast(`Error: ${err.message}`, 'error')
@@ -848,8 +850,6 @@ export default function Home() {
       const url = editingItem ? `${apiBase}/crms/${editingItem.id}` : `${apiBase}/crms`
       const payload = normalizeDateFields(formData)
 
-      await promptOutlookCalendarConnectIfNeeded(payload)
-
       const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -874,6 +874,8 @@ export default function Home() {
         calendarSyncWarning || `CRM contact ${editingItem ? 'updated' : 'added'} successfully.`,
         calendarSyncWarning ? 'error' : 'success'
       )
+
+      await promptOutlookCalendarConnectIfNeeded(payload)
     } catch (err) {
       showToast(`Error: ${err.message}`, 'error')
     } finally {
@@ -980,10 +982,6 @@ export default function Home() {
     const normalizedValue = dateFields.includes(field) && value === '' ? null : value
     const previousValue = item[field]
 
-    if ((field === 'appointment' || field === 'follow_up') && hasReminderDateValue(normalizedValue)) {
-      await promptOutlookCalendarConnectIfNeeded({ [field]: normalizedValue })
-    }
-
     setData((prev) => {
       if (!prev || !prev.data) return prev
       return {
@@ -1011,6 +1009,11 @@ export default function Home() {
 
       const calendarSyncWarning = extractCalendarSyncWarning(json)
       showToast(calendarSyncWarning || 'Changes have been made.', calendarSyncWarning ? 'error' : 'success')
+
+      if ((field === 'appointment' || field === 'follow_up') && hasReminderDateValue(normalizedValue)) {
+        await promptOutlookCalendarConnectIfNeeded({ [field]: normalizedValue })
+      }
+
       return true
     } catch (err) {
       setData((prev) => {

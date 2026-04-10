@@ -428,13 +428,12 @@ SVG;
       var targetOrigin = {$targetOriginJson};
       var hasOpener = !!(window.opener && !window.opener.closed && typeof window.opener.postMessage === 'function');
       var canRedirectBack = targetOrigin !== '*';
-      var shouldRedirectForAuthFlow = payload && payload.type === 'zenara:outlook-auth';
       var payloadHash = '';
       var redirectUrl = '';
 
       try {
         payloadHash = encodeURIComponent(JSON.stringify(payload));
-        redirectUrl = (canRedirectBack && shouldRedirectForAuthFlow) ? (targetOrigin + '/#zenara_oauth_payload=' + payloadHash) : '';
+        redirectUrl = (canRedirectBack && payloadHash) ? (targetOrigin + '/#zenara_oauth_payload=' + payloadHash) : '';
       } catch (e) {
         payloadHash = '';
         redirectUrl = '';
