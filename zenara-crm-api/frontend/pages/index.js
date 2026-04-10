@@ -1089,6 +1089,7 @@ export default function Home() {
           if (v !== 'listing') setSearchCompany('')
         }}
         onLogout={handleLogout}
+        onProfileClick={() => setProfileOpen(true)}
         onAddAdminClick={handleAddAdmin}
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
