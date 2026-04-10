@@ -1532,33 +1532,32 @@ export default function Home() {
             aria-labelledby="outlook-connect-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="outlook-connect-kicker">Smart Reminder</div>
-            <h3 id="outlook-connect-title" className="outlook-connect-title">
-              Enable Outlook Reminder Sync
-            </h3>
+            <div className="outlook-connect-head">
+              <div className="outlook-connect-icon" aria-hidden="true">
+                <span className="outlook-connect-icon-glyph">@</span>
+              </div>
+              <h3 id="outlook-connect-title" className="outlook-connect-title">
+                Connect to Outlook
+              </h3>
+            </div>
             <p className="outlook-connect-copy">
-              Enable calendar integration so appointment and follow-up reminders sync to Outlook.
+              Sync your appointments and get automatic reminders for upcoming meetings.
             </p>
 
-            <div className="outlook-connect-benefits">
-              <div className="outlook-connect-benefit">Keep all client reminders in one calendar.</div>
-              <div className="outlook-connect-benefit">Avoid missed follow-ups with smarter scheduling.</div>
-            </div>
-
             <div className="outlook-connect-actions">
+              <button
+                type="button"
+                className="outlook-prompt-btn outlook-prompt-btn-primary"
+                onClick={() => resolveOutlookConnectPrompt(true)}
+              >
+                Yes, Connect
+              </button>
               <button
                 type="button"
                 className="outlook-prompt-btn outlook-prompt-btn-secondary"
                 onClick={() => resolveOutlookConnectPrompt(false)}
               >
                 Skip for now
-              </button>
-              <button
-                type="button"
-                className="outlook-prompt-btn outlook-prompt-btn-primary"
-                onClick={() => resolveOutlookConnectPrompt(true)}
-              >
-                Connect Outlook
               </button>
             </div>
           </div>
