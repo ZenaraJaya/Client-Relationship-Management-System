@@ -1272,7 +1272,7 @@ td {
 
 .metric-card-button {
   width: 100%;
-  border: 1px solid #dde6e1;
+  border: 1px solid var(--surface-border);
   text-align: left;
   font: inherit;
   color: inherit;
