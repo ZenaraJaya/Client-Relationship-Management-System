@@ -1248,15 +1248,29 @@ export default function Home() {
     setServerPage((prev) => prev + 1)
   }
 
-  if (authChecking) {
-    return (
-      <div className="session-loader">
-        <div className="session-loader-track" role="progressbar" aria-label="Initializing CRM">
-          <div className="session-loader-bar" />
+  const renderAnimatedPreloader = ({ title, copy }) => (
+    <div className="auth-success-preloader" role="status" aria-live="polite" aria-label={title}>
+      <div className="auth-success-preloader-card">
+        <div className="auth-success-orbit" aria-hidden="true">
+          <span className="auth-success-orbit-ring auth-success-orbit-ring-one" />
+          <span className="auth-success-orbit-ring auth-success-orbit-ring-two" />
+          <span className="auth-success-orbit-core" />
         </div>
-        <p className="session-loader-text">Initializing CRM...</p>
+        <p className="auth-success-preloader-kicker">Zenara CRM</p>
+        <h2 className="auth-success-preloader-title">{title}</h2>
+        <p className="auth-success-preloader-copy">{copy}</p>
+        <div className="auth-success-progress-track" aria-hidden="true">
+          <span className="auth-success-progress-bar" />
+        </div>
       </div>
-    )
+    </div>
+  )
+
+  if (authChecking) {
+    return renderAnimatedPreloader({
+      title: 'Initializing CRM',
+      copy: 'Checking your secure session and preparing your dashboard...',
+    })
   }
 
   if (!authToken) {
@@ -1701,23 +1715,11 @@ export default function Home() {
         </div>
       )}
 
-      {authSuccessPreloader.visible && (
-        <div className="auth-success-preloader" role="status" aria-live="polite" aria-label={authSuccessPreloader.title}>
-          <div className="auth-success-preloader-card">
-            <div className="auth-success-orbit" aria-hidden="true">
-              <span className="auth-success-orbit-ring auth-success-orbit-ring-one" />
-              <span className="auth-success-orbit-ring auth-success-orbit-ring-two" />
-              <span className="auth-success-orbit-core" />
-            </div>
-            <p className="auth-success-preloader-kicker">Zenara CRM</p>
-            <h2 className="auth-success-preloader-title">{authSuccessPreloader.title}</h2>
-            <p className="auth-success-preloader-copy">{authSuccessPreloader.copy}</p>
-            <div className="auth-success-progress-track" aria-hidden="true">
-              <span className="auth-success-progress-bar" />
-            </div>
-          </div>
-        </div>
-      )}
+      {authSuccessPreloader.visible &&
+        renderAnimatedPreloader({
+          title: authSuccessPreloader.title,
+          copy: authSuccessPreloader.copy,
+        })}
     </div>
   )
 }
