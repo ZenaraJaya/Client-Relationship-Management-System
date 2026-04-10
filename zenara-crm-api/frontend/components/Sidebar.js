@@ -7,6 +7,8 @@ export default function Sidebar({
   onProfileClick = () => {},
   userName = 'User',
   profilePhotoUrl = '',
+  teamUsers = [],
+  currentUserId = null,
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
@@ -70,12 +72,62 @@ export default function Sidebar({
     []
   )
 
-  const initials = (userName || 'U')
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const getInitials = (value) =>
+    (String(value || 'U')
+      .trim()
+      .split(/\s+/)
+      .map((part) => part.charAt(0))
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'U')
+
+  const initials = getInitials(userName)
+  const normalizedCurrentUserId = currentUserId === null || currentUserId === undefined ? '' : String(currentUserId)
+
+  const teamMembers = useMemo(() => {
+    const source = Array.isArray(teamUsers) ? teamUsers : []
+    const seen = new Set()
+    const deduped = []
+
+    source.forEach((member) => {
+      if (!member || typeof member !== 'object') return
+
+      const idKey = member.id === null || member.id === undefined ? '' : String(member.id)
+      const emailKey = String(member.email || '').trim().toLowerCase()
+      const nameKey = String(member.name || '').trim().toLowerCase()
+      const uniqueKey = idKey || emailKey || nameKey
+      if (!uniqueKey || seen.has(uniqueKey)) return
+
+      seen.add(uniqueKey)
+      deduped.push(member)
+    })
+
+    if (!deduped.length) {
+      return [
+        {
+          id: currentUserId,
+          name: userName || 'User',
+          profile_photo_url: profilePhotoUrl || '',
+        },
+      ]
+    }
+
+    if (
+      normalizedCurrentUserId &&
+      !deduped.some((member) => String(member?.id ?? '') === normalizedCurrentUserId)
+    ) {
+      return [
+        {
+          id: currentUserId,
+          name: userName || 'User',
+          profile_photo_url: profilePhotoUrl || '',
+        },
+        ...deduped,
+      ]
+    }
+
+    return deduped
+  }, [teamUsers, currentUserId, userName, profilePhotoUrl, normalizedCurrentUserId])
 
   useEffect(() => {
     setAvatarLoadFailed(false)
@@ -171,32 +223,49 @@ export default function Sidebar({
         {!isCollapsed && profileMenuOpen && (
           <div className="profile-switcher-menu" role="menu" aria-label="Account dropdown">
             <div className="profile-switcher-menu-title">Teams</div>
-            <button
-              type="button"
-              className="profile-switcher-team-row"
-              onClick={() => {
-                setProfileMenuOpen(false)
-              }}
-            >
-              <span className="profile-switcher-team-avatar" aria-hidden="true">
-                {profilePhotoUrl && !avatarLoadFailed ? (
-                  <img
-                    src={profilePhotoUrl}
-                    alt={`${userName} team avatar`}
-                    className="profile-switcher-avatar-image"
-                    onError={() => setAvatarLoadFailed(true)}
-                  />
-                ) : (
-                  <span className="profile-switcher-avatar-fallback">{initials}</span>
-                )}
-              </span>
-              <span className="profile-switcher-team-name">{userName || 'User'}</span>
-              <span className="profile-switcher-team-check" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </span>
-            </button>
+            <div className="profile-switcher-team-list" role="none">
+              {teamMembers.map((member, index) => {
+                const memberId = member?.id
+                const memberName = String(member?.name || 'User')
+                const memberAvatarUrl = String(member?.profile_photo_url || '').trim()
+                const memberInitials = getInitials(memberName)
+                const memberKey = `${String(memberId ?? memberName)}-${index}`
+                const isCurrentUser = normalizedCurrentUserId
+                  ? String(memberId ?? '') === normalizedCurrentUserId
+                  : index === 0
+
+                return (
+                  <button
+                    key={memberKey}
+                    type="button"
+                    className="profile-switcher-team-row"
+                    onClick={() => {
+                      setProfileMenuOpen(false)
+                    }}
+                  >
+                    <span className="profile-switcher-team-avatar" aria-hidden="true">
+                      {memberAvatarUrl ? (
+                        <img
+                          src={memberAvatarUrl}
+                          alt={`${memberName} team avatar`}
+                          className="profile-switcher-avatar-image"
+                        />
+                      ) : (
+                        <span className="profile-switcher-avatar-fallback">{memberInitials}</span>
+                      )}
+                    </span>
+                    <span className="profile-switcher-team-name">{memberName}</span>
+                    {isCurrentUser && (
+                      <span className="profile-switcher-team-check" aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
 
             <button
               type="button"

@@ -23,6 +23,7 @@ Route::post('webhooks/firestore/delete', [FirestoreWebhookController::class, 'ha
 
 Route::middleware('auth.token')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me']);
+    Route::get('auth/users', [AuthController::class, 'users']);
     Route::put('auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/microsoft/connect-url', [AuthController::class, 'microsoftConnectUrl']);

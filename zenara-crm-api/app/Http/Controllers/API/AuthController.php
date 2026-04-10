@@ -536,6 +536,37 @@ HTML, 200)->header('Content-Type', 'text/html; charset=UTF-8');
         return response()->json($this->serializeAuthUser($request->user(), $request));
     }
 
+    public function users(Request $request): JsonResponse
+    {
+        if (!$this->tokenColumnReady()) {
+            return $this->schemaOutOfDateResponse();
+        }
+
+        try {
+            $users = User::query()
+                ->with('profilePhoto')
+                ->orderByRaw('LOWER(name)')
+                ->orderBy('id')
+                ->get();
+        } catch (QueryException $e) {
+            Log::error('Users list query failed.', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Unable to load users right now. Please try again.'], 500);
+        }
+
+        return response()->json([
+            'users' => $users
+                ->map(fn (User $user): array => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'profile_photo_url' => $this->profilePhotoUrlForUser($user, $request),
+                    'updated_at' => $user->updated_at?->toDateTimeString(),
+                ])
+                ->values(),
+        ]);
+    }
+
     public function updateProfile(Request $request): JsonResponse
     {
         if (!$this->tokenColumnReady()) {

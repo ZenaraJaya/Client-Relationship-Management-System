@@ -600,6 +600,11 @@ td {
   color: #394844;
 }
 
+.profile-switcher-team-list {
+  max-height: 248px;
+  overflow-y: auto;
+}
+
 .profile-switcher-team-row {
   width: 100%;
   border: 0;

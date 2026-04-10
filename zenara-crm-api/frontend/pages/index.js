@@ -145,6 +145,7 @@ export default function Home() {
   const [authError, setAuthError] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
+  const [teamUsers, setTeamUsers] = useState([])
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
   const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(
     authUser?.profile_photo_url || '',
@@ -152,6 +153,17 @@ export default function Home() {
     authUser?.id,
     authUser?.updated_at
   )
+  const normalizedTeamUsers = Array.isArray(teamUsers)
+    ? teamUsers.map((member) => ({
+        ...member,
+        profile_photo_url: normalizeProfilePhotoUrl(
+          member?.profile_photo_url || '',
+          apiBase,
+          member?.id,
+          member?.updated_at
+        ),
+      }))
+    : []
 
   const toastTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)
@@ -246,6 +258,7 @@ export default function Home() {
     }
     setAuthToken('')
     setAuthUser(null)
+    setTeamUsers([])
     setAuthError('Your session has expired. Please login again.')
     resetCrmUiState()
   }
@@ -408,6 +421,45 @@ export default function Home() {
     return () => clearInterval(intervalId)
   }, [apiBase, authToken, serverPage, searchCompany])
 
+  useEffect(() => {
+    let mounted = true
+
+    const fetchRegisteredUsers = async () => {
+      if (!authToken) {
+        if (mounted) setTeamUsers([])
+        return
+      }
+
+      try {
+        const res = await fetch(`${apiBase}/auth/users`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
+
+        if (!mounted) return
+
+        if (res.status === 401) {
+          handleUnauthorized()
+          return
+        }
+
+        const json = await res.json().catch(() => null)
+        if (!res.ok) {
+          throw new Error(extractErrorMessage(json, 'Unable to load users.'))
+        }
+
+        setTeamUsers(Array.isArray(json?.users) ? json.users : [])
+      } catch (err) {
+        console.error('Users fetch failed:', err)
+      }
+    }
+
+    fetchRegisteredUsers()
+
+    return () => {
+      mounted = false
+    }
+  }, [apiBase, authToken])
+
   const handleAuthSubmit = async ({ mode, name, role, email, password }) => {
     setAuthSubmitting(true)
     setAuthError('')
@@ -525,6 +577,13 @@ export default function Home() {
 
       if (json?.user) {
         setAuthUser(json.user)
+        setTeamUsers((prev) =>
+          prev.map((member) =>
+            String(member?.id ?? '') === String(json.user?.id ?? '')
+              ? { ...member, ...json.user }
+              : member
+          )
+        )
       }
 
       setProfileOpen(false)
@@ -1009,6 +1068,8 @@ export default function Home() {
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
         profilePhotoUrl={normalizedProfilePhotoUrl}
+        teamUsers={normalizedTeamUsers}
+        currentUserId={authUser?.id ?? null}
       />
       <main className="main">
         <TopBar
