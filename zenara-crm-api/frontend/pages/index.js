@@ -17,11 +17,6 @@ const DEFAULT_ADVANCED_FILTERS = {
   appointment: [],
   followUp: [],
 }
-const DEFAULT_FILTER_SECTION_STATE = {
-  organization: true,
-  salesActivity: true,
-  leadSource: true,
-}
 
 const getSwitchUserLoginState = (overrides = {}) => ({
   open: false,
@@ -154,7 +149,7 @@ export default function Home() {
   const [searchCompany, setSearchCompany] = useState('')
   const [advancedFilters, setAdvancedFilters] = useState(DEFAULT_ADVANCED_FILTERS)
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
-  const [filterSectionsOpen, setFilterSectionsOpen] = useState(DEFAULT_FILTER_SECTION_STATE)
+  const [filterSearchTerm, setFilterSearchTerm] = useState('')
   const [serverPage, setServerPage] = useState(1)
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' })
   const [deleteConfirm, setDeleteConfirm] = useState({
@@ -346,7 +341,7 @@ export default function Home() {
     setSearchCompany('')
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)
     setAdvancedFiltersOpen(false)
-    setFilterSectionsOpen(DEFAULT_FILTER_SECTION_STATE)
+    setFilterSearchTerm('')
     setCurrentView('dashboard')
     setModalOpen(false)
     setEditingItem(null)
@@ -1164,13 +1159,6 @@ export default function Home() {
       .sort((a, b) => a.label.localeCompare(b.label))
   }
 
-  const toggleFilterSection = (sectionKey) => {
-    setFilterSectionsOpen((prev) => ({
-      ...prev,
-      [sectionKey]: !prev[sectionKey],
-    }))
-  }
-
   const toggleAdvancedFilterOption = (field, value) => {
     setAdvancedFilters((prev) => {
       const currentValues = Array.isArray(prev[field]) ? prev[field] : []
@@ -1196,6 +1184,7 @@ export default function Home() {
 
   const clearAdvancedFilters = () => {
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)
+    setFilterSearchTerm('')
     setSelectedIds([])
   }
 
@@ -1219,6 +1208,35 @@ export default function Home() {
       priorities: Object.fromEntries(filterOptions.priorities.map((option) => [option.value, option.label])),
     }),
     [filterOptions]
+  )
+
+  const normalizedFilterSearchTerm = filterSearchTerm.trim().toLowerCase()
+
+  const visibleFilterOptions = useMemo(
+    () => {
+      const filterVisibleOptions = (field, options) => {
+        if (!normalizedFilterSearchTerm) return options
+
+        const selectedValues = Array.isArray(advancedFilters[field]) ? advancedFilters[field] : []
+        return options.filter((option) => {
+          const optionLabel = String(option?.label || '').toLowerCase()
+          const optionValue = String(option?.value || '').toLowerCase()
+          return (
+            optionLabel.includes(normalizedFilterSearchTerm) ||
+            optionValue.includes(normalizedFilterSearchTerm) ||
+            selectedValues.includes(option.value)
+          )
+        })
+      }
+
+      return {
+        locations: filterVisibleOptions('locations', filterOptions.locations),
+        industries: filterVisibleOptions('industries', filterOptions.industries),
+        priorities: filterVisibleOptions('priorities', filterOptions.priorities),
+        statuses: filterVisibleOptions('statuses', filterOptions.statuses),
+      }
+    },
+    [filterOptions, normalizedFilterSearchTerm, advancedFilters]
   )
 
   const doesItemMatchAdvancedFilters = (item) => {
@@ -1302,15 +1320,36 @@ export default function Home() {
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
-  const sectionActiveCounts = {
-    organization: advancedFilters.locations.length + advancedFilters.industries.length,
-    salesActivity:
-      advancedFilters.statuses.length +
-      advancedFilters.priorities.length +
-      advancedFilters.appointment.length +
-      advancedFilters.followUp.length,
-    leadSource: advancedFilters.sources.length,
-  }
+  const filterPanelGroups = [
+    {
+      field: 'locations',
+      title: 'Location',
+      icon: '📍',
+      options: visibleFilterOptions.locations,
+      emptyLabel: 'No location options on this page.',
+    },
+    {
+      field: 'industries',
+      title: 'Industry',
+      icon: '🏢',
+      options: visibleFilterOptions.industries,
+      emptyLabel: 'No industry options on this page.',
+    },
+    {
+      field: 'priorities',
+      title: 'Priority',
+      icon: '⚡',
+      options: visibleFilterOptions.priorities,
+      emptyLabel: 'No priority options on this page.',
+    },
+    {
+      field: 'statuses',
+      title: 'Status',
+      icon: '✓',
+      options: visibleFilterOptions.statuses,
+      emptyLabel: 'No status options on this page.',
+    },
+  ]
 
   const renderFilterOptionList = (field, options, emptyLabel = 'No options available on this page.') => {
     if (!options.length) {
@@ -1335,6 +1374,19 @@ export default function Home() {
       </div>
     )
   }
+
+  const renderFilterGroup = ({ field, title, icon, options, emptyLabel }) => (
+    <section key={field} className="advanced-filter-group">
+      <div className="advanced-filter-group-head">
+        <h4 className="advanced-filter-group-title">
+          <span aria-hidden="true">{icon}</span>
+          <span>{title}</span>
+        </h4>
+        <span className="advanced-filter-group-meta">{advancedFilters[field].length}</span>
+      </div>
+      {renderFilterOptionList(field, options, emptyLabel)}
+    </section>
+  )
 
   useEffect(() => {
     const visibleIds = new Set(filteredItems.map((item) => item.id))
@@ -1511,7 +1563,7 @@ export default function Home() {
           if (v !== 'listing') {
             setSearchCompany('')
             setAdvancedFiltersOpen(false)
-            setFilterSectionsOpen(DEFAULT_FILTER_SECTION_STATE)
+            setFilterSearchTerm('')
           }
         }}
         onLogout={handleLogout}
@@ -1532,10 +1584,7 @@ export default function Home() {
             setSelectedIds([])
             setServerPage(1)
           }}
-          showFilterToggle={currentView === 'listing'}
-          onToggleFilters={() => setAdvancedFiltersOpen((prev) => !prev)}
-          filtersOpen={advancedFiltersOpen}
-          activeFilterCount={activeAdvancedFilterCount}
+          showFilterToggle={false}
           canQuickAdd={isAdmin}
           onQuickAdd={() => {
             setEditingItem(null)
@@ -1630,112 +1679,73 @@ export default function Home() {
             </div>
 
             <div className="advanced-filters-bar">
-              <div className="advanced-filters-summary">
-                Showing {filteredItems.length} of {items.length} contacts on this page
-              </div>
-              {hasAnyAdvancedFilters && (
-                <button type="button" className="advanced-filters-clear" onClick={clearAdvancedFilters}>
-                  Clear all
+              <div className="advanced-filters-toolbar-left">
+                <button
+                  type="button"
+                  className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
+                  onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
+                  aria-expanded={advancedFiltersOpen}
+                >
+                  <span className="advanced-filters-toggle-icon" aria-hidden="true">🔎</span>
+                  <span>Filters</span>
+                  <span className="advanced-filters-toggle-caret" aria-hidden="true">
+                    {advancedFiltersOpen ? '▲' : '▼'}
+                  </span>
+                  {activeAdvancedFilterCount > 0 && (
+                    <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
+                  )}
                 </button>
-              )}
-            </div>
-
-            {hasAnyAdvancedFilters && (
-              <div className="advanced-filters-chip-row">
-                {activeFilterChips.map((chip) => (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    className="advanced-filter-chip"
-                    onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
-                  >
-                    <span>{chip.label}</span>
-                    <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
-                  </button>
-                ))}
+                <span className="advanced-filters-divider" aria-hidden="true" />
+                <div className="advanced-filters-summary">
+                  Showing {filteredItems.length} of {items.length} contacts
+                </div>
               </div>
-            )}
+              <button
+                type="button"
+                className="advanced-filters-clear"
+                onClick={clearAdvancedFilters}
+                disabled={!hasAnyAdvancedFilters}
+              >
+                Clear all
+              </button>
+            </div>
 
             {advancedFiltersOpen && (
               <div className="advanced-filters-panel">
-                <section className="advanced-filter-group">
-                  <button
-                    type="button"
-                    className={`advanced-filter-group-toggle ${filterSectionsOpen.organization ? 'open' : ''}`}
-                    onClick={() => toggleFilterSection('organization')}
-                  >
-                    <span className="advanced-filter-group-title">Organization</span>
-                    <span className="advanced-filter-group-meta">{sectionActiveCounts.organization}</span>
-                  </button>
-                  {filterSectionsOpen.organization && (
-                    <div className="advanced-filter-group-body">
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Location</h4>
-                        {renderFilterOptionList('locations', filterOptions.locations, 'No location options on this page.')}
-                      </div>
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Industry</h4>
-                        {renderFilterOptionList('industries', filterOptions.industries, 'No industry options on this page.')}
-                      </div>
-                    </div>
-                  )}
-                </section>
+                <div className="advanced-filters-panel-head">
+                  <h4>Filter Contacts</h4>
+                </div>
 
-                <section className="advanced-filter-group">
-                  <button
-                    type="button"
-                    className={`advanced-filter-group-toggle ${filterSectionsOpen.salesActivity ? 'open' : ''}`}
-                    onClick={() => toggleFilterSection('salesActivity')}
-                  >
-                    <span className="advanced-filter-group-title">Sales Activity</span>
-                    <span className="advanced-filter-group-meta">{sectionActiveCounts.salesActivity}</span>
-                  </button>
-                  {filterSectionsOpen.salesActivity && (
-                    <div className="advanced-filter-group-body">
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Status</h4>
-                        {renderFilterOptionList('statuses', filterOptions.statuses, 'No status options on this page.')}
-                      </div>
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Priority</h4>
-                        {renderFilterOptionList('priorities', filterOptions.priorities, 'No priority options on this page.')}
-                      </div>
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Appointment</h4>
-                        {renderFilterOptionList('appointment', [
-                          { value: 'has', label: 'Has appointment' },
-                          { value: 'none', label: 'No appointment' },
-                        ])}
-                      </div>
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Follow Up</h4>
-                        {renderFilterOptionList('followUp', [
-                          { value: 'has', label: 'Has follow up' },
-                          { value: 'none', label: 'No follow up' },
-                        ])}
-                      </div>
-                    </div>
-                  )}
-                </section>
+                <div className="advanced-filters-search-wrap">
+                  <input
+                    type="text"
+                    className="advanced-filters-search-input"
+                    placeholder="Search filters..."
+                    value={filterSearchTerm}
+                    onChange={(event) => setFilterSearchTerm(event.target.value)}
+                    aria-label="Search filter options"
+                  />
+                </div>
 
-                <section className="advanced-filter-group">
-                  <button
-                    type="button"
-                    className={`advanced-filter-group-toggle ${filterSectionsOpen.leadSource ? 'open' : ''}`}
-                    onClick={() => toggleFilterSection('leadSource')}
-                  >
-                    <span className="advanced-filter-group-title">Lead Source</span>
-                    <span className="advanced-filter-group-meta">{sectionActiveCounts.leadSource}</span>
-                  </button>
-                  {filterSectionsOpen.leadSource && (
-                    <div className="advanced-filter-group-body">
-                      <div className="advanced-filter-subgroup">
-                        <h4 className="advanced-filter-subtitle">Source</h4>
-                        {renderFilterOptionList('sources', filterOptions.sources, 'No source options on this page.')}
-                      </div>
-                    </div>
-                  )}
-                </section>
+                {hasAnyAdvancedFilters && (
+                  <div className="advanced-filters-chip-row">
+                    {activeFilterChips.map((chip) => (
+                      <button
+                        key={chip.id}
+                        type="button"
+                        className="advanced-filter-chip"
+                        onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
+                      >
+                        <span>{chip.label}</span>
+                        <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="advanced-filter-grid">
+                  {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                </div>
               </div>
             )}
 
