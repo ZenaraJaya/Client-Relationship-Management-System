@@ -88,6 +88,11 @@ export default function Sidebar({
     const source = Array.isArray(teamUsers) ? teamUsers : []
     const seen = new Set()
     const deduped = []
+    const currentUserFallback = {
+      id: currentUserId,
+      name: userName || 'User',
+      profile_photo_url: profilePhotoUrl || '',
+    }
 
     source.forEach((member) => {
       if (!member || typeof member !== 'object') return
@@ -103,27 +108,23 @@ export default function Sidebar({
     })
 
     if (!deduped.length) {
-      return [
-        {
-          id: currentUserId,
-          name: userName || 'User',
-          profile_photo_url: profilePhotoUrl || '',
-        },
-      ]
+      return [currentUserFallback]
     }
 
-    if (
-      normalizedCurrentUserId &&
-      !deduped.some((member) => String(member?.id ?? '') === normalizedCurrentUserId)
-    ) {
-      return [
-        {
-          id: currentUserId,
-          name: userName || 'User',
-          profile_photo_url: profilePhotoUrl || '',
-        },
-        ...deduped,
-      ]
+    if (normalizedCurrentUserId) {
+      const currentIndex = deduped.findIndex((member) => String(member?.id ?? '') === normalizedCurrentUserId)
+
+      if (currentIndex > 0) {
+        return [
+          deduped[currentIndex],
+          ...deduped.slice(0, currentIndex),
+          ...deduped.slice(currentIndex + 1),
+        ]
+      }
+
+      if (currentIndex < 0) {
+        return [currentUserFallback, ...deduped]
+      }
     }
 
     return deduped
