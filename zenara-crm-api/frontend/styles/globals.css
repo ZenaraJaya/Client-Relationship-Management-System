@@ -490,6 +490,7 @@ td {
 
 .profile-switcher {
   position: relative;
+  margin-bottom: 10px;
 }
 
 .profile-switcher-trigger {
