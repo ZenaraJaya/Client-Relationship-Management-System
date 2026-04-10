@@ -147,6 +147,14 @@ export default function Home() {
   const [authPanelInitialRole, setAuthPanelInitialRole] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
+  const [switchUserLogin, setSwitchUserLogin] = useState({
+    open: false,
+    targetName: '',
+    email: '',
+    password: '',
+    isSubmitting: false,
+    error: '',
+  })
   const [teamUsers, setTeamUsers] = useState([])
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
   const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(
@@ -261,6 +269,14 @@ export default function Home() {
     setAuthToken('')
     setAuthUser(null)
     setTeamUsers([])
+    setSwitchUserLogin({
+      open: false,
+      targetName: '',
+      email: '',
+      password: '',
+      isSubmitting: false,
+      error: '',
+    })
     setAuthPanelInitialMode('login')
     setAuthPanelInitialRole('')
     setAuthError('Your session has expired. Please login again.')
@@ -551,10 +567,116 @@ export default function Home() {
       setAuthToken('')
       setAuthUser(null)
       setTeamUsers([])
+      setSwitchUserLogin({
+        open: false,
+        targetName: '',
+        email: '',
+        password: '',
+        isSubmitting: false,
+        error: '',
+      })
       setAuthPanelInitialMode('login')
       setAuthPanelInitialRole('')
       resetCrmUiState()
       showToast('Logged out successfully.')
+    }
+  }
+
+  const openSwitchUserLogin = (member) => {
+    const targetName = String(member?.name || 'User')
+    const targetEmail = String(member?.email || '').trim()
+
+    setSwitchUserLogin({
+      open: true,
+      targetName,
+      email: targetEmail,
+      password: '',
+      isSubmitting: false,
+      error: '',
+    })
+  }
+
+  const closeSwitchUserLogin = () => {
+    setSwitchUserLogin((prev) => {
+      if (prev.isSubmitting) return prev
+      return {
+        open: false,
+        targetName: '',
+        email: '',
+        password: '',
+        isSubmitting: false,
+        error: '',
+      }
+    })
+  }
+
+  const submitSwitchUserLogin = async () => {
+    const email = String(switchUserLogin.email || '').trim()
+    const password = String(switchUserLogin.password || '')
+
+    if (!email) {
+      setSwitchUserLogin((prev) => ({ ...prev, error: 'Email is required.' }))
+      return
+    }
+
+    if (!password) {
+      setSwitchUserLogin((prev) => ({ ...prev, error: 'Password is required.' }))
+      return
+    }
+
+    setSwitchUserLogin((prev) => ({ ...prev, isSubmitting: true, error: '' }))
+
+    try {
+      const res = await fetch(`${apiBase}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const json = await res.json().catch(() => null)
+      if (!res.ok) {
+        setSwitchUserLogin((prev) => ({
+          ...prev,
+          isSubmitting: false,
+          error: extractErrorMessage(json, 'Login failed.'),
+        }))
+        return
+      }
+
+      const token = json?.token
+      const user = json?.user
+      if (!token || !user) {
+        setSwitchUserLogin((prev) => ({
+          ...prev,
+          isSubmitting: false,
+          error: 'Authentication response is invalid.',
+        }))
+        return
+      }
+
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+      }
+
+      setAuthToken(token)
+      setAuthUser(user)
+      setCurrentView(resolveLandingViewForUser(user))
+      setAuthError('')
+      setSwitchUserLogin({
+        open: false,
+        targetName: '',
+        email: '',
+        password: '',
+        isSubmitting: false,
+        error: '',
+      })
+      showToast('Login successful.')
+    } catch (err) {
+      setSwitchUserLogin((prev) => ({
+        ...prev,
+        isSubmitting: false,
+        error: `Unable to connect to server at ${apiBase}.`,
+      }))
     }
   }
 
@@ -1091,6 +1213,7 @@ export default function Home() {
         onLogout={handleLogout}
         onProfileClick={() => setProfileOpen(true)}
         onAddAdminClick={handleAddAdmin}
+        onOtherUserClick={openSwitchUserLogin}
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
         profilePhotoUrl={normalizedProfilePhotoUrl}
@@ -1296,6 +1419,125 @@ export default function Home() {
         isLoading={profileSubmitting}
         user={authUser ? { ...authUser, profile_photo_url: normalizedProfilePhotoUrl } : null}
       />
+
+      {switchUserLogin.open && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'var(--modal-overlay-bg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1450,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 420,
+              background: 'var(--modal-card-bg)',
+              borderRadius: 12,
+              boxShadow: 'var(--modal-card-shadow)',
+              padding: 20,
+              border: '1px solid var(--modal-card-border)',
+            }}
+          >
+            <h3 style={{ margin: 0, marginBottom: 8, color: 'var(--modal-heading)' }}>Login Required</h3>
+            <p style={{ margin: 0, marginBottom: 14, color: 'var(--modal-copy)', lineHeight: 1.5, fontSize: 14 }}>
+              Login as <strong>{switchUserLogin.targetName || 'this user'}</strong> to continue.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input
+                type="email"
+                value={switchUserLogin.email}
+                onChange={(event) =>
+                  setSwitchUserLogin((prev) => ({ ...prev, email: event.target.value, error: '' }))
+                }
+                placeholder="Email"
+                autoComplete="email"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  border: '1px solid var(--input-border)',
+                  background: 'var(--input-bg)',
+                  color: 'var(--input-text)',
+                }}
+              />
+              <input
+                type="password"
+                value={switchUserLogin.password}
+                onChange={(event) =>
+                  setSwitchUserLogin((prev) => ({ ...prev, password: event.target.value, error: '' }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    submitSwitchUserLogin()
+                  }
+                }}
+                placeholder="Password"
+                autoComplete="current-password"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  border: '1px solid var(--input-border)',
+                  background: 'var(--input-bg)',
+                  color: 'var(--input-text)',
+                }}
+              />
+            </div>
+
+            {switchUserLogin.error ? (
+              <p style={{ margin: '10px 0 0', color: '#dc2626', fontSize: 13 }}>{switchUserLogin.error}</p>
+            ) : null}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={closeSwitchUserLogin}
+                disabled={switchUserLogin.isSubmitting}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  border: '1px solid var(--modal-btn-secondary-border)',
+                  background: 'var(--modal-btn-secondary-bg)',
+                  color: 'var(--modal-btn-secondary-text)',
+                  cursor: switchUserLogin.isSubmitting ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                  opacity: switchUserLogin.isSubmitting ? 0.7 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitSwitchUserLogin}
+                disabled={switchUserLogin.isSubmitting}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  border: '1px solid #0f766e',
+                  background: '#0f766e',
+                  color: '#fff',
+                  cursor: switchUserLogin.isSubmitting ? 'not-allowed' : 'pointer',
+                  fontWeight: 700,
+                  opacity: switchUserLogin.isSubmitting ? 0.8 : 1,
+                }}
+              >
+                {switchUserLogin.isSubmitting ? 'Logging in...' : 'Login'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {deleteConfirm.open && (
         <div

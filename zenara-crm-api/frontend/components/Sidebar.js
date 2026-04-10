@@ -6,6 +6,7 @@ export default function Sidebar({
   onLogout,
   onProfileClick = () => {},
   onAddAdminClick = () => {},
+  onOtherUserClick = () => {},
   userName = 'User',
   profilePhotoUrl = '',
   teamUsers = [],
@@ -245,7 +246,9 @@ export default function Sidebar({
                       setProfileMenuOpen(false)
                       if (isCurrentUser) {
                         onProfileClick()
+                        return
                       }
+                      onOtherUserClick(member)
                     }}
                   >
                     <span className="profile-switcher-team-avatar" aria-hidden="true">
