@@ -1324,28 +1324,32 @@ export default function Home() {
     {
       field: 'locations',
       title: 'Location',
-      icon: '📍',
+      iconGlyph: '⌖',
+      iconClass: 'location',
       options: visibleFilterOptions.locations,
       emptyLabel: 'No location options on this page.',
     },
     {
       field: 'industries',
       title: 'Industry',
-      icon: '🏢',
+      iconGlyph: '▦',
+      iconClass: 'industry',
       options: visibleFilterOptions.industries,
       emptyLabel: 'No industry options on this page.',
     },
     {
       field: 'priorities',
       title: 'Priority',
-      icon: '⚡',
+      iconGlyph: '⚡',
+      iconClass: 'priority',
       options: visibleFilterOptions.priorities,
       emptyLabel: 'No priority options on this page.',
     },
     {
       field: 'statuses',
       title: 'Status',
-      icon: '✓',
+      iconGlyph: '✓',
+      iconClass: 'status',
       options: visibleFilterOptions.statuses,
       emptyLabel: 'No status options on this page.',
     },
@@ -1375,11 +1379,13 @@ export default function Home() {
     )
   }
 
-  const renderFilterGroup = ({ field, title, icon, options, emptyLabel }) => (
+  const renderFilterGroup = ({ field, title, iconGlyph, iconClass, options, emptyLabel }) => (
     <section key={field} className="advanced-filter-group">
       <div className="advanced-filter-group-head">
         <h4 className="advanced-filter-group-title">
-          <span aria-hidden="true">{icon}</span>
+          <span className={`advanced-filter-group-icon ${iconClass}`} aria-hidden="true">
+            {iconGlyph}
+          </span>
           <span>{title}</span>
         </h4>
         <span className="advanced-filter-group-meta">{advancedFilters[field].length}</span>
@@ -1686,7 +1692,7 @@ export default function Home() {
                   onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
                   aria-expanded={advancedFiltersOpen}
                 >
-                  <span className="advanced-filters-toggle-icon" aria-hidden="true">🔎</span>
+                  <span className="advanced-filters-toggle-icon" aria-hidden="true">⌕</span>
                   <span>Filters</span>
                   <span className="advanced-filters-toggle-caret" aria-hidden="true">
                     {advancedFiltersOpen ? '▲' : '▼'}

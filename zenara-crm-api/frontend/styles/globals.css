@@ -2147,8 +2147,8 @@ td {
   background: linear-gradient(135deg, #2f77c4, #1d5ea3);
   color: #ecf5ff;
   border-radius: 9px;
-  padding: 10px 16px;
-  font-size: 0.98rem;
+  padding: 9px 14px;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
@@ -2169,11 +2169,19 @@ td {
 }
 
 .advanced-filters-toggle-icon {
-  font-size: 13px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .advanced-filters-toggle-caret {
-  font-size: 12px;
+  font-size: 10px;
   opacity: 0.94;
 }
 
@@ -2203,8 +2211,8 @@ td {
   background: #f8fafd;
   color: #526377;
   border-radius: 10px;
-  padding: 10px 18px;
-  font-size: 0.95rem;
+  padding: 9px 15px;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -2224,7 +2232,7 @@ td {
 }
 
 .advanced-filters-summary {
-  font-size: 0.93rem;
+  font-size: 0.82rem;
   color: #5b6d83;
   font-weight: 600;
   white-space: nowrap;
@@ -2247,7 +2255,7 @@ td {
 
 .advanced-filters-panel-head h4 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.05rem;
   line-height: 1.2;
   color: #0f2740;
 }
@@ -2263,9 +2271,9 @@ td {
   background: #f9fbfe;
   color: #1f334c;
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   font: inherit;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
@@ -2293,7 +2301,7 @@ td {
   color: #2d5078;
   border-radius: 999px;
   padding: 6px 10px;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -2343,12 +2351,45 @@ td {
   margin: 0;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   color: #304a68;
-  font-size: 1.02rem;
+  font-size: 0.88rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+.advanced-filter-group-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid #bdd1e8;
+  background: #edf4fd;
+  color: #2b6eb7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.advanced-filter-group-icon.industry {
+  border-color: #cfd8e8;
+  background: #f1f4f9;
+  color: #4e6584;
+}
+
+.advanced-filter-group-icon.priority {
+  border-color: #f3d5a5;
+  background: #fff4df;
+  color: #c7791e;
+}
+
+.advanced-filter-group-icon.status {
+  border-color: #b9dfc8;
+  background: #eaf8ef;
+  color: #1f8651;
 }
 
 .advanced-filter-group-meta {
@@ -2368,7 +2409,7 @@ td {
 .advanced-filter-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .advanced-filter-option {
@@ -2381,7 +2422,7 @@ td {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 500;
   transition: all 0.2s ease;
 }
@@ -2392,19 +2433,19 @@ td {
 
 .advanced-filter-option.checked {
   color: #1f3650;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .advanced-filter-option input {
   margin: 0;
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  height: 13px;
   accent-color: #2f77c4;
   cursor: pointer;
 }
 
 .advanced-filter-empty {
-  font-size: 0.85rem;
+  font-size: 0.74rem;
   color: #6f8098;
   font-weight: 600;
   padding: 2px 0 6px;
@@ -2778,6 +2819,30 @@ td {
 
 [data-theme='dark'] .advanced-filter-group-title {
   color: #d2e0eb;
+}
+
+[data-theme='dark'] .advanced-filter-group-icon {
+  border-color: #3f5d7e;
+  background: #1a3248;
+  color: #8fc6ff;
+}
+
+[data-theme='dark'] .advanced-filter-group-icon.industry {
+  border-color: #4a5870;
+  background: #232d3d;
+  color: #b7c6d8;
+}
+
+[data-theme='dark'] .advanced-filter-group-icon.priority {
+  border-color: #775e35;
+  background: #3a2f1c;
+  color: #f3bd75;
+}
+
+[data-theme='dark'] .advanced-filter-group-icon.status {
+  border-color: #2f6c4a;
+  background: #173826;
+  color: #9be1bc;
 }
 
 [data-theme='dark'] .advanced-filter-group-meta {
@@ -3174,7 +3239,7 @@ td {
   }
 
   .advanced-filters-panel-head h4 {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 
   .advanced-filters-search-wrap {
@@ -3202,7 +3267,7 @@ td {
   }
 
   .advanced-filter-option {
-    font-size: 0.95rem;
+    font-size: 0.84rem;
   }
 
   .switch-login-overlay {
