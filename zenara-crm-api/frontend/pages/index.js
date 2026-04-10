@@ -155,6 +155,11 @@ export default function Home() {
   const [authError, setAuthError] = useState('')
   const [authPanelInitialMode, setAuthPanelInitialMode] = useState('login')
   const [authPanelInitialRole, setAuthPanelInitialRole] = useState('')
+  const [authSuccessPreloader, setAuthSuccessPreloader] = useState({
+    visible: false,
+    title: '',
+    copy: '',
+  })
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
   const [switchUserLogin, setSwitchUserLogin] = useState(getSwitchUserLoginState())
@@ -180,6 +185,7 @@ export default function Home() {
     : []
 
   const toastTimerRef = useRef(null)
+  const authSuccessPreloaderTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)
   const outlookPromptResolveRef = useRef(null)
   const dateFields = ['last_contact', 'appointment', 'follow_up']
@@ -260,6 +266,7 @@ export default function Home() {
     }
 
     saveAuthTokenToSession(token)
+    showAuthSuccessPreloader(payload?.mode)
 
     setAuthToken(token)
     setAuthUser(user)
@@ -289,6 +296,31 @@ export default function Home() {
     }, 2600)
   }
 
+  const clearAuthSuccessPreloaderTimer = () => {
+    if (authSuccessPreloaderTimerRef.current) {
+      clearTimeout(authSuccessPreloaderTimerRef.current)
+      authSuccessPreloaderTimerRef.current = null
+    }
+  }
+
+  const showAuthSuccessPreloader = (mode) => {
+    const isSignup = mode === 'signup'
+
+    clearAuthSuccessPreloaderTimer()
+    setAuthSuccessPreloader({
+      visible: true,
+      title: isSignup ? 'Creating your workspace' : 'Welcome back',
+      copy: isSignup
+        ? 'Finalizing your account and preparing your CRM dashboard...'
+        : 'Signing you in and restoring your CRM dashboard...',
+    })
+
+    authSuccessPreloaderTimerRef.current = setTimeout(() => {
+      setAuthSuccessPreloader((prev) => ({ ...prev, visible: false }))
+      authSuccessPreloaderTimerRef.current = null
+    }, 1700)
+  }
+
   const resetCrmUiState = () => {
     setData(null)
     setLoading(false)
@@ -304,6 +336,8 @@ export default function Home() {
   }
 
   const handleUnauthorized = () => {
+    clearAuthSuccessPreloaderTimer()
+    setAuthSuccessPreloader((prev) => ({ ...prev, visible: false }))
     clearAuthTokenFromSession()
     setAuthToken('')
     setAuthUser(null)
@@ -377,6 +411,7 @@ export default function Home() {
   useEffect(() => {
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      clearAuthSuccessPreloaderTimer()
       if (outlookPopupRef.current && !outlookPopupRef.current.closed) {
         outlookPopupRef.current.close()
       }
@@ -592,6 +627,7 @@ export default function Home() {
       }
 
       saveAuthTokenToSession(token)
+      showAuthSuccessPreloader(mode)
 
       setAuthToken(token)
       setAuthUser(user)
@@ -689,6 +725,8 @@ export default function Home() {
     } catch (err) {
       // Ignore logout request failures and still clear local auth state.
     } finally {
+      clearAuthSuccessPreloaderTimer()
+      setAuthSuccessPreloader((prev) => ({ ...prev, visible: false }))
       clearAuthTokenFromSession()
       setAuthToken('')
       setAuthUser(null)
@@ -764,6 +802,7 @@ export default function Home() {
       }
 
       saveAuthTokenToSession(token)
+      showAuthSuccessPreloader('login')
 
       setAuthToken(token)
       setAuthUser(user)
@@ -1659,6 +1698,24 @@ export default function Home() {
       {toast.visible && (
         <div className={`toast-notification ${toast.type === 'error' ? 'toast-error' : 'toast-success'}`}>
           {toast.message}
+        </div>
+      )}
+
+      {authSuccessPreloader.visible && (
+        <div className="auth-success-preloader" role="status" aria-live="polite" aria-label={authSuccessPreloader.title}>
+          <div className="auth-success-preloader-card">
+            <div className="auth-success-orbit" aria-hidden="true">
+              <span className="auth-success-orbit-ring auth-success-orbit-ring-one" />
+              <span className="auth-success-orbit-ring auth-success-orbit-ring-two" />
+              <span className="auth-success-orbit-core" />
+            </div>
+            <p className="auth-success-preloader-kicker">Zenara CRM</p>
+            <h2 className="auth-success-preloader-title">{authSuccessPreloader.title}</h2>
+            <p className="auth-success-preloader-copy">{authSuccessPreloader.copy}</p>
+            <div className="auth-success-progress-track" aria-hidden="true">
+              <span className="auth-success-progress-bar" />
+            </div>
+          </div>
         </div>
       )}
     </div>
