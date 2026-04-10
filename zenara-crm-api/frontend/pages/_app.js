@@ -38,13 +38,20 @@ export default function App({ Component, pageProps }) {
       syncAuthState()
     }
 
+    const handleThemeToggleVisibility = (event) => {
+      const nextVisible = Boolean(event?.detail?.visible)
+      setIsAuthenticated(nextVisible)
+    }
+
     syncAuthState()
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('zenara:auth-token-changed', syncAuthState)
+    window.addEventListener('zenara:theme-toggle-visibility', handleThemeToggleVisibility)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('zenara:auth-token-changed', syncAuthState)
+      window.removeEventListener('zenara:theme-toggle-visibility', handleThemeToggleVisibility)
     }
   }, [])
 

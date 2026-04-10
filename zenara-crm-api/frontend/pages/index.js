@@ -201,6 +201,15 @@ export default function Home() {
     notifyAuthTokenChanged()
   }
 
+  const publishThemeToggleVisibility = (visible) => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(
+      new CustomEvent('zenara:theme-toggle-visibility', {
+        detail: { visible: Boolean(visible) },
+      })
+    )
+  }
+
   const resolveLandingViewForUser = (user) => {
     return 'dashboard'
   }
@@ -401,6 +410,10 @@ export default function Home() {
       setSelectedIds([])
     }
   }, [isAdmin, selectedIds.length])
+
+  useEffect(() => {
+    publishThemeToggleVisibility(Boolean(authToken) && !authChecking)
+  }, [authToken, authChecking])
 
   useEffect(() => {
     let mounted = true
