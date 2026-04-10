@@ -247,14 +247,14 @@ td {
   bottom: 20px;
   width: 84px;
   height: 44px;
-  padding: 0;
+  padding: 4px 6px;
   border-radius: 999px;
-  border: 1px solid var(--theme-toggle-border);
-  background: var(--theme-toggle-bg);
-  box-shadow: var(--theme-toggle-shadow);
+  border: 1px solid rgba(17, 24, 39, 0.94);
+  background: linear-gradient(140deg, #0b1119 0%, #05080f 100%);
+  box-shadow: 0 14px 24px rgba(2, 6, 23, 0.46);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 4px;
   cursor: pointer;
   z-index: 1700;
@@ -285,7 +285,7 @@ td {
   line-height: 1;
   user-select: none;
   pointer-events: none;
-  color: var(--theme-toggle-text);
+  color: #ffe066;
   background: transparent;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
@@ -299,36 +299,45 @@ td {
 }
 
 .theme-toggle-thumb {
-  display: none;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(2, 6, 23, 0.34);
+  transition: transform 0.3s ease;
 }
 
 .theme-toggle-button.is-light .theme-toggle-thumb {
-  transform: none;
+  transform: translateX(40px);
 }
 
 .theme-toggle-button.is-dark .theme-toggle-thumb {
-  transform: none;
+  transform: translateX(40px);
 }
 
 .theme-toggle-button.is-light .theme-toggle-icon-sun {
   opacity: 1;
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 
 .theme-toggle-button.is-light .theme-toggle-icon-moon {
   opacity: 0;
-  transform: translateX(4px);
-  color: #ffffff;
+  transform: translateX(0);
+  color: transparent;
 }
 
 .theme-toggle-button.is-dark .theme-toggle-icon-sun {
-  opacity: 0;
-  transform: translateX(-4px);
+  opacity: 1;
+  transform: translateX(3px);
 }
 
 .theme-toggle-button.is-dark .theme-toggle-icon-moon {
-  opacity: 1;
-  transform: translateX(-2px);
+  opacity: 0;
+  transform: translateX(0);
+  color: transparent;
 }
 
 .session-loader {
@@ -2074,11 +2083,16 @@ td {
   }
 
   .theme-toggle-thumb {
-    display: none;
+    width: 32px;
+    height: 32px;
   }
 
   .theme-toggle-button.is-light .theme-toggle-thumb {
-    transform: none;
+    transform: translateX(34px);
+  }
+
+  .theme-toggle-button.is-dark .theme-toggle-thumb {
+    transform: translateX(34px);
   }
 
   .metric-grid {
