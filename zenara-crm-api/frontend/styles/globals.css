@@ -557,7 +557,7 @@ td {
 .profile-switcher-name {
   flex: 1;
   min-width: 0;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
@@ -595,7 +595,7 @@ td {
 
 .profile-switcher-menu-title {
   padding: 12px 18px 8px;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #394844;
 }
@@ -642,7 +642,7 @@ td {
 .profile-switcher-team-name {
   flex: 1;
   min-width: 0;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.15;
   color: #2f3836;
@@ -683,7 +683,7 @@ td {
   gap: 10px;
   padding: 10px 14px 11px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
