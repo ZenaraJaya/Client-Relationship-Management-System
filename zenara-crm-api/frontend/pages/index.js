@@ -1521,6 +1521,26 @@ export default function Home() {
   }, [filteredItems])
 
   useEffect(() => {
+    if (!advancedFiltersOpen) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setAdvancedFiltersOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [advancedFiltersOpen])
+
+  useEffect(() => {
     if (!calendarModalOpen) return undefined
 
     const handleKeyDown = (event) => {
@@ -1975,6 +1995,7 @@ export default function Home() {
                   className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
                   onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
                   aria-expanded={advancedFiltersOpen}
+                  aria-controls="advanced-filters-drawer"
                 >
                   <span className="advanced-filters-toggle-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -2006,49 +2027,77 @@ export default function Home() {
             </div>
 
             {advancedFiltersOpen && (
-              <div className="advanced-filters-panel">
-                <div className="advanced-filters-panel-head">
-                  <h4>Filter Contacts</h4>
-                </div>
-
-                <div className="advanced-filters-search-wrap">
-                  <div className="advanced-filters-search-input-wrap">
-                    <span className="advanced-filters-search-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <circle cx="11" cy="11" r="5.5" />
-                        <path d="m15.5 15.5 4 4" />
+              <div
+                className="advanced-filters-drawer-backdrop"
+                onClick={(event) => {
+                  if (event.target === event.currentTarget) {
+                    setAdvancedFiltersOpen(false)
+                  }
+                }}
+              >
+                <aside
+                  id="advanced-filters-drawer"
+                  className="advanced-filters-drawer"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Filter contacts"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="advanced-filters-drawer-head">
+                    <h4>Filter Contacts</h4>
+                    <button
+                      type="button"
+                      className="advanced-filters-drawer-close"
+                      onClick={() => setAdvancedFiltersOpen(false)}
+                      aria-label="Close filters drawer"
+                    >
+                      <svg viewBox="0 0 20 20" fill="none">
+                        <path d="M5 5l10 10M15 5 5 15" />
                       </svg>
-                    </span>
-                    <input
-                      type="text"
-                      className="advanced-filters-search-input"
-                      placeholder="Search filters..."
-                      value={filterSearchTerm}
-                      onChange={(event) => setFilterSearchTerm(event.target.value)}
-                      aria-label="Search filter options"
-                    />
+                    </button>
                   </div>
-                </div>
 
-                {hasAnyAdvancedFilters && (
-                  <div className="advanced-filters-chip-row">
-                    {activeFilterChips.map((chip) => (
-                      <button
-                        key={chip.id}
-                        type="button"
-                        className="advanced-filter-chip"
-                        onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
-                      >
-                        <span>{chip.label}</span>
-                        <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
-                      </button>
-                    ))}
+                  <div className="advanced-filters-drawer-body">
+                    <div className="advanced-filters-search-wrap">
+                      <div className="advanced-filters-search-input-wrap">
+                        <span className="advanced-filters-search-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="11" cy="11" r="5.5" />
+                            <path d="m15.5 15.5 4 4" />
+                          </svg>
+                        </span>
+                        <input
+                          type="text"
+                          className="advanced-filters-search-input"
+                          placeholder="Search filters..."
+                          value={filterSearchTerm}
+                          onChange={(event) => setFilterSearchTerm(event.target.value)}
+                          aria-label="Search filter options"
+                        />
+                      </div>
+                    </div>
+
+                    {hasAnyAdvancedFilters && (
+                      <div className="advanced-filters-chip-row">
+                        {activeFilterChips.map((chip) => (
+                          <button
+                            key={chip.id}
+                            type="button"
+                            className="advanced-filter-chip"
+                            onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
+                          >
+                            <span>{chip.label}</span>
+                            <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="advanced-filter-grid">
+                      {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                    </div>
                   </div>
-                )}
-
-                <div className="advanced-filter-grid">
-                  {filterPanelGroups.map((group) => renderFilterGroup(group))}
-                </div>
+                </aside>
               </div>
             )}
 
