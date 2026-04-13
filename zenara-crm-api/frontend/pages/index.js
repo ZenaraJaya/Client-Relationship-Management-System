@@ -1584,28 +1584,7 @@ export default function Home() {
     .sort((a, b) => a.date - b.date)
 
   const dashboardUpcomingRows = useMemo(() => {
-    if (!sevenDayAppointments.length) {
-      return [
-        {
-          id: 'sample-touchpoint-1',
-          day: '14',
-          month: 'APR',
-          title: 'Amirul Hakim - intro call',
-          meta: '10:00 AM | 30 min',
-          type: 'Call',
-        },
-        {
-          id: 'sample-touchpoint-2',
-          day: '17',
-          month: 'APR',
-          title: 'Siti Nurhaliza - proposal review',
-          meta: '2:30 PM | 60 min',
-          type: 'Meet',
-        },
-      ]
-    }
-
-    return sevenDayAppointments.slice(0, 4).map((entry) => {
+    return upcomingTouchpoints.slice(0, 4).map((entry) => {
       const type = entry.type === 'Follow Up' ? 'Call' : 'Meet'
       const day = entry.date.toLocaleDateString(undefined, { day: '2-digit' })
       const month = entry.date.toLocaleDateString(undefined, { month: 'short' }).toUpperCase()
@@ -1623,7 +1602,7 @@ export default function Home() {
         type,
       }
     })
-  }, [sevenDayAppointments])
+  }, [upcomingTouchpoints])
 
   const currentPage = Math.max(1, Number(data?.current_page) || serverPage || 1)
   const lastPage = Math.max(1, Number(data?.last_page) || 1)
@@ -1759,22 +1738,30 @@ export default function Home() {
                   <h3>Upcoming touchpoints</h3>
                   <span className="dashboard-count-chip">{dashboardUpcomingRows.length}</span>
                 </div>
-                <ul className="touchpoint-list touchpoint-list-modern">
-                  {dashboardUpcomingRows.map((entry) => (
-                    <li key={entry.id} className="touchpoint-item touchpoint-item-modern">
-                      <div className="touchpoint-date-chip" aria-hidden="true">
-                        <span className="touchpoint-date-day">{entry.day}</span>
-                        <span className="touchpoint-date-month">{entry.month}</span>
-                      </div>
-                      <div className="touchpoint-main">
-                        <div className="touchpoint-company">{entry.title}</div>
-                        <div className="touchpoint-meta">{entry.meta}</div>
-                      </div>
-                      <span className={`touchpoint-type-pill ${entry.type.toLowerCase()}`}>{entry.type}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button type="button" className="panel-inline-action panel-inline-action-secondary">
+                {dashboardUpcomingRows.length === 0 ? (
+                  <p className="dashboard-empty">No upcoming touchpoints found in your listing yet.</p>
+                ) : (
+                  <ul className="touchpoint-list touchpoint-list-modern">
+                    {dashboardUpcomingRows.map((entry) => (
+                      <li key={entry.id} className="touchpoint-item touchpoint-item-modern">
+                        <div className="touchpoint-date-chip" aria-hidden="true">
+                          <span className="touchpoint-date-day">{entry.day}</span>
+                          <span className="touchpoint-date-month">{entry.month}</span>
+                        </div>
+                        <div className="touchpoint-main">
+                          <div className="touchpoint-company">{entry.title}</div>
+                          <div className="touchpoint-meta">{entry.meta}</div>
+                        </div>
+                        <span className={`touchpoint-type-pill ${entry.type.toLowerCase()}`}>{entry.type}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <button
+                  type="button"
+                  className="panel-inline-action panel-inline-action-secondary"
+                  onClick={() => setCurrentView('listing')}
+                >
                   View full calendar
                 </button>
               </section>
