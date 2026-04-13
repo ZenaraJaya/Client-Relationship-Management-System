@@ -1,291 +1,134 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+
+const getFirstName = (value) => {
+  const raw = String(value || '').trim()
+  if (!raw) return 'there'
+  return raw.split(/\s+/)[0]
+}
 
 export default function DashboardCards({
   totalLeads = 0,
   activeDeals = 0,
   followUpsToday = 0,
   upcomingAppointments = 0,
-  upcomingAppointmentClients = [],
-  totalLeadClients = [],
-  activeDealClients = [],
-  todayFollowUpClients = [],
   onOpenListing = () => {},
+  userName = '',
 }) {
-  const [appointmentPopupOpen, setAppointmentPopupOpen] = useState(false)
-  const [activeMetricPopupId, setActiveMetricPopupId] = useState('')
+  const firstName = getFirstName(userName)
   const conversionRate = totalLeads > 0 ? Math.round((activeDeals / totalLeads) * 100) : 0
-
-  useEffect(() => {
-    if (!appointmentPopupOpen && !activeMetricPopupId) return
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setAppointmentPopupOpen(false)
-        setActiveMetricPopupId('')
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [appointmentPopupOpen, activeMetricPopupId])
-
-  const formatAppointmentDate = (value) => {
-    const date = value instanceof Date ? value : new Date(value)
-    if (Number.isNaN(date.getTime())) return 'Date not available'
-
-    return date.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    })
-  }
-
-  const leadRows = totalLeadClients.map((entry) => ({
-    key: `lead-${entry.id}`,
-    title: entry.company_name || 'Unnamed Company',
-    subtitle: entry.contact_person || 'No contact person set',
-    badge: entry.status || 'No status',
-  }))
-
-  const activeDealRows = activeDealClients.map((entry) => ({
-    key: `deal-${entry.id}`,
-    title: entry.company_name || 'Unnamed Company',
-    subtitle: entry.contact_person || 'No contact person set',
-    badge: entry.status || 'No status',
-  }))
-
-  const followUpRows = [
-    ...todayFollowUpClients.map((entry) => {
-      const date = entry.date instanceof Date ? entry.date : new Date(entry.date)
-      const dateValue = Number.isNaN(date.getTime()) ? 0 : date.getTime()
-      return {
-        key: `followup-${entry.id}-${dateValue}`,
-        title: entry.company_name || 'Unnamed Company',
-        subtitle: entry.contact_person || 'No contact person set',
-        badge: `Follow Up • ${formatAppointmentDate(date)}`,
-        sortDate: dateValue,
-      }
-    }),
-    ...upcomingAppointmentClients.map((entry) => {
-      const date = entry.date instanceof Date ? entry.date : new Date(entry.date)
-      const dateValue = Number.isNaN(date.getTime()) ? 0 : date.getTime()
-      return {
-        key: `appointment-${entry.id}-${dateValue}`,
-        title: entry.company_name || 'Unnamed Company',
-        subtitle: entry.contact_person || 'No contact person set',
-        badge: `Appointment • ${formatAppointmentDate(date)}`,
-        sortDate: dateValue,
-      }
-    }),
-  ]
-    .sort((a, b) => a.sortDate - b.sortDate)
-    .map(({ sortDate, ...entry }) => entry)
 
   const metrics = [
     {
       id: 'total-leads',
-      title: 'Total Leads',
+      title: 'Total leads',
       value: totalLeads,
-      tone: 'soft-green',
-      popupTitle: 'All Leads',
-      popupSubtitle: `${totalLeads} lead(s) currently tracked in your CRM.`,
-      popupRows: leadRows,
-      emptyMessage: 'No leads available yet.',
+      helper: 'Added this week: -',
+      tone: 'soft-neutral',
+      trend: '-',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <path
+            d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="9.5" cy="7.5" r="3.5" stroke="currentColor" strokeWidth="1.8" />
+          <path
+            d="M18.5 8.5h4M20.5 6.5v4"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       ),
     },
     {
       id: 'active-deals',
-      title: 'Active Deals',
+      title: 'Active deals',
       value: activeDeals,
-      tone: 'soft-blue',
-      popupTitle: 'Active Deals',
-      popupSubtitle: `${activeDeals} qualified deal(s) currently in progress.`,
-      popupRows: activeDealRows,
-      emptyMessage: 'No active deals yet.',
+      helper: activeDeals > 0 ? `${activeDeals} open in pipeline` : 'No deals in pipeline',
+      tone: 'soft-neutral',
+      trend: '-',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M4 12h4l2-5 4 10 2-5h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="3.5" y="7" width="17" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M8.5 7V5.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5V7" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M3.5 12h17" stroke="currentColor" strokeWidth="1.8" />
         </svg>
       ),
     },
     {
       id: 'conversion-rate',
-      title: 'Conversion Rate',
+      title: 'Conversion rate',
       value: `${conversionRate}%`,
+      helper: 'Target: 15%',
       tone: 'soft-amber',
-      popupTitle: 'Conversion Breakdown',
-      popupSubtitle: `${activeDeals} qualified lead(s) from ${totalLeads} total lead(s).`,
-      popupRows: activeDealRows,
-      emptyMessage: 'No qualified leads available for conversion yet.',
+      trend: '-',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M5 18h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           <path d="M7 14l3-3 2 2 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M17 8h-3M17 8v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M17 8h-3M17 8v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       ),
     },
     {
       id: 'follow-ups',
-      title: 'Follow Ups Today',
-      value: followUpsToday + upcomingAppointments,
-      tone: 'soft-slate',
-      popupTitle: 'Follow Ups and Appointments',
-      popupSubtitle: `${followUpsToday} follow-up(s) due today and ${upcomingAppointments} appointment(s) in the next 7 days.`,
-      popupRows: followUpRows,
-      emptyMessage: 'No follow-ups due today and no upcoming appointments in the next 7 days.',
+      title: 'Follow-ups today',
+      value: followUpsToday,
+      helper: `Next: ${upcomingAppointments > 0 ? `${upcomingAppointments} scheduled` : 'none scheduled'}`,
+      tone: 'soft-green',
+      trend: '-',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" strokeWidth="1.8" />
-          <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <rect x="4" y="5" width="16" height="15" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M8 3.5v3M16 3.5v3M4 9.5h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M9 14l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
     },
   ]
-  const activeMetricPopup = metrics.find((metric) => metric.id === activeMetricPopupId) || null
 
   return (
     <section className="cards premium-cards">
       <div className="panel premium-hero">
         <div className="hero-left">
           <div className="hero-tag">Zenara Command Center</div>
-          <h2>Welcome to Zenara CRM</h2>
-          <p className="small hero-subtitle">
-            Track leads, set appointments, and move every client to the next step with less friction and better signal.
-          </p>
+          <h2>Welcome back, {firstName}</h2>
+          <p className="small hero-subtitle">Track leads, appointments, and next actions with less friction and clearer visibility.</p>
           <div className="hero-actions">
             <button type="button" className="hero-primary-btn" onClick={onOpenListing}>
-              Open Listing
+              <span aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 6h16M4 12h16M4 18h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span>Open listing</span>
             </button>
-            <button
-              type="button"
-              className="hero-meta-chip hero-meta-chip-button"
-              onClick={() => {
-                setActiveMetricPopupId('')
-                setAppointmentPopupOpen(true)
-              }}
-              aria-haspopup="dialog"
-              aria-expanded={appointmentPopupOpen}
-            >
-              {upcomingAppointments} upcoming appointment(s)
-            </button>
+            <span className="hero-meta-chip">
+              <span className="hero-meta-dot" aria-hidden="true" />
+              <span>{upcomingAppointments} upcoming appointments</span>
+            </span>
           </div>
         </div>
       </div>
 
       <div className="metric-grid">
         {metrics.map((metric) => (
-          <button
-            key={metric.id}
-            type="button"
-            className={`panel metric-card metric-card-button ${metric.tone}`}
-            onClick={() => {
-              setAppointmentPopupOpen(false)
-              setActiveMetricPopupId(metric.id)
-            }}
-            aria-haspopup="dialog"
-            aria-expanded={activeMetricPopupId === metric.id}
-          >
-            <div className="metric-icon">{metric.icon}</div>
+          <article key={metric.id} className={`panel metric-card ${metric.tone}`}>
+            <div className="metric-top-row">
+              <div className="metric-icon">{metric.icon}</div>
+              <div className="metric-trend">{metric.trend}</div>
+            </div>
             <div className="metric-value">{metric.value}</div>
             <div className="metric-label">{metric.title}</div>
-          </button>
+            <div className="metric-helper">{metric.helper}</div>
+          </article>
         ))}
       </div>
-
-      {activeMetricPopup && (
-        <div
-          className="appointment-popup-overlay"
-          role="presentation"
-          onClick={() => setActiveMetricPopupId('')}
-        >
-          <div
-            className="appointment-popup-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="metric-popup-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="appointment-popup-head">
-              <div className="appointment-popup-title-group">
-                <h3 id="metric-popup-title">{activeMetricPopup.popupTitle}</h3>
-                <p className="appointment-popup-subtitle">{activeMetricPopup.popupSubtitle}</p>
-              </div>
-              <button
-                type="button"
-                className="appointment-popup-close"
-                onClick={() => setActiveMetricPopupId('')}
-                aria-label="Close metrics popup"
-              >
-                &times;
-              </button>
-            </div>
-
-            {activeMetricPopup.popupRows.length === 0 ? (
-              <p className="appointment-popup-empty">{activeMetricPopup.emptyMessage}</p>
-            ) : (
-              <ul className="appointment-popup-list">
-                {activeMetricPopup.popupRows.map((entry) => (
-                  <li key={entry.key} className="appointment-popup-item">
-                    <div className="appointment-popup-company">{entry.title}</div>
-                    <div className="appointment-popup-meta">{entry.subtitle}</div>
-                    <div className="appointment-popup-time">{entry.badge}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
-
-      {appointmentPopupOpen && (
-        <div
-          className="appointment-popup-overlay"
-          role="presentation"
-          onClick={() => setAppointmentPopupOpen(false)}
-        >
-          <div
-            className="appointment-popup-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="appointment-popup-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="appointment-popup-head">
-              <h3 id="appointment-popup-title">Clients with upcoming appointments</h3>
-              <button
-                type="button"
-                className="appointment-popup-close"
-                onClick={() => setAppointmentPopupOpen(false)}
-                aria-label="Close upcoming appointments popup"
-              >
-                &times;
-              </button>
-            </div>
-
-            {upcomingAppointmentClients.length === 0 ? (
-              <p className="appointment-popup-empty">No upcoming appointments in the next 7 days.</p>
-            ) : (
-              <ul className="appointment-popup-list">
-                {upcomingAppointmentClients.map((entry) => (
-                  <li
-                    key={`${entry.id}-${entry.date instanceof Date ? entry.date.getTime() : String(entry.date)}`}
-                    className="appointment-popup-item"
-                  >
-                    <div className="appointment-popup-company">{entry.company_name || 'Unnamed Company'}</div>
-                    <div className="appointment-popup-meta">{entry.contact_person || 'No contact person set'}</div>
-                    <div className="appointment-popup-time">{formatAppointmentDate(entry.date)}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
     </section>
   )
 }

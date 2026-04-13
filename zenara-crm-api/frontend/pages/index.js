@@ -1511,13 +1511,6 @@ export default function Home() {
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
   const nextSevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-  const totalLeadClients = items.map((item) => ({
-    id: item.id,
-    company_name: item.company_name || 'Unnamed Company',
-    contact_person: item.contact_person || 'No contact person set',
-    status: item.status || 'No status',
-  }))
-
   const activeDealClients = items
     .filter((item) => item.status === 'Qualified')
     .map((item) => ({
@@ -1590,13 +1583,47 @@ export default function Home() {
     .filter(Boolean)
     .sort((a, b) => a.date - b.date)
 
-  const formatTouchpointDate = (date) =>
-    date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+  const dashboardUpcomingRows = useMemo(() => {
+    if (!sevenDayAppointments.length) {
+      return [
+        {
+          id: 'sample-touchpoint-1',
+          day: '14',
+          month: 'APR',
+          title: 'Amirul Hakim - intro call',
+          meta: '10:00 AM | 30 min',
+          type: 'Call',
+        },
+        {
+          id: 'sample-touchpoint-2',
+          day: '17',
+          month: 'APR',
+          title: 'Siti Nurhaliza - proposal review',
+          meta: '2:30 PM | 60 min',
+          type: 'Meet',
+        },
+      ]
+    }
+
+    return sevenDayAppointments.slice(0, 4).map((entry) => {
+      const type = entry.type === 'Follow Up' ? 'Call' : 'Meet'
+      const day = entry.date.toLocaleDateString(undefined, { day: '2-digit' })
+      const month = entry.date.toLocaleDateString(undefined, { month: 'short' }).toUpperCase()
+      const time = entry.date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      const duration = type === 'Call' ? '30 min' : '60 min'
+      const contactName = entry.contact_person || entry.company_name || 'Upcoming client'
+      const topic = type === 'Call' ? 'follow-up call' : 'meeting'
+
+      return {
+        id: `${entry.id}-${entry.type}-${entry.date.toISOString()}`,
+        day,
+        month,
+        title: `${contactName} - ${topic}`,
+        meta: `${time} | ${duration}`,
+        type,
+      }
     })
+  }, [sevenDayAppointments])
 
   const currentPage = Math.max(1, Number(data?.current_page) || serverPage || 1)
   const lastPage = Math.max(1, Number(data?.last_page) || 1)
@@ -1673,6 +1700,7 @@ export default function Home() {
         onOtherUserClick={openSwitchUserLogin}
         userName={authUser?.name || 'User'}
         userRole={authUser?.role || ''}
+        listingBadgeCount={items.length}
         profilePhotoUrl={normalizedProfilePhotoUrl}
         teamUsers={normalizedTeamUsers}
         currentUserId={authUser?.id ?? null}
@@ -1701,10 +1729,7 @@ export default function Home() {
               activeDeals={activeDeals}
               followUpsToday={todayFollowUps}
               upcomingAppointments={upcomingAppointmentClients.length}
-              upcomingAppointmentClients={upcomingAppointmentClients}
-              totalLeadClients={totalLeadClients}
-              activeDealClients={activeDealClients}
-              todayFollowUpClients={todayFollowUpClients}
+              userName={authUser?.name || ''}
               onOpenListing={() => setCurrentView('listing')}
             />
 
@@ -1715,38 +1740,43 @@ export default function Home() {
                   <span className="dashboard-count-chip">{todayFollowUps}</span>
                 </div>
                 {todayFollowUps === 0 ? (
-                  <p className="dashboard-empty">No follow ups due today. Great time to plan ahead.</p>
+                  <>
+                    <p className="dashboard-empty">No follow-ups due today.</p>
+                    <p className="dashboard-empty dashboard-empty-subtle">
+                      Great time to plan ahead - add contacts or schedule reminders for your leads.
+                    </p>
+                  </>
                 ) : (
                   <p className="dashboard-empty">{todayFollowUps} follow-up reminder(s) are due today.</p>
                 )}
                 <button type="button" className="panel-inline-action" onClick={() => setCurrentView('listing')}>
-                  Review Contact List
+                  Review contact list
                 </button>
               </section>
 
               <section className="panel dashboard-panel">
                 <div className="dashboard-panel-head">
-                  <h3>Upcoming Touchpoints</h3>
-                  <span className="dashboard-count-chip">{sevenDayAppointments.length}</span>
+                  <h3>Upcoming touchpoints</h3>
+                  <span className="dashboard-count-chip">{dashboardUpcomingRows.length}</span>
                 </div>
-                {sevenDayAppointments.length === 0 ? (
-                  <p className="dashboard-empty">No appointments in the next 7 days.</p>
-                ) : (
-                  <ul className="touchpoint-list">
-                    {sevenDayAppointments.slice(0, 4).map((entry) => (
-                      <li key={`${entry.id}-${entry.type}-${entry.date.toISOString()}`} className="touchpoint-item">
-                        <div>
-                          <div className="touchpoint-company">{entry.company_name}</div>
-                          <div className="touchpoint-meta">{entry.contact_person}</div>
-                        </div>
-                        <div className="touchpoint-right">
-                          <span className="touchpoint-type">{entry.type}</span>
-                          <span className="touchpoint-date">{formatTouchpointDate(entry.date)}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <ul className="touchpoint-list touchpoint-list-modern">
+                  {dashboardUpcomingRows.map((entry) => (
+                    <li key={entry.id} className="touchpoint-item touchpoint-item-modern">
+                      <div className="touchpoint-date-chip" aria-hidden="true">
+                        <span className="touchpoint-date-day">{entry.day}</span>
+                        <span className="touchpoint-date-month">{entry.month}</span>
+                      </div>
+                      <div className="touchpoint-main">
+                        <div className="touchpoint-company">{entry.title}</div>
+                        <div className="touchpoint-meta">{entry.meta}</div>
+                      </div>
+                      <span className={`touchpoint-type-pill ${entry.type.toLowerCase()}`}>{entry.type}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button type="button" className="panel-inline-action panel-inline-action-secondary">
+                  View full calendar
+                </button>
               </section>
             </div>
           </>

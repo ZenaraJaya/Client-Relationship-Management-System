@@ -8,9 +8,11 @@ export default function Sidebar({
   onAddAdminClick = () => {},
   onOtherUserClick = () => {},
   userName = 'User',
+  userRole = '',
   profilePhotoUrl = '',
   teamUsers = [],
   currentUserId = null,
+  listingBadgeCount = 0,
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
@@ -36,6 +38,7 @@ export default function Sidebar({
       {
         id: 'listing',
         label: 'Listing',
+        badge: Math.max(0, Number(listingBadgeCount) || 0),
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -71,7 +74,7 @@ export default function Sidebar({
         ),
       },
     ],
-    []
+    [listingBadgeCount]
   )
 
   const getInitials = (value) =>
@@ -83,7 +86,19 @@ export default function Sidebar({
       .slice(0, 2)
       .toUpperCase() || 'U')
 
+  const getRoleLabel = (value) => {
+    const raw = String(value || '').trim()
+    if (!raw) return ''
+
+    return raw
+      .replace(/[_-]+/g, ' ')
+      .split(/\s+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ')
+  }
+
   const initials = getInitials(userName)
+  const roleLabel = getRoleLabel(userRole)
   const normalizedCurrentUserId = currentUserId === null || currentUserId === undefined ? '' : String(currentUserId)
 
   const teamMembers = useMemo(() => {
@@ -211,9 +226,15 @@ export default function Sidebar({
             ) : (
               <span className="profile-switcher-avatar-fallback">{initials}</span>
             )}
+            <span className="profile-switcher-avatar-status" />
           </span>
 
-          <span className="profile-switcher-name">{userName || 'User'}</span>
+          <span className="profile-switcher-copy">
+            <span className="profile-switcher-name">{userName || 'User'}</span>
+            {!isCollapsed && roleLabel ? (
+              <span className="profile-switcher-role">{roleLabel}</span>
+            ) : null}
+          </span>
 
           <span className={`profile-switcher-caret ${profileMenuOpen ? 'open' : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -291,6 +312,7 @@ export default function Sidebar({
       </div>
 
       <nav className="nav" aria-label="Main navigation">
+        <div className="nav-section-label">Main</div>
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -303,6 +325,7 @@ export default function Sidebar({
           >
             <span className="nav-icon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
+            {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
           </button>
         ))}
       </nav>
