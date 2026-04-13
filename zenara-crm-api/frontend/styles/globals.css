@@ -3219,7 +3219,10 @@ td {
   overflow: hidden;
   z-index: 1200;
   animation: advancedFiltersDrawerSlideIn 0.28s cubic-bezier(.4,0,.2,1);
-  transform: translateX(320px);
+}
+
+.advanced-filters-drawer.open {
+  transform: translateX(0);
 }
 
 .advanced-filters-drawer-head {
@@ -3260,11 +3263,10 @@ td {
 }
 
 .advanced-filters-drawer-close svg {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
+  stroke-width: 1.4;
 }
 
 .advanced-filters-drawer-body {
@@ -3300,31 +3302,15 @@ td {
   border-bottom: 1px solid rgba(0,0,0,.08);
 }
 
-.advanced-filters-search-input-wrap {
-  position: relative;
-}
+.advanced-filters-search-input-wrap { position: relative; }
 
 .advanced-filters-search-icon {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: #8ca0b8;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  color: #A09F9A;
   pointer-events: none;
-}
-
-.advanced-filters-search-icon svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .advanced-filters-search-input {
@@ -3336,25 +3322,18 @@ td {
   padding: 7px 10px 7px 30px;
   font: inherit;
   font-size: 0.84rem;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition: border-color 0.12s ease, background 0.12s ease;
 }
 
-.advanced-filters-search-input::placeholder {
-  color: #A09F9A;
-}
+.advanced-filters-search-input::placeholder { color: #A09F9A; }
 
-.advanced-filters-search-input:focus {
-  outline: none;
-  border-color: #1B6B4A;
-  background: #FFFFFF;
-  box-shadow: none;
-}
+.advanced-filters-search-input:focus { outline: none; border-color: #1B6B4A; background: #FFFFFF; }
 
 .advanced-filters-chip-row {
-  padding: 10px 16px 0;
+  padding: 12px 20px 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
 }
 
 .advanced-filter-chip {
@@ -3390,7 +3369,7 @@ td {
 }
 
 .advanced-filter-grid {
-  padding: 0;
+  padding: 0 20px 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
@@ -3398,44 +3377,34 @@ td {
 
 .advanced-filter-group {
   min-width: 0;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  background: transparent;
-  transition: border-color 0.2s ease, background 0.2s ease;
-  border-bottom: 1px solid rgba(0,0,0,.08);
+  padding: 8px 0 12px;
+  border-bottom: 1px solid #e3e8f0;
 }
 
 .advanced-filter-group:last-child {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
 .advanced-filter-group-head {
   width: 100%;
   border: 0;
   background: transparent;
-  padding: 11px 16px;
+  padding: 6px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 9px;
-  margin-bottom: 0;
+  gap: 10px;
+  margin-bottom: 8px;
   cursor: pointer;
-  transition: background 0.1s ease;
-}
-
-.advanced-filter-group-head:hover {
-  background: #F7F6F2;
 }
 
 .advanced-filter-group-title {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: #1A1916;
-  font-size: 0.85rem;
-  font-weight: 500;
-  flex: 1;
+  color: #26394d;
+  font-size: 1.01rem;
+  font-weight: 600;
 }
 
 .advanced-filter-group-head-right {
@@ -3445,15 +3414,14 @@ td {
 }
 
 .advanced-filter-group-chevron {
-  width: 12px;
-  height: 12px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
-  color: #A09F9A;
+  color: #8194aa;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease;
-  flex-shrink: 0;
 }
 
 .advanced-filter-group-chevron.open {
@@ -3461,26 +3429,25 @@ td {
 }
 
 .advanced-filter-group-chevron svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   stroke: currentColor;
-  stroke-width: 1.4;
+  stroke-width: 1.9;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .advanced-filter-group-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  border: 1px solid #E5F2EC;
-  background: #E5F2EC;
-  color: #1B6B4A;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid #bdd1e8;
+  background: #edf4fd;
+  color: #2b6eb7;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: none;
-  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .advanced-filter-group-icon-svg {
@@ -3508,26 +3475,24 @@ td {
 }
 
 .advanced-filter-group-meta {
-  min-width: 20px;
-  height: 20px;
+  min-width: 24px;
+  height: 24px;
   border-radius: 999px;
-  padding: 0 5px;
+  padding: 0 7px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #F7F6F2;
-  color: #A09F9A;
-  border: 0.5px solid rgba(0,0,0,.13);
+  background: #f3f5f8;
+  color: #95a3b3;
+  border: 1px solid #d4dde8;
   font-size: 0.7rem;
-  font-weight: 600;
-  font-family: 'DM Mono', monospace;
-  transition: all 0.15s ease;
+  font-weight: 800;
 }
 
 .advanced-filter-group-meta.active {
-  background: #1B6B4A;
-  color: #FFFFFF;
-  border-color: #1B6B4A;
+  background: #23894e;
+  color: #ffffff;
+  border-color: #23894e;
 }
 
 .advanced-filter-options {
@@ -3538,37 +3503,36 @@ td {
 
 .advanced-filter-option {
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  color: #1A1916;
-  padding: 6px 8px;
+  color: #374a5f;
+  padding: 8px 6px;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 400;
-  transition: all 0.1s ease;
-  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .advanced-filter-option:hover {
-  border-color: transparent;
-  background: #F7F6F2;
-  color: #1A1916;
+  border-color: #dbe3ee;
+  background: #f7fafe;
+  color: #2f4763;
 }
 
 .advanced-filter-option.checked {
-  color: #1A1916;
-  font-weight: 500;
-  border-color: transparent;
-  background: transparent;
+  color: #203449;
+  font-weight: 600;
+  border-color: #c9deff;
+  background: #f4f8ff;
 }
 
 .advanced-filter-option input {
   margin: 0;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   accent-color: #2f77c4;
   cursor: pointer;
   flex-shrink: 0;
@@ -3607,59 +3571,43 @@ td {
 
 .advanced-filter-option-label {
   min-width: 0;
-  font-size: 0.85rem;
-  color: inherit;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .advanced-filter-option-count {
   margin-left: auto;
-  color: #A09F9A;
-  font-weight: 400;
-  font-size: 0.75rem;
+  color: #8b99aa;
+  font-weight: 500;
+  font-size: 0.93rem;
   line-height: 1;
-  padding: 0;
-  font-family: 'DM Mono', monospace;
 }
 
 .advanced-filter-empty {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #6f8098;
   font-weight: 500;
-  padding: 8px 0;
+  padding: 2px 0 6px;
 }
 
 .advanced-filters-reset,
 .advanced-filters-apply {
-  min-height: 36px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: #6B6A65;
-  font-size: 0.85rem;
-  font-weight: 500;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid #ced8e6;
+  background: #f9fafc;
+  color: #4b6179;
+  font-size: 0.92rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
-  transition: all 0.1s ease;
-  flex: 1;
-  font-family: var(--font);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.advanced-filters-reset {
-  background: none;
-  border: 1px solid rgba(0,0,0,.13);
-  color: #6B6A65;
-}
-
-.advanced-filters-reset:hover:not(:disabled) {
-  background: #EFEDE8;
-  color: #1A1916;
+.advanced-filters-reset:hover:not(:disabled),
+.advanced-filters-apply:hover {
+  transform: translateY(-1px);
 }
 
 .advanced-filters-reset:disabled {
@@ -3668,24 +3616,13 @@ td {
 }
 
 .advanced-filters-apply {
-  background: #1B6B4A;
-  color: #FFFFFF;
-  border: none;
-  flex: 1.2;
-}
-
-.advanced-filters-apply:hover {
-  background: #155A3E;
+  border-color: #1b6b4a;
+  background: linear-gradient(135deg, #1f7b4f, #17633f);
+  color: #f4fff8;
+  box-shadow: 0 10px 18px rgba(17, 94, 60, 0.2);
 }
 
 .advanced-filters-apply svg {
-  width: 12px;
-  height: 12px;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}.advanced-filters-apply svg {
   width: 14px;
   height: 14px;
   stroke: currentColor;
@@ -3696,7 +3633,7 @@ td {
 
 @keyframes advancedFiltersDrawerSlideIn {
   from {
-    transform: translateX(320px);
+    transform: translateX(28px);
   }
   to {
     transform: translateX(0);
