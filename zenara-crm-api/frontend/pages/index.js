@@ -135,6 +135,16 @@ const matchesCrmSearch = (item, rawKeyword) => {
   })
 }
 
+const CALENDAR_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const toDateKey = (value) => {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return ''
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function Home() {
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || getDefaultApiBase()).replace(/\/+$/, '')
 
@@ -177,6 +187,12 @@ export default function Home() {
   const [switchUserLogin, setSwitchUserLogin] = useState(getSwitchUserLoginState())
   const [outlookConnectPromptOpen, setOutlookConnectPromptOpen] = useState(false)
   const [teamUsers, setTeamUsers] = useState([])
+  const [calendarModalOpen, setCalendarModalOpen] = useState(false)
+  const [calendarMonthCursor, setCalendarMonthCursor] = useState(() => {
+    const today = new Date()
+    return new Date(today.getFullYear(), today.getMonth(), 1)
+  })
+  const [calendarSelectedDateKey, setCalendarSelectedDateKey] = useState('')
   const isAdmin = (authUser?.role || '').toLowerCase() === 'admin'
   const normalizedProfilePhotoUrl = normalizeProfilePhotoUrl(
     authUser?.profile_photo_url || '',
@@ -334,6 +350,7 @@ export default function Home() {
   }
 
   const resetCrmUiState = () => {
+    const today = new Date()
     setData(null)
     setLoading(false)
     setError(null)
@@ -344,6 +361,9 @@ export default function Home() {
     setFilterSearchTerm('')
     setCurrentView('dashboard')
     setModalOpen(false)
+    setCalendarModalOpen(false)
+    setCalendarMonthCursor(new Date(today.getFullYear(), today.getMonth(), 1))
+    setCalendarSelectedDateKey('')
     setEditingItem(null)
     setProfileOpen(false)
     setServerPage(1)
@@ -1500,6 +1520,21 @@ export default function Home() {
     })
   }, [filteredItems])
 
+  useEffect(() => {
+    if (!calendarModalOpen) return undefined
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setCalendarModalOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [calendarModalOpen])
+
   const toDate = (value) => {
     if (!value) return null
     const date = new Date(value)
@@ -1565,7 +1600,6 @@ export default function Home() {
     .filter(Boolean)
     .sort((a, b) => a.date - b.date)
 
-  const sevenDayAppointments = upcomingTouchpoints.filter((entry) => entry.date <= nextSevenDays)
   const upcomingAppointmentClients = items
     .map((item) => {
       const appointmentDate = toDate(item.appointment)
@@ -1603,6 +1637,144 @@ export default function Home() {
       }
     })
   }, [upcomingTouchpoints])
+
+  const calendarReminderEntries = (() => {
+    const rows = []
+
+    items.forEach((item) => {
+      const contactName = item.contact_person || item.company_name || 'Unnamed contact'
+      const companyName = item.company_name || 'Unnamed company'
+
+      const appointmentDate = toDate(item.appointment)
+      if (appointmentDate) {
+        rows.push({
+          id: `${item.id}-appointment-${appointmentDate.toISOString()}`,
+          date: appointmentDate,
+          dateKey: toDateKey(appointmentDate),
+          title: `${contactName} - appointment`,
+          company: companyName,
+          timeLabel: appointmentDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+          kind: 'Meet',
+          kindClass: 'meet',
+        })
+      }
+
+      const followUpDate = toDate(item.follow_up)
+      if (followUpDate) {
+        rows.push({
+          id: `${item.id}-followup-${followUpDate.toISOString()}`,
+          date: followUpDate,
+          dateKey: toDateKey(followUpDate),
+          title: `${contactName} - follow-up`,
+          company: companyName,
+          timeLabel: followUpDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+          kind: 'Call',
+          kindClass: 'call',
+        })
+      }
+    })
+
+    return rows.sort((a, b) => a.date - b.date)
+  })()
+
+  const calendarEventsByDate = useMemo(() => {
+    const grouped = new Map()
+
+    calendarReminderEntries.forEach((entry) => {
+      if (!entry.dateKey) return
+      const currentEntries = grouped.get(entry.dateKey) || []
+      currentEntries.push(entry)
+      grouped.set(entry.dateKey, currentEntries)
+    })
+
+    return grouped
+  }, [calendarReminderEntries])
+
+  const calendarEventCountByDate = useMemo(() => {
+    const counts = new Map()
+
+    calendarEventsByDate.forEach((entries, key) => {
+      counts.set(key, Array.isArray(entries) ? entries.length : 0)
+    })
+
+    return counts
+  }, [calendarEventsByDate])
+
+  const calendarSelectedEvents = useMemo(
+    () => calendarEventsByDate.get(calendarSelectedDateKey) || [],
+    [calendarEventsByDate, calendarSelectedDateKey]
+  )
+
+  const calendarSelectedDateLabel = useMemo(() => {
+    if (!calendarSelectedDateKey) return ''
+    const selectedDate = new Date(`${calendarSelectedDateKey}T00:00:00`)
+    if (Number.isNaN(selectedDate.getTime())) return ''
+
+    return selectedDate.toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }, [calendarSelectedDateKey])
+
+  const calendarMonthMeta = useMemo(() => {
+    const year = calendarMonthCursor.getFullYear()
+    const month = calendarMonthCursor.getMonth()
+    const firstDayOfMonth = new Date(year, month, 1)
+    const monthLabel = firstDayOfMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const leadingOffset = firstDayOfMonth.getDay()
+    const totalCells = Math.ceil((leadingOffset + daysInMonth) / 7) * 7
+    const todayKey = toDateKey(new Date())
+    const cells = []
+
+    for (let index = 0; index < totalCells; index += 1) {
+      const day = index - leadingOffset + 1
+      if (day < 1 || day > daysInMonth) {
+        cells.push({ id: `empty-${index}`, isCurrentMonth: false })
+        continue
+      }
+
+      const cellDate = new Date(year, month, day)
+      const cellDateKey = toDateKey(cellDate)
+      const reminderCount = calendarEventCountByDate.get(cellDateKey) || 0
+
+      cells.push({
+        id: cellDateKey,
+        isCurrentMonth: true,
+        dateKey: cellDateKey,
+        day,
+        reminderCount,
+        isToday: cellDateKey === todayKey,
+        isSelected: cellDateKey === calendarSelectedDateKey,
+      })
+    }
+
+    return { monthLabel, cells }
+  }, [calendarMonthCursor, calendarEventCountByDate, calendarSelectedDateKey])
+
+  const openCalendarReminderModal = () => {
+    const nextUpcomingEvent = calendarReminderEntries.find((entry) => entry.date >= now)
+    const seedDate = nextUpcomingEvent?.date || calendarReminderEntries[0]?.date || now
+    const seedDateKey = toDateKey(seedDate)
+
+    setCalendarMonthCursor(new Date(seedDate.getFullYear(), seedDate.getMonth(), 1))
+    setCalendarSelectedDateKey(seedDateKey)
+    setCalendarModalOpen(true)
+  }
+
+  const closeCalendarReminderModal = () => {
+    setCalendarModalOpen(false)
+  }
+
+  const goToPreviousCalendarMonth = () => {
+    setCalendarMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+  }
+
+  const goToNextCalendarMonth = () => {
+    setCalendarMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+  }
 
   const currentPage = Math.max(1, Number(data?.current_page) || serverPage || 1)
   const lastPage = Math.max(1, Number(data?.last_page) || 1)
@@ -1760,7 +1932,7 @@ export default function Home() {
                 <button
                   type="button"
                   className="panel-inline-action panel-inline-action-secondary"
-                  onClick={() => setCurrentView('listing')}
+                  onClick={openCalendarReminderModal}
                 >
                   View full calendar
                 </button>
@@ -1980,6 +2152,117 @@ export default function Home() {
         isLoading={profileSubmitting}
         user={authUser ? { ...authUser, profile_photo_url: normalizedProfilePhotoUrl } : null}
       />
+
+      {calendarModalOpen && (
+        <div className="calendar-reminder-overlay" onClick={closeCalendarReminderModal}>
+          <div
+            className="calendar-reminder-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calendar-reminder-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="calendar-reminder-head">
+              <div className="calendar-reminder-title-wrap">
+                <h3 id="calendar-reminder-title">Calendar reminders</h3>
+                <p className="calendar-reminder-subtitle">
+                  Fetched from Listing contacts: {calendarReminderEntries.length} reminder(s)
+                </p>
+              </div>
+              <button
+                type="button"
+                className="calendar-reminder-close"
+                onClick={closeCalendarReminderModal}
+                aria-label="Close calendar reminder modal"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="calendar-reminder-body">
+              <section className="calendar-month-panel">
+                <div className="calendar-month-head">
+                  <button
+                    type="button"
+                    className="calendar-month-nav"
+                    onClick={goToPreviousCalendarMonth}
+                    aria-label="Previous month"
+                  >
+                    &#8249;
+                  </button>
+                  <div className="calendar-month-label">{calendarMonthMeta.monthLabel}</div>
+                  <button
+                    type="button"
+                    className="calendar-month-nav"
+                    onClick={goToNextCalendarMonth}
+                    aria-label="Next month"
+                  >
+                    &#8250;
+                  </button>
+                </div>
+
+                <div className="calendar-weekday-row">
+                  {CALENDAR_WEEKDAYS.map((weekday) => (
+                    <span key={weekday} className="calendar-weekday-cell">
+                      {weekday}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="calendar-day-grid">
+                  {calendarMonthMeta.cells.map((cell) => {
+                    if (!cell.isCurrentMonth) {
+                      return <span key={cell.id} className="calendar-day-filler" aria-hidden="true" />
+                    }
+
+                    return (
+                      <button
+                        key={cell.id}
+                        type="button"
+                        className={`calendar-day-button ${cell.isSelected ? 'selected' : ''} ${cell.isToday ? 'today' : ''} ${
+                          cell.reminderCount > 0 ? 'has-reminders' : ''
+                        }`.trim()}
+                        onClick={() => setCalendarSelectedDateKey(cell.dateKey)}
+                        aria-label={`${cell.day}, ${cell.reminderCount} reminder(s)`}
+                      >
+                        <span className="calendar-day-number">{cell.day}</span>
+                        {cell.reminderCount > 0 && (
+                          <span className="calendar-day-count">{cell.reminderCount}</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+
+              <section className="calendar-reminder-list-panel">
+                <div className="calendar-reminder-list-head">
+                  <h4>{calendarSelectedDateLabel || 'Select a date'}</h4>
+                  <span className="calendar-reminder-list-count">{calendarSelectedEvents.length}</span>
+                </div>
+
+                {calendarSelectedEvents.length === 0 ? (
+                  <p className="calendar-reminder-empty">No reminders for this date.</p>
+                ) : (
+                  <ul className="calendar-reminder-list">
+                    {calendarSelectedEvents.map((entry) => (
+                      <li key={entry.id} className="calendar-reminder-item">
+                        <div className="calendar-reminder-item-main">
+                          <div className="calendar-reminder-item-title">{entry.title}</div>
+                          <div className="calendar-reminder-item-meta">
+                            {entry.timeLabel} | {entry.company}
+                          </div>
+                        </div>
+                        <span className={`calendar-reminder-item-kind ${entry.kindClass}`}>{entry.kind}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
 
       {switchUserLogin.open && (
         <div
