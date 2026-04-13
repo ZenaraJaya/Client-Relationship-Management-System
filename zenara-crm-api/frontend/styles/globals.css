@@ -711,9 +711,9 @@ td {
 }
 
 .brand-title {
-  font-size: 1.12rem;
+  font-size: 1.04rem;
   line-height: 1.1;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
@@ -721,7 +721,7 @@ td {
 }
 
 .small {
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   line-height: 1.2;
   color: var(--ink-soft);
   white-space: nowrap;
@@ -804,7 +804,7 @@ td {
   display: block;
   flex: 1;
   min-width: 0;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.15;
   white-space: nowrap;
@@ -821,7 +821,7 @@ td {
 .profile-switcher-role {
   margin-top: 2px;
   display: block;
-  font-size: 0.79rem;
+  font-size: 0.76rem;
   line-height: 1.2;
   color: #6c8078;
   white-space: nowrap;
@@ -989,9 +989,9 @@ td {
 
 .nav-section-label {
   margin: 2px 8px 8px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #7d8f88;
 }
@@ -1007,9 +1007,9 @@ td {
   border-radius: 12px;
   color: var(--sidebar-nav-text);
   text-align: left;
-  font-size: 0.93rem;
+  font-size: 0.88rem;
   line-height: 1.2;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
@@ -3080,8 +3080,7 @@ td {
 }
 
 .table-card.with-filter-drawer {
-  padding-right: 420px;
-  transition: padding-right 0.24s ease;
+  padding-right: 0;
 }
 
 .advanced-filters-bar {
@@ -3993,7 +3992,7 @@ td {
 }
 
 [data-theme='dark'] .table-card.with-filter-drawer {
-  padding-right: 420px;
+  padding-right: 0;
 }
 
 [data-theme='dark'] .advanced-filters-drawer {

@@ -477,10 +477,10 @@ export default function CrmList({
 
   return (
     <div style={{ overflowX: 'auto', minHeight: '400px' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '13px', tableLayout: 'fixed' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: '1240px', fontSize: '13px', tableLayout: 'fixed' }}>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
-            <th style={{ padding: '12px 10px', width: '40px' }}>
+            <th style={{ padding: '12px 10px', width: '40px', whiteSpace: 'nowrap' }}>
               {canDelete ? (
                 <input
                   type="checkbox"
@@ -492,14 +492,14 @@ export default function CrmList({
                 <span style={{ color: 'var(--table-viewonly-text)' }}>-</span>
               )}
             </th>
-            <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>No</th>
-            <th style={{ padding: '12px 10px', width: 'auto', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Company Name</th>
-            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Appointment</th>
-            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Follow Up</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Priority</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Status</th>
-            <th style={{ padding: '12px 10px', width: '180px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Remarks</th>
-            <th style={{ padding: '12px 10px', width: '120px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Actions</th>
+            <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>No</th>
+            <th style={{ padding: '12px 10px', width: '230px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Company Name</th>
+            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Appointment</th>
+            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Follow Up</th>
+            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Priority</th>
+            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Status</th>
+            <th style={{ padding: '12px 10px', width: '180px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Remarks</th>
+            <th style={{ padding: '12px 10px', width: '120px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
