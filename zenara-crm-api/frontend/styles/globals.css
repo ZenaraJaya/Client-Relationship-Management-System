@@ -1996,6 +1996,498 @@ td {
   font-size: 0.93rem;
 }
 
+.crm-contact-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  z-index: 1400;
+  animation: fadeIn 0.2s ease;
+}
+
+.crm-contact-modal {
+  width: 100%;
+  max-width: 660px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #ffffff;
+  color: #1a1916;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: "Manrope", "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+.crm-contact-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 0;
+  flex-shrink: 0;
+}
+
+.crm-contact-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #1a1916;
+}
+
+.crm-contact-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #f7f6f2;
+  color: #6b6a65;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.crm-contact-close:hover:not(:disabled) {
+  background: #efede8;
+  color: #1a1916;
+}
+
+.crm-contact-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.crm-contact-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #e5f2ec;
+  color: #1b6b4a;
+  border: 1.5px solid rgba(27, 107, 74, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.crm-contact-identity-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.crm-contact-identity-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1916;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crm-contact-identity-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: #6b6a65;
+  flex-wrap: wrap;
+}
+
+.crm-contact-meta-sep {
+  color: rgba(0, 0, 0, 0.22);
+}
+
+.crm-contact-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.crm-contact-status-pill.new {
+  background: #e6eff9;
+  color: #1a5fa8;
+}
+
+.crm-contact-status-pill.contacted {
+  background: #fdf3e0;
+  color: #b06a00;
+}
+
+.crm-contact-status-pill.qualified {
+  background: #e5f2ec;
+  color: #1b6b4a;
+}
+
+.crm-contact-status-pill.closed {
+  background: #faeaea;
+  color: #c63b3b;
+}
+
+.crm-contact-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.crm-contact-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.crm-contact-body {
+  padding: 6px 22px 4px;
+  overflow-y: auto;
+  flex: 1;
+  scroll-behavior: smooth;
+}
+
+.crm-contact-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.crm-contact-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.crm-contact-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+}
+
+.crm-contact-section {
+  padding: 14px 0 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.crm-contact-section:last-child {
+  border-bottom: 0;
+}
+
+.crm-contact-section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.crm-contact-section-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crm-contact-section-icon.green {
+  background: #e5f2ec;
+  color: #1b6b4a;
+}
+
+.crm-contact-section-icon.blue {
+  background: #e6eff9;
+  color: #1a5fa8;
+}
+
+.crm-contact-section-icon.amber {
+  background: #fdf3e0;
+  color: #b06a00;
+}
+
+.crm-contact-section-icon.slate {
+  background: #f1efe8;
+  color: #888780;
+}
+
+.crm-contact-section-icon.indigo {
+  background: #eeedfe;
+  color: #534ab7;
+}
+
+.crm-contact-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #6b6a65;
+}
+
+.crm-contact-grid {
+  display: grid;
+  gap: 10px 14px;
+}
+
+.crm-contact-grid.one {
+  grid-template-columns: 1fr;
+}
+
+.crm-contact-grid.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.crm-contact-grid.three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.crm-contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crm-contact-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b6a65;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.crm-contact-req {
+  color: #c63b3b;
+  line-height: 1;
+}
+
+.crm-contact-field input,
+.crm-contact-field select,
+.crm-contact-field textarea {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #f7f6f2;
+  padding: 8px 11px;
+  color: #1a1916;
+  font-size: 13.5px;
+  line-height: 1.45;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.crm-contact-field input:hover,
+.crm-contact-field select:hover,
+.crm-contact-field textarea:hover {
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.crm-contact-field input:focus,
+.crm-contact-field select:focus,
+.crm-contact-field textarea:focus {
+  border-color: #1b6b4a;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(27, 107, 74, 0.1);
+}
+
+.crm-contact-field textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.crm-contact-field input::placeholder,
+.crm-contact-field textarea::placeholder {
+  color: #a09f9a;
+}
+
+.crm-contact-field select {
+  padding-right: 28px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.crm-contact-hint {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: #a09f9a;
+  line-height: 1.35;
+}
+
+.crm-contact-char-count {
+  margin-top: 2px;
+  align-self: flex-end;
+  font-size: 11px;
+  color: #a09f9a;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.crm-contact-toggle-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.crm-contact-toggle-button {
+  flex: 1;
+  min-width: 86px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #f7f6f2;
+  color: #6b6a65;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.crm-contact-toggle-button:hover {
+  border-color: rgba(0, 0, 0, 0.22);
+  color: #1a1916;
+}
+
+.crm-contact-toggle-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+.crm-contact-toggle-button.is-priority-high {
+  background: #faeaea;
+  border-color: rgba(198, 59, 59, 0.3);
+  color: #c63b3b;
+}
+
+.crm-contact-toggle-button.is-priority-medium {
+  background: #fdf3e0;
+  border-color: rgba(176, 106, 0, 0.3);
+  color: #b06a00;
+}
+
+.crm-contact-toggle-button.is-priority-low {
+  background: #e5f2ec;
+  border-color: rgba(27, 107, 74, 0.3);
+  color: #1b6b4a;
+}
+
+.crm-contact-toggle-button.is-status-new {
+  background: #e6eff9;
+  border-color: rgba(26, 95, 168, 0.3);
+  color: #1a5fa8;
+}
+
+.crm-contact-toggle-button.is-status-contacted {
+  background: #fdf3e0;
+  border-color: rgba(176, 106, 0, 0.3);
+  color: #b06a00;
+}
+
+.crm-contact-toggle-button.is-status-qualified {
+  background: #e5f2ec;
+  border-color: rgba(27, 107, 74, 0.3);
+  color: #1b6b4a;
+}
+
+.crm-contact-toggle-button.is-status-closed {
+  background: #faeaea;
+  border-color: rgba(198, 59, 59, 0.3);
+  color: #c63b3b;
+}
+
+.crm-contact-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 22px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f7f6f2;
+  flex-shrink: 0;
+}
+
+.crm-contact-footer-meta {
+  font-size: 12px;
+  color: #a09f9a;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  white-space: nowrap;
+}
+
+.crm-contact-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crm-contact-cancel {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: transparent;
+  color: #6b6a65;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.crm-contact-cancel:hover:not(:disabled) {
+  background: #efede8;
+  color: #1a1916;
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.crm-contact-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 6px;
+  background: #1b6b4a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s ease, transform 0.08s ease;
+}
+
+.crm-contact-save:hover:not(:disabled) {
+  background: #155a3e;
+}
+
+.crm-contact-save:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.crm-contact-close:disabled,
+.crm-contact-cancel:disabled,
+.crm-contact-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .calendar-reminder-overlay {
   position: fixed;
   inset: 0;
@@ -3696,6 +4188,138 @@ td {
   color: #c9f1e4;
 }
 
+[data-theme='dark'] .crm-contact-modal {
+  background: #1c1c1b;
+  color: #e8e6e0;
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .crm-contact-title,
+[data-theme='dark'] .crm-contact-identity-name {
+  color: #e8e6e0;
+}
+
+[data-theme='dark'] .crm-contact-close {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: #242423;
+  color: #9e9d98;
+}
+
+[data-theme='dark'] .crm-contact-close:hover:not(:disabled) {
+  background: #2c2c2b;
+  color: #e8e6e0;
+}
+
+[data-theme='dark'] .crm-contact-identity {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .crm-contact-avatar {
+  background: #0d2e1e;
+  color: #64c69a;
+  border-color: rgba(100, 198, 154, 0.25);
+}
+
+[data-theme='dark'] .crm-contact-identity-meta,
+[data-theme='dark'] .crm-contact-section-label,
+[data-theme='dark'] .crm-contact-label {
+  color: #9e9d98;
+}
+
+[data-theme='dark'] .crm-contact-meta-sep {
+  color: rgba(255, 255, 255, 0.22);
+}
+
+[data-theme='dark'] .crm-contact-section {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .crm-contact-field input,
+[data-theme='dark'] .crm-contact-field select,
+[data-theme='dark'] .crm-contact-field textarea {
+  border-color: rgba(255, 255, 255, 0.13) !important;
+  background: #242423 !important;
+  color: #e8e6e0 !important;
+}
+
+[data-theme='dark'] .crm-contact-field input:hover,
+[data-theme='dark'] .crm-contact-field select:hover,
+[data-theme='dark'] .crm-contact-field textarea:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+[data-theme='dark'] .crm-contact-field input:focus,
+[data-theme='dark'] .crm-contact-field select:focus,
+[data-theme='dark'] .crm-contact-field textarea:focus {
+  border-color: #30a883;
+  background: #1c1c1b;
+  box-shadow: 0 0 0 3px rgba(48, 168, 131, 0.2);
+}
+
+[data-theme='dark'] .crm-contact-field input::placeholder,
+[data-theme='dark'] .crm-contact-field textarea::placeholder,
+[data-theme='dark'] .crm-contact-hint,
+[data-theme='dark'] .crm-contact-char-count,
+[data-theme='dark'] .crm-contact-footer-meta {
+  color: #5f5e5a;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: #242423;
+  color: #9e9d98;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #e8e6e0;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button.is-priority-high,
+[data-theme='dark'] .crm-contact-toggle-button.is-status-closed {
+  background: #2e0e0e;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button.is-priority-medium,
+[data-theme='dark'] .crm-contact-toggle-button.is-status-contacted {
+  background: #2a1c00;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button.is-priority-low,
+[data-theme='dark'] .crm-contact-toggle-button.is-status-qualified {
+  background: #0d2e1e;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button.is-status-new {
+  background: #0e1e33;
+}
+
+[data-theme='dark'] .crm-contact-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  background: #242423;
+}
+
+[data-theme='dark'] .crm-contact-cancel {
+  border-color: rgba(255, 255, 255, 0.13);
+  color: #9e9d98;
+}
+
+[data-theme='dark'] .crm-contact-cancel:hover:not(:disabled) {
+  background: #2c2c2b;
+  color: #e8e6e0;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+[data-theme='dark'] .crm-contact-save {
+  background: #30a883;
+  color: #08110e;
+}
+
+[data-theme='dark'] .crm-contact-save:hover:not(:disabled) {
+  background: #44bd97;
+}
+
 [data-theme='dark'] .calendar-reminder-head {
   border-bottom-color: #28404f;
 }
@@ -4024,6 +4648,31 @@ td {
   .calendar-month-panel,
   .calendar-reminder-list-panel {
     padding: 10px;
+  }
+
+  .crm-contact-modal {
+    max-height: 95vh;
+    border-radius: 14px;
+  }
+
+  .crm-contact-header,
+  .crm-contact-identity,
+  .crm-contact-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .crm-contact-body {
+    padding: 6px 14px 4px;
+  }
+
+  .crm-contact-grid.two,
+  .crm-contact-grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-contact-footer-meta {
+    display: none;
   }
 
   .advanced-filters-toolbar-left {
