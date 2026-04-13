@@ -1150,12 +1150,18 @@ export default function Home() {
       if (!rawLabel) return
 
       const normalizedValue = normalizeFilterValue(rawLabel)
-      if (!normalizedValue || optionMap.has(normalizedValue)) return
-      optionMap.set(normalizedValue, rawLabel)
+      if (!normalizedValue) return
+
+      const existing = optionMap.get(normalizedValue)
+      if (existing) {
+        existing.count += 1
+      } else {
+        optionMap.set(normalizedValue, { label: rawLabel, count: 1 })
+      }
     })
 
     return Array.from(optionMap.entries())
-      .map(([value, label]) => ({ value, label }))
+      .map(([value, payload]) => ({ value, label: payload.label, count: payload.count }))
       .sort((a, b) => a.label.localeCompare(b.label))
   }
 
@@ -1422,6 +1428,22 @@ export default function Home() {
     },
   ]
 
+  const getFilterOptionToneClass = (field, value) => {
+    if (field === 'priorities') {
+      if (value === 'high') return 'priority-high'
+      if (value === 'medium') return 'priority-medium'
+      if (value === 'low') return 'priority-low'
+    }
+
+    if (field === 'statuses') {
+      if (value === 'new') return 'status-new'
+      if (value === 'contacted') return 'status-contacted'
+      if (value === 'closed') return 'status-closed'
+    }
+
+    return ''
+  }
+
   const renderFilterOptionList = (field, options, emptyLabel = 'No options available on this page.') => {
     if (!options.length) {
       return <div className="advanced-filter-empty">{emptyLabel}</div>
@@ -1431,6 +1453,8 @@ export default function Home() {
       <div className="advanced-filter-options">
         {options.map((option) => {
           const checked = advancedFilters[field].includes(option.value)
+          const toneClass = getFilterOptionToneClass(field, option.value)
+          const optionCount = Number(option.count || 0)
           return (
             <label key={`${field}-${option.value}`} className={`advanced-filter-option ${checked ? 'checked' : ''}`}>
               <input
@@ -1438,7 +1462,9 @@ export default function Home() {
                 checked={checked}
                 onChange={() => toggleAdvancedFilterOption(field, option.value)}
               />
-              <span>{option.label}</span>
+              {toneClass ? <span className={`advanced-filter-option-dot ${toneClass}`} aria-hidden="true" /> : null}
+              <span className="advanced-filter-option-label">{option.label}</span>
+              <span className="advanced-filter-option-count">{optionCount}</span>
             </label>
           )
         })}
@@ -1455,7 +1481,9 @@ export default function Home() {
           </span>
           <span>{title}</span>
         </h4>
-        <span className="advanced-filter-group-meta">{advancedFilters[field].length}</span>
+        <span className={`advanced-filter-group-meta ${advancedFilters[field].length > 0 ? 'active' : ''}`}>
+          {advancedFilters[field].length}
+        </span>
       </div>
       {renderFilterOptionList(field, options, emptyLabel)}
     </section>
@@ -1755,7 +1783,7 @@ export default function Home() {
               <div className="advanced-filters-toolbar-left">
                 <button
                   type="button"
-                  className={`advanced-filters-toggle ${advancedFiltersOpen ? '^' : 'v'}`}
+                  className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
                   onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
                   aria-expanded={advancedFiltersOpen}
                 >
@@ -1795,14 +1823,22 @@ export default function Home() {
                 </div>
 
                 <div className="advanced-filters-search-wrap">
-                  <input
-                    type="text"
-                    className="advanced-filters-search-input"
-                    placeholder="Search filters..."
-                    value={filterSearchTerm}
-                    onChange={(event) => setFilterSearchTerm(event.target.value)}
-                    aria-label="Search filter options"
-                  />
+                  <div className="advanced-filters-search-input-wrap">
+                    <span className="advanced-filters-search-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="11" cy="11" r="5.5" />
+                        <path d="m15.5 15.5 4 4" />
+                      </svg>
+                    </span>
+                    <input
+                      type="text"
+                      className="advanced-filters-search-input"
+                      placeholder="Search filters..."
+                      value={filterSearchTerm}
+                      onChange={(event) => setFilterSearchTerm(event.target.value)}
+                      aria-label="Search filter options"
+                    />
+                  </div>
                 </div>
 
                 {hasAnyAdvancedFilters && (
