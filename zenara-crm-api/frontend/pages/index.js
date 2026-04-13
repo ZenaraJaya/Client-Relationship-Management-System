@@ -159,6 +159,12 @@ export default function Home() {
   const [searchCompany, setSearchCompany] = useState('')
   const [advancedFilters, setAdvancedFilters] = useState(DEFAULT_ADVANCED_FILTERS)
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
+  const [collapsedFilterGroups, setCollapsedFilterGroups] = useState({
+    locations: false,
+    industries: false,
+    priorities: false,
+    statuses: false,
+  })
   const [filterSearchTerm, setFilterSearchTerm] = useState('')
   const [serverPage, setServerPage] = useState(1)
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' })
@@ -1494,18 +1500,35 @@ export default function Home() {
 
   const renderFilterGroup = ({ field, title, iconClass, options, emptyLabel }) => (
     <section key={field} className="advanced-filter-group">
-      <div className="advanced-filter-group-head">
-        <h4 className="advanced-filter-group-title">
+      <button
+        type="button"
+        className="advanced-filter-group-head"
+        onClick={() =>
+          setCollapsedFilterGroups((prev) => ({
+            ...prev,
+            [field]: !prev[field],
+          }))
+        }
+        aria-expanded={!collapsedFilterGroups[field]}
+      >
+        <span className="advanced-filter-group-title">
           <span className={`advanced-filter-group-icon ${iconClass}`} aria-hidden="true">
             {renderFilterGroupIcon(iconClass)}
           </span>
           <span>{title}</span>
-        </h4>
-        <span className={`advanced-filter-group-meta ${advancedFilters[field].length > 0 ? 'active' : ''}`}>
-          {advancedFilters[field].length}
         </span>
-      </div>
-      {renderFilterOptionList(field, options, emptyLabel)}
+        <span className="advanced-filter-group-head-right">
+          <span className={`advanced-filter-group-meta ${advancedFilters[field].length > 0 ? 'active' : ''}`}>
+            {advancedFilters[field].length}
+          </span>
+          <span className={`advanced-filter-group-chevron ${collapsedFilterGroups[field] ? '' : 'open'}`} aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none">
+              <path d="m6 8 4 4 4-4" />
+            </svg>
+          </span>
+        </span>
+      </button>
+      {!collapsedFilterGroups[field] ? renderFilterOptionList(field, options, emptyLabel) : null}
     </section>
   )
 
@@ -1523,9 +1546,6 @@ export default function Home() {
   useEffect(() => {
     if (!advancedFiltersOpen) return undefined
 
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setAdvancedFiltersOpen(false)
@@ -1535,7 +1555,6 @@ export default function Home() {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [advancedFiltersOpen])
@@ -1962,7 +1981,7 @@ export default function Home() {
         )}
 
         {currentView === 'listing' && (
-          <div className="panel table-card">
+          <div className={`panel table-card ${advancedFiltersOpen ? 'with-filter-drawer' : ''}`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div>
                 <h3 style={{ marginTop: 0 }}>CRM Contacts</h3>
@@ -2011,94 +2030,102 @@ export default function Home() {
                     <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
                   )}
                 </button>
-                <span className="advanced-filters-divider" aria-hidden="true" />
-                <div className="advanced-filters-summary">
-                  Showing {filteredItems.length} of {items.length} contacts
-                </div>
+                <button type="button" className="advanced-filters-sort" aria-label="Sort contacts">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M5 7h14M8 12h8M10 17h4" />
+                  </svg>
+                  <span>Sort</span>
+                </button>
               </div>
-              <button
-                type="button"
-                className="advanced-filters-clear"
-                onClick={clearAdvancedFilters}
-                disabled={!hasAnyAdvancedFilters}
-              >
-                Clear all
-              </button>
+              <div className="advanced-filters-summary">
+                Showing {filteredItems.length} of {items.length} contacts
+              </div>
             </div>
 
             {advancedFiltersOpen && (
-              <div
-                className="advanced-filters-drawer-backdrop"
-                onClick={(event) => {
-                  if (event.target === event.currentTarget) {
-                    setAdvancedFiltersOpen(false)
-                  }
-                }}
+              <aside
+                id="advanced-filters-drawer"
+                className="advanced-filters-drawer"
+                role="dialog"
+                aria-modal="false"
+                aria-label="Filter contacts"
               >
-                <aside
-                  id="advanced-filters-drawer"
-                  className="advanced-filters-drawer"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label="Filter contacts"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <div className="advanced-filters-drawer-head">
-                    <h4>Filter Contacts</h4>
-                    <button
-                      type="button"
-                      className="advanced-filters-drawer-close"
-                      onClick={() => setAdvancedFiltersOpen(false)}
-                      aria-label="Close filters drawer"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none">
-                        <path d="M5 5l10 10M15 5 5 15" />
-                      </svg>
-                    </button>
-                  </div>
+                <div className="advanced-filters-drawer-head">
+                  <h4>Filter contacts</h4>
+                  <button
+                    type="button"
+                    className="advanced-filters-drawer-close"
+                    onClick={() => setAdvancedFiltersOpen(false)}
+                    aria-label="Close filters drawer"
+                  >
+                    <svg viewBox="0 0 20 20" fill="none">
+                      <path d="M5 5l10 10M15 5 5 15" />
+                    </svg>
+                  </button>
+                </div>
 
-                  <div className="advanced-filters-drawer-body">
-                    <div className="advanced-filters-search-wrap">
-                      <div className="advanced-filters-search-input-wrap">
-                        <span className="advanced-filters-search-icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <circle cx="11" cy="11" r="5.5" />
-                            <path d="m15.5 15.5 4 4" />
-                          </svg>
-                        </span>
-                        <input
-                          type="text"
-                          className="advanced-filters-search-input"
-                          placeholder="Search filters..."
-                          value={filterSearchTerm}
-                          onChange={(event) => setFilterSearchTerm(event.target.value)}
-                          aria-label="Search filter options"
-                        />
-                      </div>
-                    </div>
-
-                    {hasAnyAdvancedFilters && (
-                      <div className="advanced-filters-chip-row">
-                        {activeFilterChips.map((chip) => (
-                          <button
-                            key={chip.id}
-                            type="button"
-                            className="advanced-filter-chip"
-                            onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
-                          >
-                            <span>{chip.label}</span>
-                            <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="advanced-filter-grid">
-                      {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                <div className="advanced-filters-drawer-body">
+                  <div className="advanced-filters-search-wrap">
+                    <div className="advanced-filters-search-input-wrap">
+                      <span className="advanced-filters-search-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <circle cx="11" cy="11" r="5.5" />
+                          <path d="m15.5 15.5 4 4" />
+                        </svg>
+                      </span>
+                      <input
+                        type="text"
+                        className="advanced-filters-search-input"
+                        placeholder="Search filter options..."
+                        value={filterSearchTerm}
+                        onChange={(event) => setFilterSearchTerm(event.target.value)}
+                        aria-label="Search filter options"
+                      />
                     </div>
                   </div>
-                </aside>
-              </div>
+
+                  {hasAnyAdvancedFilters && (
+                    <div className="advanced-filters-chip-row">
+                      {activeFilterChips.map((chip) => (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          className="advanced-filter-chip"
+                          onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
+                        >
+                          <span>{chip.label}</span>
+                          <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="advanced-filter-grid">
+                    {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                  </div>
+                </div>
+
+                <div className="advanced-filters-drawer-footer">
+                  <button
+                    type="button"
+                    className="advanced-filters-reset"
+                    onClick={clearAdvancedFilters}
+                    disabled={!hasAnyAdvancedFilters}
+                  >
+                    Reset all
+                  </button>
+                  <button
+                    type="button"
+                    className="advanced-filters-apply"
+                    onClick={() => setAdvancedFiltersOpen(false)}
+                  >
+                    <svg viewBox="0 0 20 20" fill="none">
+                      <path d="m4.5 10 3.4 3.4 7.6-7.6" />
+                    </svg>
+                    Apply filters
+                  </button>
+                </div>
+              </aside>
             )}
 
             {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
