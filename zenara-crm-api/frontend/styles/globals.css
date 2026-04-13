@@ -1,5 +1,6 @@
 :root {
   --bg: #f2f5f3;
+  --drawer-w: 320px;
   --bg-alt: #eef2ef;
   --panel: #ffffff;
   --panel-strong: #f8fcfa;
@@ -3077,6 +3078,10 @@ td {
 
 .table-card {
   margin-top: 14px;
+  background: var(--panel);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
 }
 
 .table-card.with-filter-drawer {
@@ -3648,9 +3653,17 @@ table {
 
 th,
 td {
-  padding: 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--line);
   text-align: left;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* When the filter drawer is open we push the page content so the drawer doesn't overlay */
+.page-content.shifted {
+  margin-right: var(--drawer-w);
+  transition: margin-right .28s cubic-bezier(.4,0,.2,1);
 }
 
 /* Floating priority dropdown styles */
