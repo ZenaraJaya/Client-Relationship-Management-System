@@ -3085,7 +3085,9 @@ td {
 }
 
 .table-card.with-filter-drawer {
-  padding-right: 0;
+  /* push the table card left so the filter drawer doesn't cover the content */
+  margin-right: var(--drawer-w);
+  transition: margin-right .28s cubic-bezier(.4,0,.2,1);
 }
 
 .advanced-filters-bar {
