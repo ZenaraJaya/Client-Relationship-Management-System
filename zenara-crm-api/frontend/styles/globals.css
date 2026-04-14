@@ -132,11 +132,11 @@
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-blur: blur(12px);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  
+
   --filter-drawer-bg: rgba(255, 255, 255, 0.85);
   --filter-drawer-border: rgba(255, 255, 255, 0.3);
   --filter-drawer-blur: blur(16px);
-  
+
   --primary-gradient: linear-gradient(135deg, #1f7a63, #30a883);
   --primary-glow: 0 0 15px rgba(48, 168, 131, 0.3);
 }
@@ -275,7 +275,7 @@
   --filter-drawer-bg: rgba(15, 27, 39, 0.88);
   --filter-drawer-border: rgba(255, 255, 255, 0.05);
   --filter-drawer-blur: blur(20px);
-  
+
   --primary-gradient: linear-gradient(135deg, #30a883, #1f7a63);
   --primary-glow: 0 0 20px rgba(48, 168, 131, 0.2);
 }
@@ -590,6 +590,7 @@ td {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -600,9 +601,11 @@ td {
     transform: translateX(-12%) rotate(-10deg);
     opacity: 0;
   }
+
   40% {
     opacity: 1;
   }
+
   100% {
     transform: translateX(16%) rotate(-10deg);
     opacity: 0;
@@ -613,17 +616,20 @@ td {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes authPreloaderPulse {
+
   0%,
   100% {
     transform: scale(0.92);
     box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.12);
   }
+
   50% {
     transform: scale(1.06);
     box-shadow: 0 0 0 12px rgba(37, 99, 235, 0.2);
@@ -635,10 +641,12 @@ td {
     width: 20%;
     transform: translateX(-28%);
   }
+
   50% {
     width: 70%;
     transform: translateX(38%);
   }
+
   100% {
     width: 28%;
     transform: translateX(256%);
@@ -1098,6 +1106,7 @@ td {
 }
 
 @keyframes nav-icon-bounce {
+
   0%,
   100% {
     transform: translateY(0);
@@ -1131,6 +1140,7 @@ td {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .nav-link:hover .nav-icon svg,
   .nav-link.spin-active .nav-icon svg {
     animation: none;
@@ -1209,7 +1219,7 @@ td {
 .main {
   flex: 1;
   padding: 24px 28px 28px;
-  overflow: hidden;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -3426,7 +3436,7 @@ td {
   display: flex;
   width: 100%;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   height: 100%;
   align-items: stretch;
 }
@@ -3662,8 +3672,15 @@ td {
 }
 
 @keyframes advancedFilterOptionFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .advanced-filter-option {
@@ -3705,14 +3722,14 @@ td {
 .advanced-filter-option-count {
   margin-left: auto;
   font-size: 0.7rem;
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
   padding: 2px 8px;
   border-radius: 12px;
   color: var(--ink-soft);
 }
 
 [data-theme='dark'] .advanced-filter-option-count {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .advanced-filters-drawer-footer {
@@ -3773,6 +3790,7 @@ td {
     transform: translateX(100%);
     opacity: 0.5;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -3849,6 +3867,7 @@ td {
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -3860,6 +3879,7 @@ td {
     opacity: 0;
     transform: translateY(6px) scale(0.985);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -4867,6 +4887,7 @@ td {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

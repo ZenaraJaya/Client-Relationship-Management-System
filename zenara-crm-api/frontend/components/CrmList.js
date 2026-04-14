@@ -482,13 +482,13 @@ export default function CrmList({
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
-          <col style={{ width: '15%' }} />
-          <col style={{ width: '13%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '22%' : '15%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '25%' : '13%' }} />
           {!isFilterDrawerOpen && <col style={{ width: '13%' }} />}
-          <col style={{ width: '9%' }} />
-          <col style={{ width: '10%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '14%' : '9%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '16%' : '10%' }} />
           {!isFilterDrawerOpen && <col style={{ width: '18%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '43%' : '15%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '16%' : '15%' }} />
         </colgroup>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
