@@ -437,7 +437,7 @@ export default function CrmList({
 
   if (items.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--table-empty-text)' }}>
+      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--table-empty-text)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {emptyMessage}
       </div>
     )
@@ -481,8 +481,8 @@ export default function CrmList({
   const fillerRowCount = Math.max(0, baselineRows - items.length)
 
   return (
-    <div style={{ width: '100%', overflowX: 'visible', overflowY: 'hidden' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
+    <div style={{ width: '100%', overflowX: 'visible', overflowY: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed', height: '100%' }}>
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
@@ -700,6 +700,9 @@ export default function CrmList({
                 <td colSpan={expandedDetailsColSpan} style={{ height: '72px', padding: 0, borderBottom: 'none' }} />
               </tr>
             ))}
+          <tr aria-hidden="true" style={{ height: '100%' }}>
+            <td colSpan={expandedDetailsColSpan} style={{ padding: 0, borderBottom: 'none' }} />
+          </tr>
         </tbody>
       </table>
     </div>
