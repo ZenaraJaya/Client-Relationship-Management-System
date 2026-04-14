@@ -2113,9 +2113,6 @@ export default function Home() {
                           </svg>
                         </span>
                         <span>Filters</span>
-                        <span className="advanced-filters-toggle-caret" aria-hidden="true">
-                          {advancedFiltersOpen ? '^' : 'v'}
-                        </span>
                         {activeAdvancedFilterCount > 0 && (
                           <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
                         )}
