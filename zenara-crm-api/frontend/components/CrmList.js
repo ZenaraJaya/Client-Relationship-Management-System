@@ -482,7 +482,7 @@ export default function CrmList({
 
   return (
     <div style={{ width: '100%', overflowX: 'visible', overflowY: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed', height: '100%' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed', height: '60%' }}>
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
