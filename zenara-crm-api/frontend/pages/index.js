@@ -1229,12 +1229,6 @@ export default function Home() {
   }
 
   const removeAdvancedFilterChip = (field, value) => {
-    if (field === 'filterSearch') {
-      setFilterSearchTerm('')
-      setSelectedIds([])
-      return
-    }
-
     setAdvancedFilters((prev) => ({
       ...prev,
       [field]: (Array.isArray(prev[field]) ? prev[field] : []).filter((entry) => entry !== value),
@@ -1374,17 +1368,9 @@ export default function Home() {
     pushChips('priorities', advancedFilters.priorities, 'Priority', filterOptionLookup.priorities)
     pushChips('appointment', advancedFilters.appointment, 'Appointment', { has: 'Has', none: 'None' })
     pushChips('followUp', advancedFilters.followUp, 'Follow Up', { has: 'Has', none: 'None' })
-    if (normalizedFilterSearchTerm) {
-      chips.unshift({
-        id: `filterSearch:${normalizedFilterSearchTerm}`,
-        field: 'filterSearch',
-        value: normalizedFilterSearchTerm,
-        label: `Search: ${filterSearchTerm.trim()}`,
-      })
-    }
 
     return chips
-  }, [advancedFilters, filterOptionLookup, normalizedFilterSearchTerm, filterSearchTerm])
+  }, [advancedFilters, filterOptionLookup])
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
@@ -2294,11 +2280,6 @@ export default function Home() {
                     onClick={() => setAdvancedFiltersOpen(false)}
                     style={{ fontSize: '0.9rem' }}
                   >
-                    {activeAdvancedFilterCount > 0 && (
-                      <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', color: 'var(--accent)', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                        {activeAdvancedFilterCount}
-                      </div>
-                    )}
                     <span>{`Apply Filters - ${liveApplyResultsLabel}`}</span>
                   </button>
                 </div>
