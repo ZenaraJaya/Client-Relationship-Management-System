@@ -1376,72 +1376,56 @@ export default function Home() {
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
   const liveApplyResultsLabel = `${filteredItems.length} result${filteredItems.length === 1 ? '' : 's'}`
   const renderFilterGroupIcon = (iconClass) => {
+    const commonProps = {
+      className: `advanced-filter-group-icon-svg ${iconClass}`,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2.2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": "true"
+    }
+
     if (iconClass === 'location') {
       return (
-        <svg
-          className={`advanced-filter-group-icon-svg ${iconClass}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M12 21s-6-5.1-6-10a6 6 0 1 1 12 0c0 4.9-6 10-6 10z" />
-          <circle cx="12" cy="11" r="2.3" />
+        <svg {...commonProps}>
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+          <circle cx="12" cy="10" r="3" />
         </svg>
       )
     }
 
     if (iconClass === 'industry') {
       return (
-        <svg
-          className={`advanced-filter-group-icon-svg ${iconClass}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="4.5" y="3.5" width="15" height="17" rx="2.5" />
-          <path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8" />
+        <svg {...commonProps}>
+          <rect width="16" height="20" x="4" y="2" rx="2" ry="2" />
+          <path d="M9 22v-4h6v4" />
+          <path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
         </svg>
       )
     }
 
     if (iconClass === 'priority') {
       return (
-        <svg
-          className={`advanced-filter-group-icon-svg ${iconClass}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M13 2L6 14h5l-1 8 8-12h-5l0-8z" />
+        <svg {...commonProps}>
+          <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      )
+    }
+
+    if (iconClass === 'status') {
+      return (
+        <svg {...commonProps}>
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       )
     }
 
     return (
-      <svg
-        className={`advanced-filter-group-icon-svg ${iconClass}`}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="8" />
-        <path d="m8.5 12.5 2.2 2.2 4.8-4.8" />
+      <svg {...commonProps}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="m9 12 2 2 4-4" />
       </svg>
     )
   }
@@ -1506,31 +1490,62 @@ export default function Home() {
 
     return (
       <div className="advanced-filter-options">
-        <label className={`advanced-filter-option advanced-filter-option-select-all ${areAllOptionsSelected ? 'checked' : ''}`}>
-          <input
-            type="checkbox"
-            checked={areAllOptionsSelected}
-            ref={(element) => {
-              if (element) {
-                element.indeterminate = hasSomeOptionsSelected
-              }
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--ink-soft)', letterSpacing: '0.05em' }}>Options</span>
+          <button
+            type="button"
+            onClick={() => toggleAdvancedFilterGroup(field, optionValues)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--accent)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
             }}
-            onChange={() => toggleAdvancedFilterGroup(field, optionValues)}
-          />
-          <span className="advanced-filter-option-label">Select all</span>
-          <span className="advanced-filter-option-count">{optionValues.length}</span>
-        </label>
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-soft)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+          >
+            {areAllOptionsSelected ? 'Deselect All' : 'Select All'}
+          </button>
+        </div>
+
         {options.map((option) => {
           const checked = selectedValues.includes(option.value)
           const toneClass = getFilterOptionToneClass(field, option.value)
           const optionCount = Number(option.count || 0)
           return (
             <label key={`${field}-${option.value}`} className={`advanced-filter-option ${checked ? 'checked' : ''}`}>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => toggleAdvancedFilterOption(field, option.value)}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleAdvancedFilterOption(field, option.value)}
+                  style={{
+                    appearance: 'none',
+                    width: '20px',
+                    height: '20px',
+                    border: '2px solid var(--line)',
+                    borderRadius: '6px',
+                    margin: 0,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: checked ? 'var(--accent)' : 'var(--panel)',
+                    borderColor: checked ? 'var(--accent)' : 'var(--line)',
+                  }}
+                />
+                {checked && (
+                  <svg
+                    style={{ position: 'absolute', pointerEvents: 'none', width: '12px', height: '12px', color: 'white' }}
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
               {toneClass ? <span className={`advanced-filter-option-dot ${toneClass}`} aria-hidden="true" /> : null}
               <span className="advanced-filter-option-label">{option.label}</span>
               <span className="advanced-filter-option-count">{optionCount}</span>
@@ -2182,15 +2197,20 @@ export default function Home() {
                   aria-label="Filter contacts"
                 >
                   <div className="advanced-filters-drawer-head">
-                    <h4>Filter contacts</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <h4>Filter contacts</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--ink-soft)', fontWeight: 500 }}>
+                        Refine your search results
+                      </p>
+                    </div>
                     <button
                       type="button"
                       className="advanced-filters-drawer-close"
                       onClick={() => setAdvancedFiltersOpen(false)}
                       aria-label="Close filters drawer"
                     >
-                      <svg viewBox="0 0 20 20" fill="none">
-                        <path d="M5 5l10 10M15 5 5 15" />
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6 6 18M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
@@ -2199,9 +2219,9 @@ export default function Home() {
                     <div className="advanced-filters-search-wrap">
                       <div className="advanced-filters-search-input-wrap">
                         <span className="advanced-filters-search-icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <circle cx="11" cy="11" r="5.5" />
-                            <path d="m15.5 15.5 4 4" />
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
                           </svg>
                         </span>
                         <input
@@ -2212,19 +2232,30 @@ export default function Home() {
                           onChange={(event) => setFilterSearchTerm(event.target.value)}
                           aria-label="Search filter options"
                         />
+                        <div style={{ position: 'absolute', right: '12px', fontSize: '10px', fontWeight: 700, color: 'var(--ink-soft)', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', pointerEvents: 'none' }}>
+                          /
+                        </div>
                       </div>
                     </div>
 
                     {showFilterSearchEmptyState ? (
                       <div className="advanced-filter-search-empty">
-                        <p>No filter options matched "{filterSearchTerm.trim()}".</p>
-                        <button
-                          type="button"
-                          className="advanced-filter-search-empty-action"
-                          onClick={() => setFilterSearchTerm('')}
-                        >
-                          Clear search and try again
-                        </button>
+                        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /><path d="M8 11h6" />
+                            </svg>
+                          </div>
+                          <p style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>No options matched "{filterSearchTerm.trim()}"</p>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', marginBottom: '20px' }}>Try a different search term or clear the filter.</p>
+                          <button
+                            type="button"
+                            className="advanced-filter-search-empty-action"
+                            onClick={() => setFilterSearchTerm('')}
+                          >
+                            Clear search
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="advanced-filter-grid">
@@ -2240,17 +2271,19 @@ export default function Home() {
                       onClick={clearAdvancedFilters}
                       disabled={!hasAnyAdvancedFilters}
                     >
-                      Reset all
+                      Reset All
                     </button>
                     <button
                       type="button"
                       className="advanced-filters-apply"
                       onClick={() => setAdvancedFiltersOpen(false)}
                     >
-                      <svg viewBox="0 0 20 20" fill="none">
-                        <path d="m4.5 10 3.4 3.4 7.6-7.6" />
-                      </svg>
-                      {`Apply \u00b7 ${liveApplyResultsLabel}`}
+                      {activeAdvancedFilterCount > 0 && (
+                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', color: 'var(--accent)', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                          {activeAdvancedFilterCount}
+                        </div>
+                      )}
+                      <span>Apply Filters</span>
                     </button>
                   </div>
                 </aside>
