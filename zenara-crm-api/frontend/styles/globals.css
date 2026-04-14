@@ -1187,7 +1187,7 @@ td {
 }
 
 .main.drawer-open {
-  margin-right: 360px;
+  margin-right: 320px;
 }
 
 .topbar {
@@ -3085,7 +3085,7 @@ td {
 }
 
 .table-card.with-filter-drawer {
-  padding-right: 0;
+  margin-right: 320px;
 }
 
 .advanced-filters-shell {
@@ -3236,11 +3236,7 @@ td {
 }
 
 .advanced-filters-drawer {
-  position: fixed;
-  top: 76px;
-  right: 0;
-  bottom: 0;
-  width: 360px;
+  width: 320px;
   border-left: 1px solid #d7dee8;
   background: #ffffff;
   box-shadow: -16px 0 30px rgba(15, 23, 42, 0.14);
@@ -3249,6 +3245,7 @@ td {
   overflow: hidden;
   z-index: 1200;
   animation: advancedFiltersDrawerSlideIn 0.22s ease;
+  flex-shrink: 0;
 }
 
 .advanced-filters-drawer-head {
@@ -4884,7 +4881,7 @@ td {
   }
 
   .table-card.with-filter-drawer {
-    padding-right: 0;
+    margin-right: 320px;
   }
 
   .advanced-filters-drawer {
