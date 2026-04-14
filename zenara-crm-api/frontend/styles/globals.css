@@ -1208,8 +1208,8 @@ td {
 
 .main {
   flex: 1;
-  padding: 28px 34px 34px;
-  overflow: auto;
+  padding: 24px 28px 28px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
