@@ -195,6 +195,7 @@ export default function CrmList({
   canEdit = true,
   canDelete = true,
   rowOffset = 0,
+  minVisibleRows = 0,
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [dateDrafts, setDateDrafts] = useState({})
@@ -476,6 +477,8 @@ export default function CrmList({
   ]
   const showRemarksColumn = true
   const expandedDetailsColSpan = 9
+  const baselineRows = Number.isFinite(Number(minVisibleRows)) ? Math.max(0, Number(minVisibleRows)) : 0
+  const fillerRowCount = Math.max(0, baselineRows - items.length)
 
   return (
     <div style={{ width: '100%', overflowX: 'visible', overflowY: 'hidden' }}>
@@ -691,6 +694,12 @@ export default function CrmList({
               </React.Fragment>
             )
           })}
+          {fillerRowCount > 0 &&
+            Array.from({ length: fillerRowCount }).map((_, fillerIndex) => (
+              <tr key={`crm-filler-row-${fillerIndex}`} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
+                <td colSpan={expandedDetailsColSpan} style={{ height: '72px', padding: 0 }} />
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
