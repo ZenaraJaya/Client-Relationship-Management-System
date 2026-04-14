@@ -3674,19 +3674,31 @@ td {
 }
 
 .advanced-filter-group-chevron {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--ink-soft);
 }
 
-.advanced-filter-group-chevron svg {
-  width: 16px;
-  height: 16px;
+.advanced-filter-group-chevron-glyph {
   display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .advanced-filter-group-chevron.open {
   transform: rotate(180deg);
   color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .advanced-filter-options {

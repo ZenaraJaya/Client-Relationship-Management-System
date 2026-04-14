@@ -475,22 +475,22 @@ export default function CrmList({
     { value: 'Qualified', icon: '' },
     { value: 'Closed', icon: '' }
   ]
-  const hasRemarksColumn = !isFilterDrawerOpen
-  const expandedDetailsColSpan = hasRemarksColumn ? 9 : 8
+  const showRemarksColumn = !isFilterDrawerOpen
+  const expandedDetailsColSpan = showRemarksColumn ? 9 : 8
 
   return (
-    <div style={{ width: '100%' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
+    <div style={{ width: '100%', overflowX: isFilterDrawerOpen ? 'auto' : 'visible', overflowY: 'hidden' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: isFilterDrawerOpen ? '920px' : '0', fontSize: '12px', tableLayout: 'fixed' }}>
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '20%' : '15%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '19%' : '13%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '19%' : '13%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '12%' : '9%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '12%' : '10%' }} />
-          {hasRemarksColumn && <col style={{ width: '18%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '11%' : '15%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '17%' : '15%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '18%' : '13%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '18%' : '13%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '11%' : '9%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '11%' : '10%' }} />
+          {showRemarksColumn && <col style={{ width: '18%' }} />}
+          <col style={{ width: isFilterDrawerOpen ? '18%' : '15%' }} />
         </colgroup>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
@@ -507,7 +507,7 @@ export default function CrmList({
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Follow Up</th>
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Priority</th>
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Status</th>
-            {hasRemarksColumn && (
+            {showRemarksColumn && (
               <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Remarks</th>
             )}
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Actions</th>
@@ -589,7 +589,7 @@ export default function CrmList({
                       <div style={badgeStyle(statusColor(row.status), statusTextColor(row.status))}>{row.status || 'New'}</div>
                     )}
                   </td>
-                  {hasRemarksColumn && (
+                  {showRemarksColumn && (
                     <td style={{ ...truncatedStyle, fontSize: '11px', color: 'var(--table-remark)' }} title={row.remarks || ''}>
                       {row.remarks || '-'}
                     </td>
