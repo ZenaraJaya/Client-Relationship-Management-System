@@ -2168,7 +2168,7 @@ export default function Home() {
                       isFilterDrawerOpen={advancedFiltersOpen}
                     />
                     {data && (
-                      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{ marginTop: 'auto', paddingTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                         <div style={{ fontSize: '0.9rem', color: 'var(--table-cell-muted)' }}>
                           Showing page {currentPage} of {lastPage}
                         </div>
