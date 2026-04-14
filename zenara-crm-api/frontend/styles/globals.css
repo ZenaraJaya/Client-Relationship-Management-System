@@ -656,6 +656,8 @@ td {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -1218,8 +1220,10 @@ td {
 
 .main {
   flex: 1;
+  min-height: 0;
   padding: 24px 28px 28px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
