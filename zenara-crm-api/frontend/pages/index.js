@@ -2143,6 +2143,7 @@ export default function Home() {
                       canEdit={isAdmin}
                       canDelete={isAdmin}
                       rowOffset={rowOffset}
+                      isFilterDrawerOpen={advancedFiltersOpen}
                     />
                     {data && (
                       <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
