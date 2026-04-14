@@ -3138,7 +3138,7 @@ td {
 
 .advanced-filters-bar-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 16px;
   min-width: 0;
@@ -3155,6 +3155,14 @@ td {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.advanced-filters-toolbar-chips-inline {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .advanced-filters-toggle {
@@ -3253,6 +3261,7 @@ td {
 }
 
 .advanced-filters-summary {
+  margin-left: auto;
   font-size: 0.86rem;
   color: #5d7187;
   font-weight: 500;
@@ -3658,13 +3667,31 @@ td {
 }
 
 .advanced-filter-group-meta {
-  background: var(--accent);
-  color: white;
+  background: #e7f7ee;
+  color: #157347;
+  border: 1px solid #b6e5cb;
   padding: 1px 7px;
   border-radius: 20px;
   font-size: 0.66rem;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.advanced-filter-group-meta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  display: inline-block;
+}
+
+.advanced-filter-group-meta.active {
+  background: #d8f3e4;
+  color: #0f6f43;
+  border-color: #84d7ad;
 }
 
 .advanced-filter-group-head-right {
@@ -5088,6 +5115,13 @@ td {
     width: 100%;
     font-size: 0.84rem;
     white-space: normal;
+    margin-left: 0;
+  }
+
+  .advanced-filters-toolbar-chips-inline {
+    width: 100%;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .advanced-filters-drawer {

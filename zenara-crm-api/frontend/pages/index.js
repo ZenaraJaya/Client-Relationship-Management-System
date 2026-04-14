@@ -1229,6 +1229,12 @@ export default function Home() {
   }
 
   const removeAdvancedFilterChip = (field, value) => {
+    if (field === 'filterSearch') {
+      setFilterSearchTerm('')
+      setSelectedIds([])
+      return
+    }
+
     setAdvancedFilters((prev) => ({
       ...prev,
       [field]: (Array.isArray(prev[field]) ? prev[field] : []).filter((entry) => entry !== value),
@@ -1368,9 +1374,17 @@ export default function Home() {
     pushChips('priorities', advancedFilters.priorities, 'Priority', filterOptionLookup.priorities)
     pushChips('appointment', advancedFilters.appointment, 'Appointment', { has: 'Has', none: 'None' })
     pushChips('followUp', advancedFilters.followUp, 'Follow Up', { has: 'Has', none: 'None' })
+    if (normalizedFilterSearchTerm) {
+      chips.unshift({
+        id: `filterSearch:${normalizedFilterSearchTerm}`,
+        field: 'filterSearch',
+        value: normalizedFilterSearchTerm,
+        label: `Search: ${filterSearchTerm.trim()}`,
+      })
+    }
 
     return chips
-  }, [advancedFilters, filterOptionLookup])
+  }, [advancedFilters, filterOptionLookup, normalizedFilterSearchTerm, filterSearchTerm])
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
@@ -1576,10 +1590,13 @@ export default function Home() {
         </span>
         <span className="advanced-filter-group-head-right">
           {advancedFilters[field].length > 0 ? (
-            <span className="advanced-filter-group-meta active">{advancedFilters[field].length}</span>
+            <span className="advanced-filter-group-meta active">
+              <span className="advanced-filter-group-meta-dot" aria-hidden="true" />
+              <span>{advancedFilters[field].length}</span>
+            </span>
           ) : null}
           <span className={`advanced-filter-group-chevron ${collapsedFilterGroups[field] ? '' : 'open'}`} aria-hidden="true">
-            <span className="advanced-filter-group-chevron-glyph">▾</span>
+            <span className="advanced-filter-group-chevron-glyph">v</span>
           </span>
         </span>
       </button>
@@ -2100,26 +2117,25 @@ export default function Home() {
                         <span>Sort</span>
                       </button>
                     </div>
+                    {hasAnyAdvancedFilters && (
+                      <div className="advanced-filters-toolbar-chips advanced-filters-toolbar-chips-inline" aria-label="Active filters">
+                        {activeFilterChips.map((chip) => (
+                          <button
+                            key={chip.id}
+                            type="button"
+                            className="advanced-filter-chip"
+                            onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
+                          >
+                            <span>{chip.label}</span>
+                            <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <div className="advanced-filters-summary">
                       Showing {filteredItems.length} of {items.length} contacts
                     </div>
                   </div>
-
-                  {hasAnyAdvancedFilters && (
-                    <div className="advanced-filters-toolbar-chips" aria-label="Active filters">
-                      {activeFilterChips.map((chip) => (
-                        <button
-                          key={chip.id}
-                          type="button"
-                          className="advanced-filter-chip"
-                          onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
-                        >
-                          <span>{chip.label}</span>
-                          <span className="advanced-filter-chip-close" aria-hidden="true">&times;</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
@@ -2283,7 +2299,7 @@ export default function Home() {
                         {activeAdvancedFilterCount}
                       </div>
                     )}
-                    <span>Apply Filters</span>
+                    <span>{`Apply Filters - ${liveApplyResultsLabel}`}</span>
                   </button>
                 </div>
               </aside>
