@@ -696,8 +696,8 @@ export default function CrmList({
           })}
           {fillerRowCount > 0 &&
             Array.from({ length: fillerRowCount }).map((_, fillerIndex) => (
-              <tr key={`crm-filler-row-${fillerIndex}`} style={{ borderBottom: '1px solid var(--table-row-border)' }}>
-                <td colSpan={expandedDetailsColSpan} style={{ height: '72px', padding: 0 }} />
+              <tr key={`crm-filler-row-${fillerIndex}`} style={{ borderBottom: 'none' }}>
+                <td colSpan={expandedDetailsColSpan} style={{ height: '72px', padding: 0, borderBottom: 'none' }} />
               </tr>
             ))}
         </tbody>
