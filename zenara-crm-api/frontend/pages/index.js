@@ -1269,7 +1269,17 @@ export default function Home() {
 
   useEffect(() => {
     const targetState = normalizedFilterSearchTerm
-      ? Object.fromEntries(Object.keys(DEFAULT_COLLAPSED_FILTER_GROUPS).map((key) => [key, false]))
+      ? Object.fromEntries(
+        Object.keys(DEFAULT_COLLAPSED_FILTER_GROUPS).map((key) => {
+          const optionsForGroup = Array.isArray(filterOptions[key]) ? filterOptions[key] : []
+          const hasSearchMatch = optionsForGroup.some((option) => {
+            const optionLabel = String(option?.label || '').toLowerCase()
+            const optionValue = String(option?.value || '').toLowerCase()
+            return optionLabel.includes(normalizedFilterSearchTerm) || optionValue.includes(normalizedFilterSearchTerm)
+          })
+          return [key, !hasSearchMatch]
+        })
+      )
       : DEFAULT_COLLAPSED_FILTER_GROUPS
 
     setCollapsedFilterGroups((prev) => {
@@ -1277,7 +1287,7 @@ export default function Home() {
       if (!hasChanged) return prev
       return { ...targetState }
     })
-  }, [normalizedFilterSearchTerm])
+  }, [normalizedFilterSearchTerm, filterOptions])
 
   const visibleFilterOptions = useMemo(
     () => {
@@ -1387,6 +1397,7 @@ export default function Home() {
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
+  const canResetAdvancedFilters = hasAnyAdvancedFilters || Boolean(normalizedFilterSearchTerm)
   const liveApplyResultsLabel = `${filteredItems.length} result${filteredItems.length === 1 ? '' : 's'}`
   const renderFilterGroupIcon = (iconClass) => {
     const commonProps = {
@@ -2283,7 +2294,7 @@ export default function Home() {
                     type="button"
                     className="advanced-filters-reset"
                     onClick={clearAdvancedFilters}
-                    disabled={!hasAnyAdvancedFilters}
+                    disabled={!canResetAdvancedFilters}
                   >
                     Reset All
                   </button>
