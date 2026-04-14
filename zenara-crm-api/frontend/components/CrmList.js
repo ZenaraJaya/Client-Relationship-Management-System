@@ -478,7 +478,7 @@ export default function CrmList({
 
   return (
     <div style={{ overflowX: 'hidden', width: '100%' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px' }}>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
             <th style={{ padding: '10px 8px', width: '32px', whiteSpace: 'nowrap' }}>
