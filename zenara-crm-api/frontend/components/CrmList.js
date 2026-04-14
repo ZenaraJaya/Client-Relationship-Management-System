@@ -195,7 +195,6 @@ export default function CrmList({
   canEdit = true,
   canDelete = true,
   rowOffset = 0,
-  isFilterDrawerOpen = false,
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [dateDrafts, setDateDrafts] = useState({})
@@ -475,22 +474,22 @@ export default function CrmList({
     { value: 'Qualified', icon: '' },
     { value: 'Closed', icon: '' }
   ]
-  const showRemarksColumn = !isFilterDrawerOpen
-  const expandedDetailsColSpan = showRemarksColumn ? 9 : 8
+  const showRemarksColumn = true
+  const expandedDetailsColSpan = 9
 
   return (
-    <div style={{ width: '100%', overflowX: isFilterDrawerOpen ? 'auto' : 'visible', overflowY: 'hidden' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: isFilterDrawerOpen ? '920px' : '0', fontSize: '12px', tableLayout: 'fixed' }}>
+    <div style={{ width: '100%', overflowX: 'visible', overflowY: 'hidden' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '17%' : '15%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '18%' : '13%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '18%' : '13%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '11%' : '9%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '11%' : '10%' }} />
+          <col style={{ width: '15%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '9%' }} />
+          <col style={{ width: '10%' }} />
           {showRemarksColumn && <col style={{ width: '18%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '18%' : '15%' }} />
+          <col style={{ width: '15%' }} />
         </colgroup>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>

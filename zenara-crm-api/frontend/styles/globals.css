@@ -3456,11 +3456,10 @@ td {
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: padding-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .advanced-filters-shell.drawer-open .advanced-filters-main {
-  padding-right: 340px;
+  padding-right: 0;
 }
 
 .advanced-filters-drawer {
