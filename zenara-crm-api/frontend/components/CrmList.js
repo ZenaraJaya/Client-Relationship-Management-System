@@ -477,18 +477,18 @@ export default function CrmList({
   ]
 
   return (
-    <div style={{ width: '100%' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
+    <div className="crm-table-wrapper">
+      <table className="crm-table">
         <colgroup>
-          <col style={{ width: '3%' }} />
-          <col style={{ width: '4%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '22%' : '15%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '25%' : '13%' }} />
-          {!isFilterDrawerOpen && <col style={{ width: '13%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '14%' : '9%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '16%' : '10%' }} />
-          {!isFilterDrawerOpen && <col style={{ width: '18%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '16%' : '15%' }} />
+          <col style={{ width: '48px' }} />
+          <col style={{ width: '40px' }} />
+          <col style={{ width: 'auto' }} />
+          <col style={{ width: '135px' }} />
+          {!isFilterDrawerOpen && <col style={{ width: '135px' }} />}
+          <col style={{ width: '105px' }} />
+          <col style={{ width: '105px' }} />
+          {!isFilterDrawerOpen && <col style={{ width: '180px' }} />}
+          <col style={{ width: '110px' }} />
         </colgroup>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
@@ -530,16 +530,16 @@ export default function CrmList({
                   onMouseEnter={(e) => { if (!selectedIds.includes(row.id) && !isExpanded) e.currentTarget.style.background = 'var(--table-row-hover-bg)' }}
                   onMouseLeave={(e) => { if (!selectedIds.includes(row.id) && !isExpanded) e.currentTarget.style.background = 'transparent' }}
                 >
-                  <td style={{ padding: '10px 8px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     {canDelete ? (
                       <input type="checkbox" checked={selectedIds.includes(row.id)} onChange={() => handleSelectOne(row.id)} style={{ cursor: 'pointer' }} />
                     ) : (
                       <span style={{ color: 'var(--table-viewonly-text)' }}>-</span>
                     )}
                   </td>
-                  <td style={{ ...truncatedStyle, color: 'var(--table-row-number)', fontSize: '11px' }}>{rowOffset + idx + 1}</td>
-                  <td style={{ ...truncatedStyle, fontWeight: 600, color: 'var(--ink)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <td style={{ color: 'var(--table-row-number)', fontSize: '11px', textAlign: 'center' }}>{rowOffset + idx + 1}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--ink)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         width: '20px', height: '20px', flexShrink: 0, borderRadius: '4px',
@@ -554,20 +554,26 @@ export default function CrmList({
                           <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                       </div>
-                      <span style={{ color: isExpanded ? 'var(--table-company-active)' : 'var(--table-company)', transition: 'color 0.2s', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{
+                        color: isExpanded ? 'var(--table-company-active)' : 'var(--table-company)',
+                        transition: 'color 0.2s',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
                         {row.company_name}
                       </span>
                     </div>
                   </td>
-                  <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
+                  <td onClick={(e) => e.stopPropagation()}>
                     {renderDateCell(row, 'appointment', 'Appointment date and time')}
                   </td>
                   {!isFilterDrawerOpen && (
-                    <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
+                    <td onClick={(e) => e.stopPropagation()}>
                       {renderDateCell(row, 'follow_up', 'Follow up date and time')}
                     </td>
                   )}
-                  <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
+                  <td onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <CustomDropdown
                         value={row.priority || 'Low'}
@@ -579,7 +585,7 @@ export default function CrmList({
                       <div style={badgeStyle(priorityColor(row.priority), 'var(--priority-text)')}>{row.priority || 'Low'}</div>
                     )}
                   </td>
-                  <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
+                  <td onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <CustomDropdown
                         value={row.status || 'New'}
@@ -592,20 +598,50 @@ export default function CrmList({
                     )}
                   </td>
                   {!isFilterDrawerOpen && (
-                    <td style={{ ...truncatedStyle, fontSize: '11px', color: 'var(--table-remark)' }} title={row.remarks || ''}>
+                    <td style={{ fontSize: '12px', color: 'var(--table-remark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.remarks || ''}>
                       {row.remarks || '-'}
                     </td>
                   )}
-                  <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       {canEdit && (
-                        <button onClick={() => onEdit(row)} style={{ padding: '4px 8px', background: 'var(--table-action-edit-bg)', color: 'var(--table-action-edit-text)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}>
-                          Edit
+                        <button
+                          onClick={() => onEdit(row)}
+                          title="Edit"
+                          style={{
+                            padding: '6px',
+                            background: 'var(--table-action-edit-bg)',
+                            color: 'var(--table-action-edit-text)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'transform 0.1s'
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg>
                         </button>
                       )}
                       {canDelete && (
-                        <button onClick={() => onDelete(row.id)} style={{ padding: '4px 8px', background: 'var(--table-action-delete-bg)', color: 'var(--table-action-delete-text)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}>
-                          Delete
+                        <button
+                          onClick={() => onDelete(row.id)}
+                          title="Delete"
+                          style={{
+                            padding: '6px',
+                            background: 'var(--table-action-delete-bg)',
+                            color: 'var(--table-action-delete-text)',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'transform 0.1s'
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                       )}
                       {!canEdit && !canDelete && (
