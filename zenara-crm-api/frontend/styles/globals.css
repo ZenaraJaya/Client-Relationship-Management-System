@@ -3120,6 +3120,7 @@ td {
 
 .table-card {
   margin-top: 14px;
+  position: relative;
 }
 
 
@@ -3439,7 +3440,7 @@ td {
 .advanced-filters-shell {
   display: flex;
   width: 100%;
-  position: relative;
+  position: static;
   overflow: visible;
   height: 100%;
   align-items: stretch;
