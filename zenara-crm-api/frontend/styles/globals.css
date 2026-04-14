@@ -3604,15 +3604,21 @@ td {
 }
 
 .advanced-filter-group-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--accent-soft);
   color: var(--accent);
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.advanced-filter-group-icon-svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .advanced-filter-group:hover .advanced-filter-group-icon {

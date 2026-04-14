@@ -1390,8 +1390,8 @@ export default function Home() {
     if (iconClass === 'location') {
       return (
         <svg {...commonProps}>
-          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-          <circle cx="12" cy="10" r="3" />
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
         </svg>
       )
     }
@@ -1399,9 +1399,8 @@ export default function Home() {
     if (iconClass === 'industry') {
       return (
         <svg {...commonProps}>
-          <rect width="16" height="20" x="4" y="2" rx="2" ry="2" />
-          <path d="M9 22v-4h6v4" />
-          <path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
+          <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
         </svg>
       )
     }
@@ -1409,7 +1408,7 @@ export default function Home() {
     if (iconClass === 'priority') {
       return (
         <svg {...commonProps}>
-          <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
       )
     }
@@ -1417,7 +1416,7 @@ export default function Home() {
     if (iconClass === 'status') {
       return (
         <svg {...commonProps}>
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
         </svg>
       )
     }
