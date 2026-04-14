@@ -14,7 +14,7 @@ export default function Sidebar({
   currentUserId = null,
   listingBadgeCount = 0,
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
   const [spinningNavId, setSpinningNavId] = useState('')
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -204,7 +204,17 @@ export default function Sidebar({
   }
 
   return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+    <aside
+      className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
+      onFocusCapture={() => setIsCollapsed(false)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setIsCollapsed(true)
+        }
+      }}
+    >
       <div className="brand profile-switcher" ref={profileMenuRef}>
         <button
           type="button"
