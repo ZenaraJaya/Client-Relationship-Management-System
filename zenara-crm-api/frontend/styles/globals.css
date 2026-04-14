@@ -3801,23 +3801,24 @@ td {
 }
 
 .advanced-filters-drawer-footer {
-  padding: 14px 20px 18px;
+  padding: 10px 16px 12px;
   border-top: 1px solid var(--filter-drawer-border);
   display: grid;
   grid-template-columns: 1fr 1.5fr;
-  gap: 12px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
 }
 
 .advanced-filters-reset {
-  padding: 10px;
-  font-size: 0.9rem;
-  border-radius: 12px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--ink-soft);
   font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -3829,13 +3830,14 @@ td {
 }
 
 .advanced-filters-apply {
-  padding: 10px;
-  font-size: 0.9rem;
-  border-radius: 12px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  border-radius: 10px;
   border: none;
   background: var(--primary-gradient);
   color: white;
   font-weight: 700;
+  line-height: 1.2;
   display: flex;
   align-items: center;
   justify-content: center;

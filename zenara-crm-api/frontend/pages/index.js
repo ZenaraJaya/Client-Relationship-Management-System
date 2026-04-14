@@ -2300,7 +2300,6 @@ export default function Home() {
                     type="button"
                     className="advanced-filters-apply"
                     onClick={() => setAdvancedFiltersOpen(false)}
-                    style={{ fontSize: '0.9rem' }}
                   >
                     <span>{`Apply Filters - ${liveApplyResultsLabel}`}</span>
                   </button>
