@@ -17,6 +17,12 @@ const DEFAULT_ADVANCED_FILTERS = {
   appointment: [],
   followUp: [],
 }
+const DEFAULT_COLLAPSED_FILTER_GROUPS = {
+  locations: true,
+  industries: true,
+  priorities: true,
+  statuses: true,
+}
 
 const getSwitchUserLoginState = (overrides = {}) => ({
   open: false,
@@ -159,12 +165,7 @@ export default function Home() {
   const [searchCompany, setSearchCompany] = useState('')
   const [advancedFilters, setAdvancedFilters] = useState(DEFAULT_ADVANCED_FILTERS)
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
-  const [collapsedFilterGroups, setCollapsedFilterGroups] = useState({
-    locations: true,
-    industries: true,
-    priorities: true,
-    statuses: true,
-  })
+  const [collapsedFilterGroups, setCollapsedFilterGroups] = useState(() => ({ ...DEFAULT_COLLAPSED_FILTER_GROUPS }))
   const [filterSearchTerm, setFilterSearchTerm] = useState('')
   const [serverPage, setServerPage] = useState(1)
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' })
@@ -1265,6 +1266,18 @@ export default function Home() {
   )
 
   const normalizedFilterSearchTerm = filterSearchTerm.trim().toLowerCase()
+
+  useEffect(() => {
+    const targetState = normalizedFilterSearchTerm
+      ? Object.fromEntries(Object.keys(DEFAULT_COLLAPSED_FILTER_GROUPS).map((key) => [key, false]))
+      : DEFAULT_COLLAPSED_FILTER_GROUPS
+
+    setCollapsedFilterGroups((prev) => {
+      const hasChanged = Object.keys(targetState).some((key) => prev[key] !== targetState[key])
+      if (!hasChanged) return prev
+      return { ...targetState }
+    })
+  }, [normalizedFilterSearchTerm])
 
   const visibleFilterOptions = useMemo(
     () => {
