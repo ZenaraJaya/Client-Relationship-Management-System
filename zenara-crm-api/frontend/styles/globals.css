@@ -68,16 +68,13 @@
   --priority-low-bg: #d1d5db;
   --priority-default-bg: #e5e7eb;
   --priority-text: #111827;
-  --status-new-bg: #eff6ff;
-  --status-new-text: #1d4ed8;
-  --status-contacted-bg: #fff7ed;
-  --status-contacted-text: #c2410c;
-  --status-qualified-bg: #ecfdf5;
-  --status-qualified-text: #047857;
-  --status-closed-bg: #fef2f2;
-  --status-closed-text: #dc2626;
-  --status-default-bg: #f9fafb;
-  --status-default-text: #6b7280;
+  --status-new-bg: #3b82f6;
+  --status-contacted-bg: #f59e0b;
+  --status-qualified-bg: #10b981;
+  --status-closed-bg: #ef4444;
+  --status-default-bg: #9ca3af;
+  --status-new-text: #0f172a;
+  --status-default-text: #ffffff;
   --date-cell-card-border: #dbe4ee;
   --date-cell-card-bg: linear-gradient(180deg, #ffffff, #f8fafc);
   --date-cell-card-bg-editing: #ffffff;
@@ -3452,44 +3449,6 @@ td {
   height: 100%;
 }
 
-.crm-table-wrapper {
-  flex: 1;
-  overflow: auto;
-  border-radius: 8px;
-  background: white;
-}
-
-.crm-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 13px;
-}
-
-.crm-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--table-head-bg);
-  padding: 12px 14px;
-  text-align: left;
-  font-weight: 600;
-  color: var(--table-head-text);
-  border-bottom: 2px solid var(--table-head-border);
-  white-space: nowrap;
-}
-
-.crm-table tbody td {
-  padding: 14px;
-  border-bottom: 1px solid var(--table-row-border);
-  vertical-align: middle;
-  transition: background 0.2s ease;
-}
-
-.crm-table tbody tr:hover td {
-  background: var(--table-row-hover-bg);
-}
-
 .advanced-filters-drawer {
   width: 0;
   opacity: 0;
@@ -3502,9 +3461,9 @@ td {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 100vh;
+  height: calc(100vh - 40px);
   position: sticky;
-  top: 0;
+  top: 20px;
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   z-index: 100;
 }
