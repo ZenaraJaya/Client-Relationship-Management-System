@@ -341,20 +341,6 @@ export default function Sidebar({
       </nav>
 
       <div className="sidebar-footer">
-        <button
-          type="button"
-          className="sidebar-ghost-btn"
-          onClick={() => setIsCollapsed((prev) => !prev)}
-          title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
-        >
-          <span className={`collapse-arrow ${isCollapsed ? 'rotate' : ''}`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </span>
-          {!isCollapsed && <span className="sidebar-label">Collapse Menu</span>}
-        </button>
-
         <button type="button" className="sidebar-logout-btn" onClick={onLogout}>
           <span className="nav-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

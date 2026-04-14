@@ -3121,6 +3121,15 @@ td {
 .table-card {
   margin-top: 14px;
   position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-card > .advanced-filters-shell {
+  flex: 1;
+  min-height: 0;
 }
 
 
