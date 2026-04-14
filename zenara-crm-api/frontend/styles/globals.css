@@ -3108,22 +3108,7 @@ td {
   margin-top: 14px;
 }
 
-/* When filters are open, position the drawer beside the main table content. */
-.table-card.with-filter-drawer {
-  margin-right: 0;
-}
 
-.advanced-filters-shell {
-  display: flex;
-  gap: 22px;
-  align-items: start;
-}
-
-.advanced-filters-main {
-  min-width: 0;
-  flex: 1 1 0;
-  overflow-x: auto;
-}
 
 .advanced-filters-bar {
   display: flex;
@@ -3443,6 +3428,7 @@ td {
   position: relative;
   overflow: hidden;
   height: 100%;
+  align-items: stretch;
 }
 
 .advanced-filters-main {

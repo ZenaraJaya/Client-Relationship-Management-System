@@ -477,7 +477,7 @@ export default function CrmList({
   ]
 
   return (
-    <div style={{ overflowX: 'hidden', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ overflowX: 'hidden', width: '100%' }}>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
@@ -494,7 +494,7 @@ export default function CrmList({
               )}
             </th>
             <th style={{ padding: '10px 8px', width: '30px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>No</th>
-            <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Company Name</th>
+            <th style={{ padding: '10px 8px', width: '160px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Company Name</th>
             <th style={{ padding: '10px 8px', width: '125px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Appointment</th>
             {!isFilterDrawerOpen && (
               <th style={{ padding: '10px 8px', width: '125px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Follow Up</th>
@@ -537,7 +537,7 @@ export default function CrmList({
                     )}
                   </td>
                   <td style={{ ...truncatedStyle, width: '30px', color: 'var(--table-row-number)', fontSize: '11px' }}>{rowOffset + idx + 1}</td>
-                  <td style={{ ...truncatedStyle, fontWeight: 600, color: 'var(--ink)' }}>
+                  <td style={{ ...truncatedStyle, width: '160px', fontWeight: 600, color: 'var(--ink)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{
                         display: 'flex',
