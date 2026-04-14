@@ -1183,6 +1183,11 @@ td {
 .main {
   flex: 1;
   padding: 28px 34px 34px;
+  transition: margin-right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main.drawer-open {
+  margin-right: 360px;
 }
 
 .topbar {
@@ -3090,10 +3095,6 @@ td {
   align-items: start;
 }
 
-.advanced-filters-shell.drawer-open {
-  grid-template-columns: minmax(0, 1fr) 392px;
-}
-
 .advanced-filters-main {
   min-width: 0;
 }
@@ -3235,17 +3236,18 @@ td {
 }
 
 .advanced-filters-drawer {
-  position: sticky;
-  top: 18px;
-  width: 100%;
-  max-height: calc(100vh - 110px);
-  border: 1px solid #d7dee8;
-  border-radius: 22px;
+  position: fixed;
+  top: 76px;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  border-left: 1px solid #d7dee8;
   background: #ffffff;
-  box-shadow: 0 20px 34px rgba(15, 23, 42, 0.12);
+  box-shadow: -16px 0 30px rgba(15, 23, 42, 0.14);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1200;
   animation: advancedFiltersDrawerSlideIn 0.22s ease;
 }
 
@@ -4841,6 +4843,10 @@ td {
     padding: 18px;
   }
 
+  .main.drawer-open {
+    margin-right: 0;
+  }
+
   .topbar {
     flex-direction: column;
     align-items: stretch;
@@ -4881,14 +4887,12 @@ td {
     padding-right: 0;
   }
 
-  .advanced-filters-shell.drawer-open {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .advanced-filters-drawer {
     position: static;
     max-height: none;
     border-radius: 18px;
+    border: 1px solid #d7dee8;
+    border-left: 1px solid #d7dee8;
   }
 
   .advanced-filter-grid {

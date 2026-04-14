@@ -1941,7 +1941,7 @@ export default function Home() {
         teamUsers={normalizedTeamUsers}
         currentUserId={authUser?.id ?? null}
       />
-      <main className="main">
+      <main className={`main ${currentView === 'listing' && advancedFiltersOpen ? 'drawer-open' : ''}`}>
         <TopBar
           searchCompany={searchCompany}
           onSearchCompanyChange={(value) => {
@@ -2053,7 +2053,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className={`advanced-filters-shell ${advancedFiltersOpen ? 'drawer-open' : ''}`}>
+            <div className="advanced-filters-shell">
               <div className="advanced-filters-main">
                 <div className="advanced-filters-bar">
                   <div className="advanced-filters-bar-top">
@@ -2626,5 +2626,4 @@ export default function Home() {
     </div>
   )
 }
-
 
