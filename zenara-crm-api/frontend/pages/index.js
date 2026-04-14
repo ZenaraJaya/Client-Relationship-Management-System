@@ -2127,7 +2127,7 @@ export default function Home() {
                 {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
                 {error && <div style={{ marginTop: 12, color: 'var(--table-action-delete-text)' }}>Data Sync Error: {String(error.message || error)}</div>}
                 {!loading && (
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ marginTop: 12, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     <CrmList
                       items={filteredItems}
                       emptyMessage={
