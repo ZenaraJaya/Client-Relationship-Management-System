@@ -1209,11 +1209,9 @@ td {
 .main {
   flex: 1;
   padding: 28px 34px 34px;
-  transition: margin-right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.main.drawer-open {
-  margin-right: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -3444,11 +3442,7 @@ td {
   width: 100%;
   position: relative;
   overflow: hidden;
-  transition: padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.advanced-filters-shell.drawer-open {
-  padding-right: 400px;
+  height: 100%;
 }
 
 .advanced-filters-main {
@@ -3456,24 +3450,29 @@ td {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .advanced-filters-drawer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 400px;
+  width: 0;
+  opacity: 0;
+  flex-shrink: 0;
   background: var(--filter-drawer-bg);
   backdrop-filter: var(--filter-drawer-blur);
   -webkit-backdrop-filter: var(--filter-drawer-blur);
-  border-left: 1px solid var(--filter-drawer-border);
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08);
+  border-left: 0px solid transparent;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  z-index: 1000;
-  animation: advancedFiltersDrawerSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.advanced-filters-shell.drawer-open .advanced-filters-drawer {
+  width: 400px;
+  opacity: 1;
+  border-left: 1px solid var(--filter-drawer-border);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08);
 }
 
 .advanced-filters-drawer-head {

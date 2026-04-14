@@ -2189,107 +2189,105 @@ export default function Home() {
                 )}
               </div>
 
-              {advancedFiltersOpen && (
-                <aside
-                  id="advanced-filters-drawer"
-                  className="advanced-filters-drawer"
-                  role="dialog"
-                  aria-modal="false"
-                  aria-label="Filter contacts"
-                >
-                  <div className="advanced-filters-drawer-head">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <h4>Filter contacts</h4>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--ink-soft)', fontWeight: 500 }}>
-                        Refine your search results
-                      </p>
+              <aside
+                id="advanced-filters-drawer"
+                className="advanced-filters-drawer"
+                role="dialog"
+                aria-modal="false"
+                aria-label="Filter contacts"
+              >
+                <div className="advanced-filters-drawer-head">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <h4>Filter contacts</h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--ink-soft)', fontWeight: 500 }}>
+                      Refine your search results
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="advanced-filters-drawer-close"
+                    onClick={() => setAdvancedFiltersOpen(false)}
+                    aria-label="Close filters drawer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="advanced-filters-drawer-body">
+                  <div className="advanced-filters-search-wrap">
+                    <div className="advanced-filters-search-input-wrap">
+                      <span className="advanced-filters-search-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="m21 21-4.3-4.3" />
+                        </svg>
+                      </span>
+                      <input
+                        type="text"
+                        className="advanced-filters-search-input"
+                        placeholder="Search filter options..."
+                        value={filterSearchTerm}
+                        onChange={(event) => setFilterSearchTerm(event.target.value)}
+                        aria-label="Search filter options"
+                      />
+                      <div style={{ position: 'absolute', right: '12px', fontSize: '10px', fontWeight: 700, color: 'var(--ink-soft)', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', pointerEvents: 'none' }}>
+                        /
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      className="advanced-filters-drawer-close"
-                      onClick={() => setAdvancedFiltersOpen(false)}
-                      aria-label="Close filters drawer"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                    </button>
                   </div>
 
-                  <div className="advanced-filters-drawer-body">
-                    <div className="advanced-filters-search-wrap">
-                      <div className="advanced-filters-search-input-wrap">
-                        <span className="advanced-filters-search-icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.3-4.3" />
+                  {showFilterSearchEmptyState ? (
+                    <div className="advanced-filter-search-empty">
+                      <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /><path d="M8 11h6" />
                           </svg>
-                        </span>
-                        <input
-                          type="text"
-                          className="advanced-filters-search-input"
-                          placeholder="Search filter options..."
-                          value={filterSearchTerm}
-                          onChange={(event) => setFilterSearchTerm(event.target.value)}
-                          aria-label="Search filter options"
-                        />
-                        <div style={{ position: 'absolute', right: '12px', fontSize: '10px', fontWeight: 700, color: 'var(--ink-soft)', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', pointerEvents: 'none' }}>
-                          /
                         </div>
+                        <p style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>No options matched "{filterSearchTerm.trim()}"</p>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', marginBottom: '20px' }}>Try a different search term or clear the filter.</p>
+                        <button
+                          type="button"
+                          className="advanced-filter-search-empty-action"
+                          onClick={() => setFilterSearchTerm('')}
+                        >
+                          Clear search
+                        </button>
                       </div>
                     </div>
+                  ) : (
+                    <div className="advanced-filter-grid">
+                      {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                    </div>
+                  )}
+                </div>
 
-                    {showFilterSearchEmptyState ? (
-                      <div className="advanced-filter-search-empty">
-                        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /><path d="M8 11h6" />
-                            </svg>
-                          </div>
-                          <p style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: '4px' }}>No options matched "{filterSearchTerm.trim()}"</p>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', marginBottom: '20px' }}>Try a different search term or clear the filter.</p>
-                          <button
-                            type="button"
-                            className="advanced-filter-search-empty-action"
-                            onClick={() => setFilterSearchTerm('')}
-                          >
-                            Clear search
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="advanced-filter-grid">
-                        {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                <div className="advanced-filters-drawer-footer">
+                  <button
+                    type="button"
+                    className="advanced-filters-reset"
+                    onClick={clearAdvancedFilters}
+                    disabled={!hasAnyAdvancedFilters}
+                  >
+                    Reset All
+                  </button>
+                  <button
+                    type="button"
+                    className="advanced-filters-apply"
+                    onClick={() => setAdvancedFiltersOpen(false)}
+                    style={{ fontSize: '0.9rem' }}
+                  >
+                    {activeAdvancedFilterCount > 0 && (
+                      <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', color: 'var(--accent)', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                        {activeAdvancedFilterCount}
                       </div>
                     )}
-                  </div>
-
-                  <div className="advanced-filters-drawer-footer">
-                    <button
-                      type="button"
-                      className="advanced-filters-reset"
-                      onClick={clearAdvancedFilters}
-                      disabled={!hasAnyAdvancedFilters}
-                    >
-                      Reset All
-                    </button>
-                    <button
-                      type="button"
-                      className="advanced-filters-apply"
-                      onClick={() => setAdvancedFiltersOpen(false)}
-                      style={{ fontSize: '0.9rem' }}
-                    >
-                      {activeAdvancedFilterCount > 0 && (
-                        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', color: 'var(--accent)', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                          {activeAdvancedFilterCount}
-                        </div>
-                      )}
-                      <span>Apply Filters</span>
-                    </button>
-                  </div>
-                </aside>
-              )}
+                    <span>Apply Filters</span>
+                  </button>
+                </div>
+              </aside>
             </div>
           </div>
         )}
