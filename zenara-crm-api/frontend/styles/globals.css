@@ -1187,7 +1187,7 @@ td {
 }
 
 .main.drawer-open {
-  margin-right: 320px;
+  margin-right: 0;
 }
 
 .topbar {
@@ -3084,19 +3084,21 @@ td {
   margin-top: 14px;
 }
 
+/* When filters are open, position the drawer beside the main table content. */
 .table-card.with-filter-drawer {
-  margin-right: 320px;
+  margin-right: 0;
 }
 
 .advanced-filters-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 22px;
   align-items: start;
 }
 
 .advanced-filters-main {
   min-width: 0;
+  flex: 1 1 0;
 }
 
 .advanced-filters-bar {
@@ -3237,6 +3239,7 @@ td {
 
 .advanced-filters-drawer {
   width: 320px;
+  flex: 0 0 320px;
   border-left: 1px solid #d7dee8;
   background: #ffffff;
   box-shadow: -16px 0 30px rgba(15, 23, 42, 0.14);
