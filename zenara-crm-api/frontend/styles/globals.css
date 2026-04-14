@@ -3091,7 +3091,6 @@ td {
 
 .advanced-filters-shell {
   display: flex;
-  flex-wrap: wrap;
   gap: 22px;
   align-items: start;
 }
@@ -3099,6 +3098,7 @@ td {
 .advanced-filters-main {
   min-width: 0;
   flex: 1 1 0;
+  overflow-x: auto;
 }
 
 .advanced-filters-bar {
@@ -4843,10 +4843,6 @@ td {
     padding: 18px;
   }
 
-  .main.drawer-open {
-    margin-right: 0;
-  }
-
   .topbar {
     flex-direction: column;
     align-items: stretch;
@@ -4881,10 +4877,6 @@ td {
 
   .calendar-reminder-body {
     grid-template-columns: 1fr;
-  }
-
-  .table-card.with-filter-drawer {
-    margin-right: 320px;
   }
 
   .advanced-filters-drawer {

@@ -1941,7 +1941,7 @@ export default function Home() {
         teamUsers={normalizedTeamUsers}
         currentUserId={authUser?.id ?? null}
       />
-      <main className={`main ${currentView === 'listing' && advancedFiltersOpen ? 'drawer-open' : ''}`}>
+      <main className="main">
         <TopBar
           searchCompany={searchCompany}
           onSearchCompanyChange={(value) => {
