@@ -3451,6 +3451,11 @@ td {
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: padding-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.advanced-filters-shell.drawer-open .advanced-filters-main {
+  padding-right: 400px;
 }
 
 .advanced-filters-drawer {
@@ -3465,9 +3470,11 @@ td {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: calc(100vh - 40px);
-  position: sticky;
-  top: 20px;
+  height: 100dvh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  pointer-events: none;
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   z-index: 100;
 }
@@ -3477,6 +3484,7 @@ td {
   opacity: 1;
   border-left: 1px solid var(--filter-drawer-border);
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.08);
+  pointer-events: auto;
 }
 
 .advanced-filters-drawer-head {
@@ -4959,6 +4967,10 @@ td {
     border-radius: 18px;
     border: 1px solid #d7dee8;
     border-left: 1px solid #d7dee8;
+  }
+
+  .advanced-filters-shell.drawer-open .advanced-filters-main {
+    padding-right: 0;
   }
 
   .advanced-filter-grid {
