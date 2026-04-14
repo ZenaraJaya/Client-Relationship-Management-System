@@ -1206,6 +1206,28 @@ export default function Home() {
     setSelectedIds([])
   }
 
+  const toggleAdvancedFilterGroup = (field, values) => {
+    const nextGroupValues = Array.from(
+      new Set((Array.isArray(values) ? values : []).filter((value) => value !== null && value !== undefined && value !== ''))
+    )
+
+    if (nextGroupValues.length === 0) return
+
+    setAdvancedFilters((prev) => {
+      const currentValues = Array.isArray(prev[field]) ? prev[field] : []
+      const hasAllValues = nextGroupValues.every((value) => currentValues.includes(value))
+      const nextValues = hasAllValues
+        ? currentValues.filter((value) => !nextGroupValues.includes(value))
+        : Array.from(new Set([...currentValues, ...nextGroupValues]))
+
+      return {
+        ...prev,
+        [field]: nextValues,
+      }
+    })
+    setSelectedIds([])
+  }
+
   const removeAdvancedFilterChip = (field, value) => {
     setAdvancedFilters((prev) => ({
       ...prev,
@@ -1352,6 +1374,7 @@ export default function Home() {
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
+  const liveApplyResultsLabel = `${filteredItems.length} result${filteredItems.length === 1 ? '' : 's'}`
   const renderFilterGroupIcon = (iconClass) => {
     if (iconClass === 'location') {
       return (
@@ -1475,10 +1498,30 @@ export default function Home() {
       return <div className="advanced-filter-empty">{emptyLabel}</div>
     }
 
+    const selectedValues = Array.isArray(advancedFilters[field]) ? advancedFilters[field] : []
+    const optionValues = options.map((option) => option.value)
+    const selectedOptionCount = optionValues.filter((value) => selectedValues.includes(value)).length
+    const areAllOptionsSelected = optionValues.length > 0 && selectedOptionCount === optionValues.length
+    const hasSomeOptionsSelected = selectedOptionCount > 0 && !areAllOptionsSelected
+
     return (
       <div className="advanced-filter-options">
+        <label className={`advanced-filter-option advanced-filter-option-select-all ${areAllOptionsSelected ? 'checked' : ''}`}>
+          <input
+            type="checkbox"
+            checked={areAllOptionsSelected}
+            ref={(element) => {
+              if (element) {
+                element.indeterminate = hasSomeOptionsSelected
+              }
+            }}
+            onChange={() => toggleAdvancedFilterGroup(field, optionValues)}
+          />
+          <span className="advanced-filter-option-label">Select all</span>
+          <span className="advanced-filter-option-count">{optionValues.length}</span>
+        </label>
         {options.map((option) => {
-          const checked = advancedFilters[field].includes(option.value)
+          const checked = selectedValues.includes(option.value)
           const toneClass = getFilterOptionToneClass(field, option.value)
           const optionCount = Number(option.count || 0)
           return (
@@ -1518,9 +1561,9 @@ export default function Home() {
           <span>{title}</span>
         </span>
         <span className="advanced-filter-group-head-right">
-          <span className={`advanced-filter-group-meta ${advancedFilters[field].length > 0 ? 'active' : ''}`}>
-            {advancedFilters[field].length}
-          </span>
+          {advancedFilters[field].length > 0 ? (
+            <span className="advanced-filter-group-meta active">{advancedFilters[field].length}</span>
+          ) : null}
           <span className={`advanced-filter-group-chevron ${collapsedFilterGroups[field] ? '' : 'open'}`} aria-hidden="true">
             <svg viewBox="0 0 20 20" fill="none">
               <path d="m6 8 4 4 4-4" />
@@ -1542,6 +1585,9 @@ export default function Home() {
       return next
     })
   }, [filteredItems])
+
+  const hasVisibleFilterOptions = filterPanelGroups.some((group) => group.options.length > 0)
+  const showFilterSearchEmptyState = Boolean(normalizedFilterSearchTerm) && !hasVisibleFilterOptions
 
   useEffect(() => {
     if (!advancedFiltersOpen) return undefined
@@ -2007,85 +2053,46 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="advanced-filters-bar">
-              <div className="advanced-filters-toolbar-left">
-                <button
-                  type="button"
-                  className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
-                  onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
-                  aria-expanded={advancedFiltersOpen}
-                  aria-controls="advanced-filters-drawer"
-                >
-                  <span className="advanced-filters-toggle-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="11" cy="11" r="5.5" />
-                      <path d="m15.5 15.5 4 4" />
-                    </svg>
-                  </span>
-                  <span>Filters</span>
-                  <span className="advanced-filters-toggle-caret" aria-hidden="true">
-                    {advancedFiltersOpen ? '^' : 'v'}
-                  </span>
-                  {activeAdvancedFilterCount > 0 && (
-                    <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
-                  )}
-                </button>
-                <button type="button" className="advanced-filters-sort" aria-label="Sort contacts">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M5 7h14M8 12h8M10 17h4" />
-                  </svg>
-                  <span>Sort</span>
-                </button>
-              </div>
-              <div className="advanced-filters-summary">
-                Showing {filteredItems.length} of {items.length} contacts
-              </div>
-            </div>
-
-            {advancedFiltersOpen && (
-              <aside
-                id="advanced-filters-drawer"
-                className="advanced-filters-drawer"
-                role="dialog"
-                aria-modal="false"
-                aria-label="Filter contacts"
-              >
-                <div className="advanced-filters-drawer-head">
-                  <h4>Filter contacts</h4>
-                  <button
-                    type="button"
-                    className="advanced-filters-drawer-close"
-                    onClick={() => setAdvancedFiltersOpen(false)}
-                    aria-label="Close filters drawer"
-                  >
-                    <svg viewBox="0 0 20 20" fill="none">
-                      <path d="M5 5l10 10M15 5 5 15" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="advanced-filters-drawer-body">
-                  <div className="advanced-filters-search-wrap">
-                    <div className="advanced-filters-search-input-wrap">
-                      <span className="advanced-filters-search-icon" aria-hidden="true">
+            <div className={`advanced-filters-shell ${advancedFiltersOpen ? 'drawer-open' : ''}`}>
+              <div className="advanced-filters-main">
+                <div className="advanced-filters-bar">
+                  <div className="advanced-filters-bar-top">
+                    <div className="advanced-filters-toolbar-left">
+                      <button
+                        type="button"
+                        className={`advanced-filters-toggle ${advancedFiltersOpen ? 'active' : ''}`}
+                        onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
+                        aria-expanded={advancedFiltersOpen}
+                        aria-controls="advanced-filters-drawer"
+                      >
+                        <span className="advanced-filters-toggle-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="11" cy="11" r="5.5" />
+                            <path d="m15.5 15.5 4 4" />
+                          </svg>
+                        </span>
+                        <span>Filters</span>
+                        <span className="advanced-filters-toggle-caret" aria-hidden="true">
+                          {advancedFiltersOpen ? '^' : 'v'}
+                        </span>
+                        {activeAdvancedFilterCount > 0 && (
+                          <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
+                        )}
+                      </button>
+                      <button type="button" className="advanced-filters-sort" aria-label="Sort contacts">
                         <svg viewBox="0 0 24 24" fill="none">
-                          <circle cx="11" cy="11" r="5.5" />
-                          <path d="m15.5 15.5 4 4" />
+                          <path d="M5 7h14M8 12h8M10 17h4" />
                         </svg>
-                      </span>
-                      <input
-                        type="text"
-                        className="advanced-filters-search-input"
-                        placeholder="Search filter options..."
-                        value={filterSearchTerm}
-                        onChange={(event) => setFilterSearchTerm(event.target.value)}
-                        aria-label="Search filter options"
-                      />
+                        <span>Sort</span>
+                      </button>
+                    </div>
+                    <div className="advanced-filters-summary">
+                      Showing {filteredItems.length} of {items.length} contacts
                     </div>
                   </div>
 
                   {hasAnyAdvancedFilters && (
-                    <div className="advanced-filters-chip-row">
+                    <div className="advanced-filters-toolbar-chips" aria-label="Active filters">
                       {activeFilterChips.map((chip) => (
                         <button
                           key={chip.id}
@@ -2099,98 +2106,156 @@ export default function Home() {
                       ))}
                     </div>
                   )}
-
-                  <div className="advanced-filter-grid">
-                    {filterPanelGroups.map((group) => renderFilterGroup(group))}
-                  </div>
                 </div>
 
-                <div className="advanced-filters-drawer-footer">
-                  <button
-                    type="button"
-                    className="advanced-filters-reset"
-                    onClick={clearAdvancedFilters}
-                    disabled={!hasAnyAdvancedFilters}
-                  >
-                    Reset all
-                  </button>
-                  <button
-                    type="button"
-                    className="advanced-filters-apply"
-                    onClick={() => setAdvancedFiltersOpen(false)}
-                  >
-                    <svg viewBox="0 0 20 20" fill="none">
-                      <path d="m4.5 10 3.4 3.4 7.6-7.6" />
-                    </svg>
-                    Apply filters
-                  </button>
-                </div>
-              </aside>
-            )}
-
-            {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
-            {error && <div style={{ marginTop: 12, color: 'var(--table-action-delete-text)' }}>Data Sync Error: {String(error.message || error)}</div>}
-            {!loading && (
-              <div style={{ marginTop: 12 }}>
-                <CrmList
-                  items={filteredItems}
-                  emptyMessage={
-                    searchKeyword || hasAnyAdvancedFilters
-                      ? 'No contacts match your current search and filters.'
-                      : 'No CRM contacts found.'
-                  }
-                  onEdit={handleEditCrm}
-                  onDelete={handleDeleteCrm}
-                  onUpdate={handleUpdateField}
-                  selectedIds={selectedIds}
-                  onSelectionChange={setSelectedIds}
-                  canEdit={isAdmin}
-                  canDelete={isAdmin}
-                  rowOffset={rowOffset}
-                />
-                {data && (
-                  <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--table-cell-muted)' }}>
-                      Showing page {currentPage} of {lastPage}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <button
-                        type="button"
-                        onClick={goToPreviousPage}
-                        disabled={!hasPrevPage || loading}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: 6,
-                          border: '1px solid var(--modal-btn-secondary-border)',
-                          background: 'var(--modal-btn-secondary-bg)',
-                          color: 'var(--modal-btn-secondary-text)',
-                          cursor: !hasPrevPage || loading ? 'not-allowed' : 'pointer',
-                          opacity: !hasPrevPage || loading ? 0.5 : 1,
-                        }}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        onClick={goToNextPage}
-                        disabled={!hasNextPage || loading}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: 6,
-                          border: '1px solid var(--modal-btn-secondary-border)',
-                          background: 'var(--modal-btn-secondary-bg)',
-                          color: 'var(--modal-btn-secondary-text)',
-                          cursor: !hasNextPage || loading ? 'not-allowed' : 'pointer',
-                          opacity: !hasNextPage || loading ? 0.5 : 1,
-                        }}
-                      >
-                        Next
-                      </button>
-                    </div>
+                {loading && <div style={{ marginTop: 12 }}>Loading contacts...</div>}
+                {error && <div style={{ marginTop: 12, color: 'var(--table-action-delete-text)' }}>Data Sync Error: {String(error.message || error)}</div>}
+                {!loading && (
+                  <div style={{ marginTop: 12 }}>
+                    <CrmList
+                      items={filteredItems}
+                      emptyMessage={
+                        searchKeyword || hasAnyAdvancedFilters
+                          ? 'No contacts match your current search and filters.'
+                          : 'No CRM contacts found.'
+                      }
+                      onEdit={handleEditCrm}
+                      onDelete={handleDeleteCrm}
+                      onUpdate={handleUpdateField}
+                      selectedIds={selectedIds}
+                      onSelectionChange={setSelectedIds}
+                      canEdit={isAdmin}
+                      canDelete={isAdmin}
+                      rowOffset={rowOffset}
+                    />
+                    {data && (
+                      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--table-cell-muted)' }}>
+                          Showing page {currentPage} of {lastPage}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <button
+                            type="button"
+                            onClick={goToPreviousPage}
+                            disabled={!hasPrevPage || loading}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: 6,
+                              border: '1px solid var(--modal-btn-secondary-border)',
+                              background: 'var(--modal-btn-secondary-bg)',
+                              color: 'var(--modal-btn-secondary-text)',
+                              cursor: !hasPrevPage || loading ? 'not-allowed' : 'pointer',
+                              opacity: !hasPrevPage || loading ? 0.5 : 1,
+                            }}
+                          >
+                            Previous
+                          </button>
+                          <button
+                            type="button"
+                            onClick={goToNextPage}
+                            disabled={!hasNextPage || loading}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: 6,
+                              border: '1px solid var(--modal-btn-secondary-border)',
+                              background: 'var(--modal-btn-secondary-bg)',
+                              color: 'var(--modal-btn-secondary-text)',
+                              cursor: !hasNextPage || loading ? 'not-allowed' : 'pointer',
+                              opacity: !hasNextPage || loading ? 0.5 : 1,
+                            }}
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+
+              {advancedFiltersOpen && (
+                <aside
+                  id="advanced-filters-drawer"
+                  className="advanced-filters-drawer"
+                  role="dialog"
+                  aria-modal="false"
+                  aria-label="Filter contacts"
+                >
+                  <div className="advanced-filters-drawer-head">
+                    <h4>Filter contacts</h4>
+                    <button
+                      type="button"
+                      className="advanced-filters-drawer-close"
+                      onClick={() => setAdvancedFiltersOpen(false)}
+                      aria-label="Close filters drawer"
+                    >
+                      <svg viewBox="0 0 20 20" fill="none">
+                        <path d="M5 5l10 10M15 5 5 15" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="advanced-filters-drawer-body">
+                    <div className="advanced-filters-search-wrap">
+                      <div className="advanced-filters-search-input-wrap">
+                        <span className="advanced-filters-search-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="11" cy="11" r="5.5" />
+                            <path d="m15.5 15.5 4 4" />
+                          </svg>
+                        </span>
+                        <input
+                          type="text"
+                          className="advanced-filters-search-input"
+                          placeholder="Search filter options..."
+                          value={filterSearchTerm}
+                          onChange={(event) => setFilterSearchTerm(event.target.value)}
+                          aria-label="Search filter options"
+                        />
+                      </div>
+                    </div>
+
+                    {showFilterSearchEmptyState ? (
+                      <div className="advanced-filter-search-empty">
+                        <p>No filter options matched "{filterSearchTerm.trim()}".</p>
+                        <button
+                          type="button"
+                          className="advanced-filter-search-empty-action"
+                          onClick={() => setFilterSearchTerm('')}
+                        >
+                          Clear search and try again
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="advanced-filter-grid">
+                        {filterPanelGroups.map((group) => renderFilterGroup(group))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="advanced-filters-drawer-footer">
+                    <button
+                      type="button"
+                      className="advanced-filters-reset"
+                      onClick={clearAdvancedFilters}
+                      disabled={!hasAnyAdvancedFilters}
+                    >
+                      Reset all
+                    </button>
+                    <button
+                      type="button"
+                      className="advanced-filters-apply"
+                      onClick={() => setAdvancedFiltersOpen(false)}
+                    >
+                      <svg viewBox="0 0 20 20" fill="none">
+                        <path d="m4.5 10 3.4 3.4 7.6-7.6" />
+                      </svg>
+                      {`Apply \u00b7 ${liveApplyResultsLabel}`}
+                    </button>
+                  </div>
+                </aside>
+              )}
+            </div>
           </div>
         )}
 
