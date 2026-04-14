@@ -3439,6 +3439,25 @@ td {
   color: #2f77c4;
 }
 
+.advanced-filters-shell {
+  display: flex;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.advanced-filters-shell.drawer-open {
+  padding-right: 400px;
+}
+
+.advanced-filters-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .advanced-filters-drawer {
   position: absolute;
   top: 0;
@@ -3453,7 +3472,7 @@ td {
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  animation: advancedFiltersDrawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: advancedFiltersDrawerSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 

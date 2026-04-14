@@ -2067,7 +2067,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="advanced-filters-shell">
+            <div className={`advanced-filters-shell ${advancedFiltersOpen ? 'drawer-open' : ''}`}>
               <div className="advanced-filters-main">
                 <div className="advanced-filters-bar">
                   <div className="advanced-filters-bar-top">
