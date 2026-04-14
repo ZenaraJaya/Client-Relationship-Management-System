@@ -477,8 +477,8 @@ export default function CrmList({
   ]
 
   return (
-    <div style={{ overflowX: 'auto', minHeight: '400px' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: isFilterDrawerOpen ? '0' : '1240px', fontSize: '13px', tableLayout: 'fixed' }}>
+    <div style={{ overflowX: 'hidden', minHeight: '400px', width: '100%' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '13px', tableLayout: 'fixed' }}>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
             <th style={{ padding: '12px 10px', width: '40px', whiteSpace: 'nowrap' }}>
