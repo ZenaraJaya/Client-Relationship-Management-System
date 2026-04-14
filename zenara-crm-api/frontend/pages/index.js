@@ -1491,7 +1491,7 @@ export default function Home() {
     return (
       <div className="advanced-filter-options">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--ink-soft)', letterSpacing: '0.05em' }}>Options</span>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--ink-soft)', letterSpacing: '0.05em' }}>Options</span>
           <button
             type="button"
             onClick={() => toggleAdvancedFilterGroup(field, optionValues)}
@@ -1499,7 +1499,7 @@ export default function Home() {
               background: 'transparent',
               border: 'none',
               color: 'var(--accent)',
-              fontSize: '0.75rem',
+              fontSize: '0.7rem',
               fontWeight: 700,
               cursor: 'pointer',
               padding: '2px 6px',
@@ -2277,9 +2277,10 @@ export default function Home() {
                       type="button"
                       className="advanced-filters-apply"
                       onClick={() => setAdvancedFiltersOpen(false)}
+                      style={{ fontSize: '0.9rem' }}
                     >
                       {activeAdvancedFilterCount > 0 && (
-                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', color: 'var(--accent)', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', color: 'var(--accent)', fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
                           {activeAdvancedFilterCount}
                         </div>
                       )}

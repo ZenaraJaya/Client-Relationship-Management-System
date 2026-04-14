@@ -3468,7 +3468,7 @@ td {
 
 .advanced-filters-drawer-head h4 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.01em;
@@ -3542,12 +3542,12 @@ td {
 
 .advanced-filters-search-input {
   width: 100%;
-  padding: 12px 14px 12px 42px;
-  border-radius: 14px;
+  padding: 10px 14px 10px 42px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--ink);
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
@@ -3599,7 +3599,7 @@ td {
   align-items: center;
   gap: 12px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--ink);
 }
 
@@ -3622,9 +3622,9 @@ td {
 .advanced-filter-group-meta {
   background: var(--accent);
   color: white;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -3653,15 +3653,15 @@ td {
 }
 
 .advanced-filter-option {
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
   transition: all 0.2s ease;
   user-select: none;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--ink-soft);
   border: 1px solid transparent;
@@ -3690,7 +3690,7 @@ td {
 
 .advanced-filter-option-count {
   margin-left: auto;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   background: rgba(0,0,0,0.05);
   padding: 2px 8px;
   border-radius: 12px;
