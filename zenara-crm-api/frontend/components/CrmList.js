@@ -477,7 +477,7 @@ export default function CrmList({
   ]
 
   return (
-    <div style={{ overflowX: 'hidden', minHeight: '400px', width: '100%' }}>
+    <div style={{ overflowX: 'auto', minHeight: '400px', width: '100%' }}>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '13px', tableLayout: 'fixed' }}>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
@@ -494,17 +494,17 @@ export default function CrmList({
               )}
             </th>
             <th style={{ padding: '12px 10px', width: '40px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>No</th>
-            <th style={{ padding: '12px 10px', width: isFilterDrawerOpen ? 'auto' : '230px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Company Name</th>
-            <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Appointment</th>
+            <th style={{ padding: '12px 10px', width: isFilterDrawerOpen ? '180px' : '230px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Company Name</th>
+            <th style={{ padding: '12px 10px', width: '140px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Appointment</th>
             {!isFilterDrawerOpen && (
-              <th style={{ padding: '12px 10px', width: '170px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Follow Up</th>
+              <th style={{ padding: '12px 10px', width: '140px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Follow Up</th>
             )}
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Priority</th>
-            <th style={{ padding: '12px 10px', width: '110px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Status</th>
+            <th style={{ padding: '12px 10px', width: '90px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Priority</th>
+            <th style={{ padding: '12px 10px', width: '90px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Status</th>
             {!isFilterDrawerOpen && (
-              <th style={{ padding: '12px 10px', width: '180px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Remarks</th>
+              <th style={{ padding: '12px 10px', width: '150px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Remarks</th>
             )}
-            <th style={{ padding: '12px 10px', width: '120px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Actions</th>
+            <th style={{ padding: '12px 10px', width: '100px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)', whiteSpace: 'nowrap' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -537,7 +537,7 @@ export default function CrmList({
                     )}
                   </td>
                   <td style={{ ...truncatedStyle, width: '40px', color: 'var(--table-row-number)', fontSize: '11px' }}>{rowOffset + idx + 1}</td>
-                  <td style={{ ...truncatedStyle, width: isFilterDrawerOpen ? 'auto' : '230px', fontWeight: 600, color: 'var(--ink)' }}>
+                  <td style={{ ...truncatedStyle, width: isFilterDrawerOpen ? '180px' : '230px', fontWeight: 600, color: 'var(--ink)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{
                         display: 'flex',
@@ -560,15 +560,15 @@ export default function CrmList({
                       {isExpanded && <span style={{ fontSize: '10px', color: 'var(--table-viewing-tag)', fontWeight: 500, marginLeft: 'auto', marginRight: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viewing Details</span>}
                     </div>
                   </td>
-                  <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ padding: '12px 10px', width: '140px' }} onClick={(e) => e.stopPropagation()}>
                     {renderDateCell(row, 'appointment', 'Appointment date and time')}
                   </td>
                   {!isFilterDrawerOpen && (
-                    <td style={{ padding: '12px 10px', width: '170px' }} onClick={(e) => e.stopPropagation()}>
+                    <td style={{ padding: '12px 10px', width: '140px' }} onClick={(e) => e.stopPropagation()}>
                       {renderDateCell(row, 'follow_up', 'Follow up date and time')}
                     </td>
                   )}
-                  <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ padding: '12px 10px', width: '90px' }} onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <CustomDropdown
                         value={row.priority || 'Low'}
@@ -583,7 +583,7 @@ export default function CrmList({
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: '12px 10px', width: '110px' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ padding: '12px 10px', width: '90px' }} onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <CustomDropdown
                         value={row.status || 'New'}
@@ -600,13 +600,13 @@ export default function CrmList({
                   </td>
                   {!isFilterDrawerOpen && (
                     <td
-                      style={{ ...truncatedStyle, width: '180px', fontSize: '12px', color: 'var(--table-remark)' }}
+                      style={{ ...truncatedStyle, width: '150px', fontSize: '12px', color: 'var(--table-remark)' }}
                       title={row.remarks || ''}
                     >
                       {row.remarks || '-'}
                     </td>
                   )}
-                  <td style={{ padding: '12px 10px', width: '120px' }} onClick={(e) => e.stopPropagation()}>
+                  <td style={{ padding: '12px 10px', width: '100px' }} onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       {canEdit && (
                         <button
