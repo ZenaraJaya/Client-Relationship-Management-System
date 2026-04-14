@@ -475,6 +475,8 @@ export default function CrmList({
     { value: 'Qualified', icon: '' },
     { value: 'Closed', icon: '' }
   ]
+  const hasRemarksColumn = !isFilterDrawerOpen
+  const expandedDetailsColSpan = hasRemarksColumn ? 9 : 8
 
   return (
     <div style={{ width: '100%' }}>
@@ -482,13 +484,13 @@ export default function CrmList({
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '22%' : '15%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '25%' : '13%' }} />
-          {!isFilterDrawerOpen && <col style={{ width: '13%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '14%' : '9%' }} />
-          <col style={{ width: isFilterDrawerOpen ? '16%' : '10%' }} />
-          {!isFilterDrawerOpen && <col style={{ width: '18%' }} />}
-          <col style={{ width: isFilterDrawerOpen ? '16%' : '15%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '20%' : '15%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '19%' : '13%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '19%' : '13%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '12%' : '9%' }} />
+          <col style={{ width: isFilterDrawerOpen ? '12%' : '10%' }} />
+          {hasRemarksColumn && <col style={{ width: '18%' }} />}
+          <col style={{ width: isFilterDrawerOpen ? '11%' : '15%' }} />
         </colgroup>
         <thead>
           <tr style={{ background: 'var(--table-head-bg)', borderBottom: '2px solid var(--table-head-border)' }}>
@@ -502,12 +504,10 @@ export default function CrmList({
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>No</th>
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Company Name</th>
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Appointment</th>
-            {!isFilterDrawerOpen && (
-              <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Follow Up</th>
-            )}
+            <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Follow Up</th>
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Priority</th>
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Status</th>
-            {!isFilterDrawerOpen && (
+            {hasRemarksColumn && (
               <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Remarks</th>
             )}
             <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--table-head-text)' }}>Actions</th>
@@ -562,11 +562,9 @@ export default function CrmList({
                   <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
                     {renderDateCell(row, 'appointment', 'Appointment date and time')}
                   </td>
-                  {!isFilterDrawerOpen && (
-                    <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
-                      {renderDateCell(row, 'follow_up', 'Follow up date and time')}
-                    </td>
-                  )}
+                  <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
+                    {renderDateCell(row, 'follow_up', 'Follow up date and time')}
+                  </td>
                   <td style={{ padding: '10px 8px' }} onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <CustomDropdown
@@ -591,7 +589,7 @@ export default function CrmList({
                       <div style={badgeStyle(statusColor(row.status), statusTextColor(row.status))}>{row.status || 'New'}</div>
                     )}
                   </td>
-                  {!isFilterDrawerOpen && (
+                  {hasRemarksColumn && (
                     <td style={{ ...truncatedStyle, fontSize: '11px', color: 'var(--table-remark)' }} title={row.remarks || ''}>
                       {row.remarks || '-'}
                     </td>
@@ -616,7 +614,7 @@ export default function CrmList({
                 </tr>
                 {isExpanded && (
                   <tr style={{ background: 'var(--table-row-expanded-bg)', borderBottom: '1px solid var(--table-head-border)' }}>
-                    <td colSpan="9" style={{ padding: '24px 40px 32px 60px' }}>
+                    <td colSpan={expandedDetailsColSpan} style={{ padding: '24px 40px 32px 60px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
                         {/* Contact Card */}
                         <div style={{ background: 'var(--table-expanded-card-bg)', padding: '20px', borderRadius: '12px', boxShadow: 'var(--table-expanded-card-shadow)', border: '1px solid var(--table-expanded-card-border)' }}>

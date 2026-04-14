@@ -161,9 +161,9 @@ export default function Home() {
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
   const [collapsedFilterGroups, setCollapsedFilterGroups] = useState({
     locations: false,
-    industries: false,
-    priorities: false,
-    statuses: false,
+    industries: true,
+    priorities: true,
+    statuses: true,
   })
   const [filterSearchTerm, setFilterSearchTerm] = useState('')
   const [serverPage, setServerPage] = useState(1)
@@ -1580,7 +1580,7 @@ export default function Home() {
           ) : null}
           <span className={`advanced-filter-group-chevron ${collapsedFilterGroups[field] ? '' : 'open'}`} aria-hidden="true">
             <svg viewBox="0 0 20 20" fill="none">
-              <path d="m6 8 4 4 4-4" />
+              <path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
         </span>
@@ -2660,4 +2660,3 @@ export default function Home() {
     </div>
   )
 }
-

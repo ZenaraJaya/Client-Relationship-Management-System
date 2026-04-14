@@ -3667,9 +3667,21 @@ td {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.advanced-filter-group-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .advanced-filter-group-chevron {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--ink-soft);
+}
+
+.advanced-filter-group-chevron svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .advanced-filter-group-chevron.open {
