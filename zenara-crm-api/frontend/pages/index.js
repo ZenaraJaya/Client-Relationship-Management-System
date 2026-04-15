@@ -23,6 +23,25 @@ const DEFAULT_COLLAPSED_FILTER_GROUPS = {
   priorities: true,
   statuses: true,
 }
+const DEFAULT_SORT_OPTION = 'none'
+const SORT_OPTIONS = [
+  { value: 'company-az', label: 'Company A-Z' },
+  { value: 'priority', label: 'Priority' },
+  { value: 'status', label: 'Status' },
+  { value: 'appointment-date', label: 'Appointment Date' },
+  { value: 'follow-up-overdue', label: 'Follow-up (overdue first)' },
+]
+const PRIORITY_SORT_ORDER = {
+  high: 0,
+  medium: 1,
+  low: 2,
+}
+const STATUS_SORT_ORDER = {
+  new: 0,
+  contacted: 1,
+  qualified: 2,
+  closed: 3,
+}
 
 const getSwitchUserLoginState = (overrides = {}) => ({
   open: false,
@@ -151,6 +170,39 @@ const toDateKey = (value) => {
   return `${year}-${month}-${day}`
 }
 
+const toComparableTimestamp = (value) => {
+  if (!value) return null
+
+  if (value instanceof Date) {
+    const timestamp = value.getTime()
+    return Number.isNaN(timestamp) ? null : timestamp
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+
+    const normalized = /^\d{4}-\d{2}-\d{2}\s/.test(trimmed) ? trimmed.replace(' ', 'T') : trimmed
+    const parsed = new Date(normalized)
+    const timestamp = parsed.getTime()
+    return Number.isNaN(timestamp) ? null : timestamp
+  }
+
+  if (value && typeof value.toDate === 'function') {
+    const parsed = value.toDate()
+    return toComparableTimestamp(parsed)
+  }
+
+  if (typeof value === 'object' && typeof value.seconds === 'number') {
+    const milliseconds = Number(value.seconds) * 1000
+    return Number.isFinite(milliseconds) ? milliseconds : null
+  }
+
+  return null
+}
+
+const compareCompanyNameAsc = (a, b) => (a.company_name || '').localeCompare(b.company_name || '')
+
 export default function Home() {
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || getDefaultApiBase()).replace(/\/+$/, '')
 
@@ -165,6 +217,8 @@ export default function Home() {
   const [searchCompany, setSearchCompany] = useState('')
   const [advancedFilters, setAdvancedFilters] = useState(DEFAULT_ADVANCED_FILTERS)
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
+  const [activeSortOption, setActiveSortOption] = useState(DEFAULT_SORT_OPTION)
+  const [sortMenuOpen, setSortMenuOpen] = useState(false)
   const [collapsedFilterGroups, setCollapsedFilterGroups] = useState(() => ({ ...DEFAULT_COLLAPSED_FILTER_GROUPS }))
   const [filterSearchTerm, setFilterSearchTerm] = useState('')
   const [serverPage, setServerPage] = useState(1)
@@ -223,6 +277,7 @@ export default function Home() {
   const authSuccessPreloaderTimerRef = useRef(null)
   const outlookPopupRef = useRef(null)
   const outlookPromptResolveRef = useRef(null)
+  const sortMenuRef = useRef(null)
   const dateFields = ['last_contact', 'appointment', 'follow_up']
 
   const notifyAuthTokenChanged = () => {
@@ -365,6 +420,8 @@ export default function Home() {
     setSearchCompany('')
     setAdvancedFilters(DEFAULT_ADVANCED_FILTERS)
     setAdvancedFiltersOpen(false)
+    setActiveSortOption(DEFAULT_SORT_OPTION)
+    setSortMenuOpen(false)
     setFilterSearchTerm('')
     setCurrentView('dashboard')
     setModalOpen(false)
@@ -1369,6 +1426,65 @@ export default function Home() {
       }),
     [items, searchKeyword, advancedFilters]
   )
+  const sortedItems = useMemo(() => {
+    if (activeSortOption === DEFAULT_SORT_OPTION) {
+      return filteredItems
+    }
+
+    const rows = [...filteredItems]
+
+    rows.sort((a, b) => {
+      if (activeSortOption === 'company-az') {
+        return compareCompanyNameAsc(a, b)
+      }
+
+      if (activeSortOption === 'priority') {
+        const priorityA = PRIORITY_SORT_ORDER[String(a?.priority || '').trim().toLowerCase()] ?? Number.MAX_SAFE_INTEGER
+        const priorityB = PRIORITY_SORT_ORDER[String(b?.priority || '').trim().toLowerCase()] ?? Number.MAX_SAFE_INTEGER
+        if (priorityA !== priorityB) return priorityA - priorityB
+        return compareCompanyNameAsc(a, b)
+      }
+
+      if (activeSortOption === 'status') {
+        const statusA = STATUS_SORT_ORDER[String(a?.status || '').trim().toLowerCase()] ?? Number.MAX_SAFE_INTEGER
+        const statusB = STATUS_SORT_ORDER[String(b?.status || '').trim().toLowerCase()] ?? Number.MAX_SAFE_INTEGER
+        if (statusA !== statusB) return statusA - statusB
+        return compareCompanyNameAsc(a, b)
+      }
+
+      if (activeSortOption === 'appointment-date') {
+        const appointmentA = toComparableTimestamp(a?.appointment)
+        const appointmentB = toComparableTimestamp(b?.appointment)
+
+        if (appointmentA === null && appointmentB === null) return compareCompanyNameAsc(a, b)
+        if (appointmentA === null) return 1
+        if (appointmentB === null) return -1
+        if (appointmentA !== appointmentB) return appointmentA - appointmentB
+        return compareCompanyNameAsc(a, b)
+      }
+
+      if (activeSortOption === 'follow-up-overdue') {
+        const now = Date.now()
+        const followUpA = toComparableTimestamp(a?.follow_up)
+        const followUpB = toComparableTimestamp(b?.follow_up)
+
+        const bucketA = followUpA === null ? 2 : (followUpA < now ? 0 : 1)
+        const bucketB = followUpB === null ? 2 : (followUpB < now ? 0 : 1)
+
+        if (bucketA !== bucketB) return bucketA - bucketB
+        if (followUpA !== null && followUpB !== null && followUpA !== followUpB) return followUpA - followUpB
+        return compareCompanyNameAsc(a, b)
+      }
+
+      return compareCompanyNameAsc(a, b)
+    })
+
+    return rows
+  }, [filteredItems, activeSortOption])
+  const activeSortLabel = useMemo(() => {
+    if (activeSortOption === DEFAULT_SORT_OPTION) return ''
+    return SORT_OPTIONS.find((option) => option.value === activeSortOption)?.label || ''
+  }, [activeSortOption])
 
   const activeFilterChips = useMemo(() => {
     const chips = []
@@ -1633,6 +1749,30 @@ export default function Home() {
       return next
     })
   }, [filteredItems])
+
+  useEffect(() => {
+    if (!sortMenuOpen) return undefined
+
+    const handlePointerDown = (event) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target)) {
+        setSortMenuOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setSortMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [sortMenuOpen])
 
   const hasVisibleFilterOptions = filterPanelGroups.some((group) => group.options.length > 0)
   const showFilterSearchEmptyState = Boolean(normalizedFilterSearchTerm) && !hasVisibleFilterOptions
@@ -2183,12 +2323,59 @@ export default function Home() {
                         </span>
                         <span>Filters</span>
                       </button>
-                      <button type="button" className="advanced-filters-sort" aria-label="Sort contacts">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <path d="M5 7h14M8 12h8M10 17h4" />
-                        </svg>
-                        <span>Sort</span>
-                      </button>
+                      <div className="advanced-filters-sort-wrap" ref={sortMenuRef}>
+                        <button
+                          type="button"
+                          className={`advanced-filters-sort ${activeSortOption !== DEFAULT_SORT_OPTION ? 'active' : ''}`.trim()}
+                          aria-label="Sort contacts"
+                          aria-expanded={sortMenuOpen}
+                          aria-haspopup="menu"
+                          onClick={() => setSortMenuOpen((prev) => !prev)}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M5 7h14M8 12h8M10 17h4" />
+                          </svg>
+                          <span>Sort</span>
+                        </button>
+                        {sortMenuOpen ? (
+                          <div className="advanced-sort-popover" role="menu" aria-label="Sort contacts">
+                            <div className="advanced-sort-popover-head">Sort by</div>
+                            <div className="advanced-sort-option-list">
+                              {SORT_OPTIONS.map((option) => (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  className={`advanced-sort-option ${activeSortOption === option.value ? 'active' : ''}`.trim()}
+                                  onClick={() => {
+                                    setActiveSortOption(option.value)
+                                    setSortMenuOpen(false)
+                                  }}
+                                >
+                                  <span>{option.label}</span>
+                                  {activeSortOption === option.value ? (
+                                    <span className="advanced-sort-option-check" aria-hidden="true">
+                                      <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="m5 13 4 4L19 7" />
+                                      </svg>
+                                    </span>
+                                  ) : null}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              className="advanced-sort-clear"
+                              onClick={() => {
+                                setActiveSortOption(DEFAULT_SORT_OPTION)
+                                setSortMenuOpen(false)
+                              }}
+                              disabled={activeSortOption === DEFAULT_SORT_OPTION}
+                            >
+                              Clear sort
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                     {hasAnyAdvancedFilters && (
                       <div className="advanced-filters-toolbar-chips advanced-filters-toolbar-chips-inline" aria-label="Active filters">
@@ -2206,7 +2393,8 @@ export default function Home() {
                       </div>
                     )}
                     <div className="advanced-filters-summary">
-                      Showing {filteredItems.length} of {items.length} contacts
+                      Showing {sortedItems.length} of {items.length} contacts
+                      {activeSortLabel ? <span className="advanced-filters-sort-summary"> | Sorted: {activeSortLabel}</span> : null}
                     </div>
                   </div>
                 </div>
@@ -2216,7 +2404,7 @@ export default function Home() {
                 {!loading && (
                   <div style={{ marginTop: 12, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     <CrmList
-                      items={filteredItems}
+                      items={sortedItems}
                       minVisibleRows={items.length}
                       emptyMessage={
                         searchKeyword || hasAnyAdvancedFilters
