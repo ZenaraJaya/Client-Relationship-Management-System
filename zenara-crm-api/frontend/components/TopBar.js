@@ -147,6 +147,8 @@ export default function TopBar({
   }, [readNotificationIds])
 
   useEffect(() => {
+    if (!Array.isArray(notifications) || notifications.length === 0) return
+
     const validIds = new Set(notifications.map((notification) => String(notification.id)))
 
     setReadNotificationIds((prev) => {
@@ -165,7 +167,7 @@ export default function TopBar({
 
       return changed ? next : prev
     })
-  }, [notifications, readNotificationIds])
+  }, [notifications])
 
   const handleThemeToggle = () => {
     if (typeof window === 'undefined') return
