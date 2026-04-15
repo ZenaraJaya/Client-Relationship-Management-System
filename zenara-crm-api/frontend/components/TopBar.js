@@ -1,4 +1,60 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+
+const formatRelativeTime = (value) => {
+  if (!value) return ''
+
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const deltaMs = date.getTime() - Date.now()
+  const absoluteMs = Math.abs(deltaMs)
+  if (absoluteMs < 60 * 1000) return 'just now'
+
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+  const units = [
+    { unit: 'day', ms: 24 * 60 * 60 * 1000 },
+    { unit: 'hour', ms: 60 * 60 * 1000 },
+    { unit: 'minute', ms: 60 * 1000 },
+  ]
+
+  for (const entry of units) {
+    if (absoluteMs >= entry.ms) {
+      return rtf.format(Math.round(deltaMs / entry.ms), entry.unit)
+    }
+  }
+
+  return 'just now'
+}
+
+const NotificationTypeIcon = ({ type }) => {
+  if (type === 'follow-up-due') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.86 19.86 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.8 12.8 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.8 12.8 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+      </svg>
+    )
+  }
+
+  if (type === 'status-change') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 12a8 8 0 0 1 13.66-5.66L20 9"></path>
+        <path d="M20 4v5h-5"></path>
+        <path d="M20 12a8 8 0 0 1-13.66 5.66L4 15"></path>
+        <path d="M4 20v-5h5"></path>
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+  )
+}
 
 export default function TopBar({
   searchCompany = '',
@@ -9,8 +65,12 @@ export default function TopBar({
   onToggleFilters = () => {},
   filtersOpen = false,
   activeFilterCount = 0,
+  notifications = [],
 }) {
   const [theme, setTheme] = useState('light')
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [readNotificationIds, setReadNotificationIds] = useState({})
+  const notificationsRef = useRef(null)
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return undefined
@@ -34,10 +94,75 @@ export default function TopBar({
     }
   }, [])
 
+  useEffect(() => {
+    if (!notificationsOpen) return undefined
+
+    const handleClickOutside = (event) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setNotificationsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [notificationsOpen])
+
+  useEffect(() => {
+    const validIds = new Set(notifications.map((notification) => String(notification.id)))
+
+    setReadNotificationIds((prev) => {
+      if (Object.keys(prev).length === 0) return prev
+
+      let changed = false
+      const next = {}
+
+      Object.entries(prev).forEach(([id, value]) => {
+        if (validIds.has(id)) {
+          next[id] = value
+        } else {
+          changed = true
+        }
+      })
+
+      return changed ? next : prev
+    })
+  }, [notifications])
+
   const handleThemeToggle = () => {
     if (typeof window === 'undefined') return
     window.dispatchEvent(new Event('zenara:theme-toggle-request'))
   }
+
+  const handleNotificationsToggle = () => {
+    setNotificationsOpen((prev) => !prev)
+  }
+
+  const handleMarkAllRead = () => {
+    if (!Array.isArray(notifications) || notifications.length === 0) return
+
+    setReadNotificationIds((prev) => {
+      const next = { ...prev }
+      notifications.forEach((notification) => {
+        next[String(notification.id)] = true
+      })
+      return next
+    })
+  }
+
+  const unreadCount = notifications.reduce((count, notification) => {
+    return count + (readNotificationIds[String(notification.id)] ? 0 : 1)
+  }, 0)
 
   return (
     <header className="topbar premium-topbar">
@@ -71,19 +196,77 @@ export default function TopBar({
       </div>
 
       <div className="command-right">
-        <button type="button" className="topbar-icon-btn" aria-label="Notifications">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M9.8 20a2.2 2.2 0 0 0 4.4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          <span className="topbar-icon-alert" aria-hidden="true" />
-        </button>
+        <div className="topbar-notifications" ref={notificationsRef}>
+          <button
+            type="button"
+            className="topbar-icon-btn"
+            aria-label="Notifications"
+            aria-expanded={notificationsOpen}
+            aria-haspopup="dialog"
+            onClick={handleNotificationsToggle}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M9.8 20a2.2 2.2 0 0 0 4.4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            {unreadCount > 0 ? <span className="topbar-icon-alert" aria-hidden="true" /> : null}
+          </button>
+
+          {notificationsOpen ? (
+            <div className="topbar-notification-panel" role="dialog" aria-label="Notifications panel">
+              <div className="topbar-notification-head">
+                <h4>Notifications</h4>
+                <button
+                  type="button"
+                  className="topbar-notification-mark-read"
+                  onClick={handleMarkAllRead}
+                  disabled={unreadCount === 0}
+                >
+                  Mark all read
+                </button>
+              </div>
+
+              {notifications.length === 0 ? (
+                <p className="topbar-notification-empty">No new notifications right now.</p>
+              ) : (
+                <ul className="topbar-notification-list">
+                  {notifications.map((notification) => {
+                    const notificationId = String(notification.id)
+                    const isUnread = !readNotificationIds[notificationId]
+
+                    return (
+                      <li
+                        key={notificationId}
+                        className={`topbar-notification-item ${isUnread ? 'is-unread' : ''}`.trim()}
+                      >
+                        <span className={`topbar-notification-type-icon type-${notification.type}`.trim()}>
+                          <NotificationTypeIcon type={notification.type} />
+                        </span>
+
+                        <div className="topbar-notification-copy">
+                          <div className="topbar-notification-title">{notification.title}</div>
+                          <div className="topbar-notification-meta">
+                            <span className="topbar-notification-subtitle">{notification.subtitle}</span>
+                            <span className="topbar-notification-sep">|</span>
+                            <span className="topbar-notification-time">{formatRelativeTime(notification.timestamp)}</span>
+                          </div>
+                        </div>
+
+                        {isUnread ? <span className="topbar-notification-unread-dot" aria-hidden="true" /> : null}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          ) : null}
+        </div>
 
         <button
           type="button"

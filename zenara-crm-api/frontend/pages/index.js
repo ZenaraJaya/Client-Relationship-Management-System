@@ -1678,6 +1678,65 @@ export default function Home() {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
   const nextSevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const topbarNotifications = useMemo(() => {
+    const rows = []
+    const referenceNow = new Date()
+    const todayStart = new Date(referenceNow.getFullYear(), referenceNow.getMonth(), referenceNow.getDate())
+    const todayEnd = new Date(referenceNow.getFullYear(), referenceNow.getMonth(), referenceNow.getDate(), 23, 59, 59, 999)
+    const followUpWindowStart = new Date(todayStart.getTime() - 14 * 24 * 60 * 60 * 1000)
+    const appointmentReminderWindow = new Date(referenceNow.getTime() + 48 * 60 * 60 * 1000)
+    const statusRecentWindow = new Date(referenceNow.getTime() - 72 * 60 * 60 * 1000)
+
+    items.forEach((item) => {
+      const baseId = item?.id ?? `${item?.company_name || 'contact'}-${item?.contact_person || ''}`
+      const contactName = item.contact_person || item.company_name || 'Unnamed contact'
+      const companyName = item.company_name || 'Unnamed company'
+
+      const followUpDate = toDate(item.follow_up)
+      if (followUpDate && followUpDate >= followUpWindowStart && followUpDate <= todayEnd) {
+        rows.push({
+          id: `${baseId}-follow-up-${followUpDate.toISOString()}`,
+          type: 'follow-up-due',
+          title: `${followUpDate < todayStart ? 'Overdue follow-up' : 'Follow-up due today'}: ${contactName}`,
+          subtitle: companyName,
+          timestamp: followUpDate.toISOString(),
+        })
+      }
+
+      const appointmentDate = toDate(item.appointment)
+      if (appointmentDate && appointmentDate >= referenceNow && appointmentDate <= appointmentReminderWindow) {
+        rows.push({
+          id: `${baseId}-appointment-${appointmentDate.toISOString()}`,
+          type: 'appointment-reminder',
+          title: `Appointment reminder: ${contactName}`,
+          subtitle: companyName,
+          timestamp: appointmentDate.toISOString(),
+        })
+      }
+
+      const statusLabel = String(item.status || '').trim()
+      const statusUpdatedAt = toDate(item.status_updated_at || item.status_changed_at || item.updated_at)
+      const createdAt = toDate(item.created_at)
+      const likelyStatusChange = Boolean(statusLabel) &&
+        statusUpdatedAt &&
+        statusUpdatedAt >= statusRecentWindow &&
+        (!createdAt || Math.abs(statusUpdatedAt.getTime() - createdAt.getTime()) > 60 * 1000)
+
+      if (likelyStatusChange) {
+        rows.push({
+          id: `${baseId}-status-${statusLabel.toLowerCase()}-${statusUpdatedAt.toISOString()}`,
+          type: 'status-change',
+          title: `Status changed to ${statusLabel}: ${contactName}`,
+          subtitle: companyName,
+          timestamp: statusUpdatedAt.toISOString(),
+        })
+      }
+    })
+
+    return rows
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 12)
+  }, [items])
 
   const activeDealClients = items
     .filter((item) => item.status === 'Qualified')
@@ -1997,6 +2056,7 @@ export default function Home() {
             setSelectedIds([])
             setServerPage(1)
           }}
+          notifications={topbarNotifications}
           showFilterToggle={false}
           canQuickAdd={isAdmin}
           onQuickAdd={() => {
