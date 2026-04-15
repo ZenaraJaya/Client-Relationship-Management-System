@@ -2430,9 +2430,9 @@ td {
 }
 
 .crm-contact-toggle-button.is-priority-low {
-  background: #e5f2ec;
-  border-color: rgba(27, 107, 74, 0.3);
-  color: #1b6b4a;
+  background: #fef2f2;
+  border-color: rgba(185, 28, 28, 0.3);
+  color: #b91c1c;
 }
 
 .crm-contact-toggle-button.is-status-new {
@@ -4704,9 +4704,12 @@ td {
   background: #2a1c00;
 }
 
-[data-theme='dark'] .crm-contact-toggle-button.is-priority-low,
 [data-theme='dark'] .crm-contact-toggle-button.is-status-qualified {
   background: #0d2e1e;
+}
+
+[data-theme='dark'] .crm-contact-toggle-button.is-priority-low {
+  background: #2e0e0e;
 }
 
 [data-theme='dark'] .crm-contact-toggle-button.is-status-new {
