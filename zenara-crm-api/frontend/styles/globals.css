@@ -1201,6 +1201,10 @@ td {
   color: #dc3f3f;
 }
 
+.sidebar .sidebar-logout-btn .nav-icon {
+  color: inherit;
+}
+
 .sidebar-logout-btn:hover {
   background: #fff0ef;
   color: #b62020;
