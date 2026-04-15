@@ -1371,13 +1371,15 @@ td {
   justify-content: center;
   font-size: 0.71rem;
   font-weight: 800;
-  background: rgba(31, 122, 99, 0.16);
-  color: #0f766e;
+  background: rgba(239, 68, 68, 0.16);
+  color: #b91c1c;
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.26);
 }
 
 .topbar-filter-btn.active .topbar-filter-count {
-  background: rgba(255, 255, 255, 0.24);
-  color: #ffffff;
+  background: rgba(248, 113, 113, 0.28);
+  color: #fff1f2;
+  box-shadow: inset 0 0 0 1px rgba(255, 228, 230, 0.24);
 }
 
 .outlook-connect-btn {
@@ -3225,8 +3227,8 @@ td {
   height: 18px;
   border-radius: 999px;
   padding: 0 5px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #f3f9ff;
+  background: rgba(127, 29, 29, 0.28);
+  color: #fff1f2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4163,8 +4165,9 @@ td {
 }
 
 [data-theme='dark'] .topbar-filter-count {
-  background: rgba(97, 179, 153, 0.25);
-  color: #bff5e3;
+  background: rgba(248, 113, 113, 0.24);
+  color: #fecdd3;
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.26);
 }
 
 [data-theme='dark'] .advanced-filters-bar {
@@ -4192,7 +4195,8 @@ td {
 }
 
 [data-theme='dark'] .advanced-filters-toggle-count {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(248, 113, 113, 0.3);
+  color: #ffe4e6;
 }
 
 [data-theme='dark'] .advanced-filters-sort {
