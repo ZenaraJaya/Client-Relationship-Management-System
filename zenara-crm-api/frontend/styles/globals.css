@@ -3672,9 +3672,9 @@ td {
 }
 
 .advanced-filter-group-meta {
-  background: #e7f7ee;
-  color: #157347;
-  border: 1px solid #b6e5cb;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
   padding: 1px 7px;
   border-radius: 20px;
   font-size: 0.66rem;
@@ -3694,9 +3694,9 @@ td {
 }
 
 .advanced-filter-group-meta.active {
-  background: #d8f3e4;
-  color: #0f6f43;
-  border-color: #84d7ad;
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
 }
 
 .advanced-filter-group-head-right {
@@ -4340,15 +4340,15 @@ td {
 }
 
 [data-theme='dark'] .advanced-filter-group-meta {
-  background: #1c2e3e;
-  border-color: #36536a;
-  color: #95aabd;
+  background: #3f1a1a;
+  border-color: #7f1d1d;
+  color: #fca5a5;
 }
 
 [data-theme='dark'] .advanced-filter-group-meta.active {
-  background: #1e7f48;
-  border-color: #1e7f48;
-  color: #e7fff1;
+  background: #991b1b;
+  border-color: #b91c1c;
+  color: #fff1f2;
 }
 
 [data-theme='dark'] .advanced-filter-option {
