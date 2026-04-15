@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 
+const NOTIFICATION_READS_STORAGE_KEY = 'zenara_crm_notification_reads'
+
 const formatRelativeTime = (value) => {
   if (!value) return ''
 
@@ -119,6 +121,32 @@ export default function TopBar({
   }, [notificationsOpen])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      const raw = window.localStorage.getItem(NOTIFICATION_READS_STORAGE_KEY)
+      if (!raw) return
+
+      const parsed = JSON.parse(raw)
+      if (!parsed || typeof parsed !== 'object') return
+
+      setReadNotificationIds(parsed)
+    } catch {
+      // Ignore parse/storage errors and continue with in-memory state.
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      window.localStorage.setItem(NOTIFICATION_READS_STORAGE_KEY, JSON.stringify(readNotificationIds))
+    } catch {
+      // Ignore storage write errors.
+    }
+  }, [readNotificationIds])
+
+  useEffect(() => {
     const validIds = new Set(notifications.map((notification) => String(notification.id)))
 
     setReadNotificationIds((prev) => {
@@ -137,7 +165,7 @@ export default function TopBar({
 
       return changed ? next : prev
     })
-  }, [notifications])
+  }, [notifications, readNotificationIds])
 
   const handleThemeToggle = () => {
     if (typeof window === 'undefined') return
