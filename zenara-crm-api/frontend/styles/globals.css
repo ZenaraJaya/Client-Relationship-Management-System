@@ -1291,22 +1291,24 @@ td {
 .topbar-icon-btn {
   width: 40px;
   height: 40px;
-  border: 1px solid #d6dfdc;
+  border: 1.5px solid #1D9E75;
   border-radius: 10px;
-  background: #ffffff;
-  color: #6a7c76;
+  background: transparent;
+  color: #0F6E56;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   position: relative;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .topbar-icon-btn:hover {
   transform: translateY(-1px);
-  border-color: #b6cbc2;
-  box-shadow: 0 8px 14px rgba(17, 35, 31, 0.08);
+  border-color: #1D9E75;
+  color: #0F6E56;
+  background: rgba(29, 158, 117, 0.08);
+  box-shadow: 0 8px 14px rgba(15, 110, 86, 0.12);
 }
 
 .topbar-icon-alert {
@@ -1321,22 +1323,25 @@ td {
 }
 
 .topbar-action-btn {
-  border: 0;
+  border: 1.5px solid #1D9E75;
   border-radius: 999px;
   padding: 11px 18px;
-  background: linear-gradient(135deg, #1f7a63, #296554);
-  color: #f5fffa;
+  background: transparent;
+  color: #0F6E56;
   font-size: 0.98rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  box-shadow: 0 10px 20px rgba(31, 122, 99, 0.24);
+  box-shadow: none;
   cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .topbar-action-btn:hover {
   transform: translateY(-1px);
-  filter: brightness(1.03);
+  border-color: #1D9E75;
+  color: #0F6E56;
+  background: rgba(29, 158, 117, 0.08);
+  box-shadow: 0 8px 14px rgba(15, 110, 86, 0.12);
 }
 
 .topbar-filter-btn {
@@ -4199,20 +4204,23 @@ td {
 }
 
 [data-theme='dark'] .topbar-action-btn {
-  background: linear-gradient(135deg, #1f7a63, #1f5f4d);
-  color: #e6f8f1;
-  box-shadow: 0 10px 20px rgba(12, 74, 62, 0.34);
+  border-color: #1D9E75;
+  background: transparent;
+  color: #0F6E56;
+  box-shadow: none;
 }
 
 [data-theme='dark'] .topbar-icon-btn {
-  border-color: #355064;
-  background: #132533;
-  color: #b4cad8;
+  border-color: #1D9E75;
+  background: transparent;
+  color: #0F6E56;
 }
 
 [data-theme='dark'] .topbar-icon-btn:hover {
-  border-color: #55758a;
-  box-shadow: 0 8px 14px rgba(2, 6, 23, 0.34);
+  border-color: #1D9E75;
+  color: #0F6E56;
+  background: rgba(29, 158, 117, 0.1);
+  box-shadow: 0 8px 14px rgba(15, 110, 86, 0.14);
 }
 
 [data-theme='dark'] .topbar-icon-alert {
