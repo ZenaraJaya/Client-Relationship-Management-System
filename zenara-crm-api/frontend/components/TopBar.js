@@ -160,9 +160,8 @@ export default function TopBar({
     })
   }
 
-  const unreadCount = notifications.reduce((count, notification) => {
-    return count + (readNotificationIds[String(notification.id)] ? 0 : 1)
-  }, 0)
+  const unreadNotifications = notifications.filter((notification) => !readNotificationIds[String(notification.id)])
+  const unreadCount = unreadNotifications.length
 
   return (
     <header className="topbar premium-topbar">
@@ -232,19 +231,15 @@ export default function TopBar({
                 </button>
               </div>
 
-              {notifications.length === 0 ? (
+              {unreadNotifications.length === 0 ? (
                 <p className="topbar-notification-empty">No new notifications right now.</p>
               ) : (
                 <ul className="topbar-notification-list">
-                  {notifications.map((notification) => {
+                  {unreadNotifications.map((notification) => {
                     const notificationId = String(notification.id)
-                    const isUnread = !readNotificationIds[notificationId]
 
                     return (
-                      <li
-                        key={notificationId}
-                        className={`topbar-notification-item ${isUnread ? 'is-unread' : ''}`.trim()}
-                      >
+                      <li key={notificationId} className="topbar-notification-item is-unread">
                         <span className={`topbar-notification-type-icon type-${notification.type}`.trim()}>
                           <NotificationTypeIcon type={notification.type} />
                         </span>
@@ -258,7 +253,7 @@ export default function TopBar({
                           </div>
                         </div>
 
-                        {isUnread ? <span className="topbar-notification-unread-dot" aria-hidden="true" /> : null}
+                        <span className="topbar-notification-unread-dot" aria-hidden="true" />
                       </li>
                     )
                   })}
