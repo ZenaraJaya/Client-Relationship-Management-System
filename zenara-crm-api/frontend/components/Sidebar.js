@@ -322,7 +322,6 @@ export default function Sidebar({
       </div>
 
       <nav className="nav" aria-label="Main navigation">
-        <div className="nav-section-label">Main</div>
         {navItems.map((item) => (
           <button
             key={item.id}
