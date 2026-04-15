@@ -1397,6 +1397,15 @@ export default function Home() {
 
   const activeAdvancedFilterCount = activeFilterChips.length
   const hasAnyAdvancedFilters = activeAdvancedFilterCount > 0
+  const filterChipToneClass = {
+    locations: 'advanced-filter-chip-location',
+    industries: 'advanced-filter-chip-industry',
+    statuses: 'advanced-filter-chip-status',
+    priorities: 'advanced-filter-chip-priority',
+    sources: 'advanced-filter-chip-source',
+    appointment: 'advanced-filter-chip-appointment',
+    followUp: 'advanced-filter-chip-follow-up',
+  }
   const canResetAdvancedFilters = hasAnyAdvancedFilters || Boolean(normalizedFilterSearchTerm)
   const liveApplyResultsLabel = `${filteredItems.length} result${filteredItems.length === 1 ? '' : 's'}`
   const renderFilterGroupIcon = (iconClass) => {
@@ -2127,7 +2136,7 @@ export default function Home() {
                           <button
                             key={chip.id}
                             type="button"
-                            className="advanced-filter-chip"
+                            className={`advanced-filter-chip ${filterChipToneClass[chip.field] || ''}`.trim()}
                             onClick={() => removeAdvancedFilterChip(chip.field, chip.value)}
                           >
                             <span>{chip.label}</span>

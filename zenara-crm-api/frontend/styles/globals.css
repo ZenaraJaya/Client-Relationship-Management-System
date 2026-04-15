@@ -3421,9 +3421,14 @@ td {
 }
 
 .advanced-filter-chip {
-  border: 1px solid #cfd9e8;
-  background: #f3f7fd;
-  color: #2d5078;
+  --chip-border: #cfd9e8;
+  --chip-bg: #f3f7fd;
+  --chip-text: #2d5078;
+  --chip-close-bg: rgba(47, 119, 196, 0.16);
+  --chip-close-text: #2f77c4;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-text);
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 0.76rem;
@@ -3448,8 +3453,64 @@ td {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  background: rgba(47, 119, 196, 0.16);
-  color: #2f77c4;
+  background: var(--chip-close-bg);
+  color: var(--chip-close-text);
+}
+
+.advanced-filter-chip-location {
+  --chip-border: #bfdbfe;
+  --chip-bg: #eff6ff;
+  --chip-text: #1d4ed8;
+  --chip-close-bg: rgba(59, 130, 246, 0.18);
+  --chip-close-text: #1d4ed8;
+}
+
+.advanced-filter-chip-industry {
+  --chip-border: #d8b4fe;
+  --chip-bg: #f5f3ff;
+  --chip-text: #6d28d9;
+  --chip-close-bg: rgba(139, 92, 246, 0.18);
+  --chip-close-text: #7c3aed;
+}
+
+.advanced-filter-chip-status {
+  --chip-border: #fed7aa;
+  --chip-bg: #fff7ed;
+  --chip-text: #c2410c;
+  --chip-close-bg: rgba(234, 88, 12, 0.16);
+  --chip-close-text: #c2410c;
+}
+
+.advanced-filter-chip-priority {
+  --chip-border: #fecdd3;
+  --chip-bg: #fff1f2;
+  --chip-text: #be123c;
+  --chip-close-bg: rgba(244, 63, 94, 0.18);
+  --chip-close-text: #be123c;
+}
+
+.advanced-filter-chip-source {
+  --chip-border: #a7f3d0;
+  --chip-bg: #ecfdf5;
+  --chip-text: #047857;
+  --chip-close-bg: rgba(16, 185, 129, 0.2);
+  --chip-close-text: #047857;
+}
+
+.advanced-filter-chip-appointment {
+  --chip-border: #a5f3fc;
+  --chip-bg: #ecfeff;
+  --chip-text: #0e7490;
+  --chip-close-bg: rgba(6, 182, 212, 0.18);
+  --chip-close-text: #0e7490;
+}
+
+.advanced-filter-chip-follow-up {
+  --chip-border: #fde68a;
+  --chip-bg: #fefce8;
+  --chip-text: #a16207;
+  --chip-close-bg: rgba(245, 158, 11, 0.2);
+  --chip-close-text: #a16207;
 }
 
 .advanced-filters-shell {
@@ -4287,14 +4348,75 @@ td {
 }
 
 [data-theme='dark'] .advanced-filter-chip {
-  border-color: #315173;
-  background: #163252;
-  color: #bfd8f1;
+  --chip-border: #315173;
+  --chip-bg: #163252;
+  --chip-text: #bfd8f1;
+  --chip-close-bg: rgba(111, 176, 238, 0.2);
+  --chip-close-text: #a8cff7;
+  border-color: var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-text);
 }
 
 [data-theme='dark'] .advanced-filter-chip-close {
-  background: rgba(111, 176, 238, 0.2);
-  color: #a8cff7;
+  background: var(--chip-close-bg);
+  color: var(--chip-close-text);
+}
+
+[data-theme='dark'] .advanced-filter-chip-location {
+  --chip-border: #1d4ed8;
+  --chip-bg: #172554;
+  --chip-text: #bfdbfe;
+  --chip-close-bg: rgba(59, 130, 246, 0.24);
+  --chip-close-text: #dbeafe;
+}
+
+[data-theme='dark'] .advanced-filter-chip-industry {
+  --chip-border: #7c3aed;
+  --chip-bg: #312e81;
+  --chip-text: #ddd6fe;
+  --chip-close-bg: rgba(139, 92, 246, 0.24);
+  --chip-close-text: #ede9fe;
+}
+
+[data-theme='dark'] .advanced-filter-chip-status {
+  --chip-border: #c2410c;
+  --chip-bg: #431407;
+  --chip-text: #fdba74;
+  --chip-close-bg: rgba(249, 115, 22, 0.25);
+  --chip-close-text: #fed7aa;
+}
+
+[data-theme='dark'] .advanced-filter-chip-priority {
+  --chip-border: #be123c;
+  --chip-bg: #4c0519;
+  --chip-text: #fda4af;
+  --chip-close-bg: rgba(244, 63, 94, 0.26);
+  --chip-close-text: #ffe4e6;
+}
+
+[data-theme='dark'] .advanced-filter-chip-source {
+  --chip-border: #0f766e;
+  --chip-bg: #052e2b;
+  --chip-text: #99f6e4;
+  --chip-close-bg: rgba(20, 184, 166, 0.24);
+  --chip-close-text: #ccfbf1;
+}
+
+[data-theme='dark'] .advanced-filter-chip-appointment {
+  --chip-border: #0e7490;
+  --chip-bg: #083344;
+  --chip-text: #a5f3fc;
+  --chip-close-bg: rgba(34, 211, 238, 0.22);
+  --chip-close-text: #cffafe;
+}
+
+[data-theme='dark'] .advanced-filter-chip-follow-up {
+  --chip-border: #a16207;
+  --chip-bg: #422006;
+  --chip-text: #fcd34d;
+  --chip-close-bg: rgba(245, 158, 11, 0.24);
+  --chip-close-text: #fef3c7;
 }
 
 [data-theme='dark'] .advanced-filter-option-select-all {
