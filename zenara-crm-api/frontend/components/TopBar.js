@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 export default function TopBar({
   searchCompany = '',
@@ -10,6 +10,35 @@ export default function TopBar({
   filtersOpen = false,
   activeFilterCount = 0,
 }) {
+  const [theme, setTheme] = useState('light')
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return undefined
+
+    const syncTheme = (event) => {
+      const nextTheme = event?.detail?.theme
+      if (nextTheme === 'dark' || nextTheme === 'light') {
+        setTheme(nextTheme)
+        return
+      }
+
+      const currentTheme = document.documentElement.getAttribute('data-theme')
+      setTheme(currentTheme === 'dark' ? 'dark' : 'light')
+    }
+
+    syncTheme()
+    window.addEventListener('zenara:theme-changed', syncTheme)
+
+    return () => {
+      window.removeEventListener('zenara:theme-changed', syncTheme)
+    }
+  }, [])
+
+  const handleThemeToggle = () => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new Event('zenara:theme-toggle-request'))
+  }
+
   return (
     <header className="topbar premium-topbar">
       <div className="command-left">
@@ -56,16 +85,34 @@ export default function TopBar({
           <span className="topbar-icon-alert" aria-hidden="true" />
         </button>
 
-        <button type="button" className="topbar-icon-btn" aria-label="Display settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.8" />
-            <path
-              d="M12 2.8v2.3M12 18.9v2.3M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M2.8 12h2.3M18.9 12h2.3M4.8 19.2l1.6-1.6M17.6 6.4l1.6-1.6"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
+        <button
+          type="button"
+          className="topbar-icon-btn"
+          onClick={handleThemeToggle}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to night mode'}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to night mode'}
+        >
+          {theme === 'dark' ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="1.8" />
+              <path
+                d="M12 2.8v2.3M12 18.9v2.3M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M2.8 12h2.3M18.9 12h2.3M4.8 19.2l1.6-1.6M17.6 6.4l1.6-1.6"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
         </button>
 
         {canQuickAdd && (

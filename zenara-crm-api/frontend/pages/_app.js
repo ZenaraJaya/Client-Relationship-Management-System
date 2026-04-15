@@ -24,7 +24,26 @@ export default function App({ Component, pageProps }) {
     document.documentElement.setAttribute('data-theme', theme)
     document.body.setAttribute('data-theme', theme)
     window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+    window.dispatchEvent(
+      new CustomEvent('zenara:theme-changed', {
+        detail: { theme },
+      })
+    )
   }, [theme, themeReady])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const handleThemeToggleRequest = () => {
+      setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+    }
+
+    window.addEventListener('zenara:theme-toggle-request', handleThemeToggleRequest)
+
+    return () => {
+      window.removeEventListener('zenara:theme-toggle-request', handleThemeToggleRequest)
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
