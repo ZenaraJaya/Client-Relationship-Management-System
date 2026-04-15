@@ -932,7 +932,7 @@ td {
   width: 34px;
   height: 34px;
   min-width: 34px;
-  border-radius: 10px;
+  border-radius: 999px;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
