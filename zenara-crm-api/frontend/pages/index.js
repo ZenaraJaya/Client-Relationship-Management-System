@@ -2113,9 +2113,6 @@ export default function Home() {
                           </svg>
                         </span>
                         <span>Filters</span>
-                        {activeAdvancedFilterCount > 0 && (
-                          <span className="advanced-filters-toggle-count">{activeAdvancedFilterCount}</span>
-                        )}
                       </button>
                       <button type="button" className="advanced-filters-sort" aria-label="Sort contacts">
                         <svg viewBox="0 0 24 24" fill="none">
