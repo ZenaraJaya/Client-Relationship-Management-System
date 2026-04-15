@@ -30,6 +30,7 @@ class CrmAdminAuthorizationTest extends TestCase
             'role' => 'staff',
         ]);
         $crm = Crm::create([
+            'user_id' => $staff->id,
             'company_name' => 'Original Company',
         ]);
 
@@ -55,6 +56,7 @@ class CrmAdminAuthorizationTest extends TestCase
             'role' => 'staff',
         ]);
         $crm = Crm::create([
+            'user_id' => $staff->id,
             'company_name' => 'Delete Protected Company',
         ]);
 
@@ -79,6 +81,7 @@ class CrmAdminAuthorizationTest extends TestCase
             'role' => 'admin',
         ]);
         $crm = Crm::create([
+            'user_id' => $admin->id,
             'company_name' => 'Admin Managed Company',
         ]);
 

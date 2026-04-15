@@ -96,9 +96,49 @@ class CrmController extends Controller
         return $payload;
     }
 
-    protected function findCrm(int|string $id): ?Crm
+    protected function authenticatedUserId(): ?int
     {
-        return Crm::find($id);
+        $authId = auth()->id();
+        return is_numeric($authId) ? (int) $authId : null;
+    }
+
+    protected function normalizeUserId(mixed $value): ?int
+    {
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    protected function isOwnedByAuthenticatedUser(mixed $ownerId): bool
+    {
+        $authUserId = $this->authenticatedUserId();
+        if ($authUserId === null) {
+            return false;
+        }
+
+        return $this->normalizeUserId($ownerId) === $authUserId;
+    }
+
+    protected function ownedCrmsQuery()
+    {
+        $authUserId = $this->authenticatedUserId();
+        if ($authUserId === null) {
+            return Crm::query()->whereRaw('1 = 0');
+        }
+
+        return Crm::query()->where('user_id', $authUserId);
+    }
+
+    protected function filterOwnedFirestoreCrms(array $records): array
+    {
+        return array_values(array_filter(
+            $records,
+            fn ($record): bool => is_array($record)
+                && $this->isOwnedByAuthenticatedUser($record['user_id'] ?? null)
+        ));
+    }
+
+    protected function findOwnedCrm(int|string $id): ?Crm
+    {
+        return $this->ownedCrmsQuery()->find($id);
     }
 
     protected function ensureAdmin(string $message = 'Only admin users can perform this action.'): ?JsonResponse
@@ -186,6 +226,8 @@ class CrmController extends Controller
         if ($this->firestore->isConfigured()) {
             $firestoreCrms = $this->firestore->list();
             if (is_array($firestoreCrms)) {
+                $firestoreCrms = $this->filterOwnedFirestoreCrms($firestoreCrms);
+
                 if ($search !== '') {
                     $firestoreCrms = array_values(array_filter(
                         $firestoreCrms,
@@ -198,7 +240,7 @@ class CrmController extends Controller
             }
         }
 
-        $crmsQuery = Crm::query();
+        $crmsQuery = $this->ownedCrmsQuery();
         if ($search !== '') {
             $searchLike = '%' . $search . '%';
             $searchFields = $this->searchableCrmFields();
@@ -245,11 +287,12 @@ class CrmController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $authId = auth()->id();
-        if (is_numeric($authId)) {
-            // Keep creator metadata while sharing the same dataset across users.
-            $data['user_id'] = (int) $authId;
+        $authUserId = $this->authenticatedUserId();
+        if ($authUserId === null) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
+        $data['user_id'] = $authUserId;
+
         $crm = Crm::create($data);
 
         $calendarWarnings = $this->syncExternalSystems($crm, false);
@@ -263,19 +306,22 @@ class CrmController extends Controller
      */
     public function show($id): JsonResponse
     {
+        $crm = $this->findOwnedCrm($id);
+        if ($crm) {
+            return response()->json($crm);
+        }
+
         if ($this->firestore->isConfigured()) {
             $remote = $this->firestore->find($id);
-            if ($remote !== null) {
+            if (
+                $remote !== null
+                && $this->isOwnedByAuthenticatedUser($remote['user_id'] ?? null)
+            ) {
                 return response()->json($remote);
             }
         }
 
-        $crm = $this->findCrm($id);
-        if (!$crm) {
-            return response()->json(['message' => 'Contact not found'], 404);
-        }
-
-        return response()->json($crm);
+        return response()->json(['message' => 'Contact not found'], 404);
     }
 
     /**
@@ -288,7 +334,7 @@ class CrmController extends Controller
             return $adminCheck;
         }
 
-        $crm = $this->findCrm($id);
+        $crm = $this->findOwnedCrm($id);
         $data = $this->extractCrmPayload($request);
 
         $validator = Validator::make($data, [
@@ -306,11 +352,18 @@ class CrmController extends Controller
             }
 
             $existingRemote = $this->firestore->find($id);
-            if ($existingRemote === null) {
+            if (
+                $existingRemote === null
+                || !$this->isOwnedByAuthenticatedUser($existingRemote['user_id'] ?? null)
+            ) {
                 return response()->json(['message' => 'Contact not found'], 404);
             }
 
             $updatedRemote = array_merge($existingRemote, $data, ['id' => $existingRemote['id'] ?? $id]);
+            $authUserId = $this->authenticatedUserId();
+            if ($authUserId !== null) {
+                $updatedRemote['user_id'] = $authUserId;
+            }
             $ok = $this->firestore->sync($id, $updatedRemote);
             if (!$ok) {
                 return response()->json(['message' => 'Failed to update contact in Firestore'], 502);
@@ -345,9 +398,17 @@ class CrmController extends Controller
             return $adminCheck;
         }
 
-        $crm = $this->findCrm($id);
+        $crm = $this->findOwnedCrm($id);
         if (!$crm) {
             if ($this->firestore->isConfigured()) {
+                $remote = $this->firestore->find($id);
+                if (
+                    $remote === null
+                    || !$this->isOwnedByAuthenticatedUser($remote['user_id'] ?? null)
+                ) {
+                    return response()->json(['message' => 'Contact not found'], 404);
+                }
+
                 $this->safeDeleteFromFirestore($id);
                 return response()->json(null, 204);
             }
@@ -392,7 +453,9 @@ class CrmController extends Controller
 
         Log::info('Bulk Delete Request for IDs: ' . implode(', ', $ids));
 
-        $targetCrms = Crm::whereIn('id', $ids)->get();
+        $targetCrms = $this->ownedCrmsQuery()
+            ->whereIn('id', $ids)
+            ->get();
 
         $deletedCount = 0;
         foreach ($targetCrms as $crm) {
@@ -400,6 +463,21 @@ class CrmController extends Controller
             $crm->delete();
             $this->safeDeleteFromFirestore($crm->id);
             $deletedCount++;
+        }
+
+        $deletedIds = $targetCrms->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if ($this->firestore->isConfigured()) {
+            $missingIds = array_values(array_diff($ids, $deletedIds));
+            foreach ($missingIds as $missingId) {
+                $remote = $this->firestore->find($missingId);
+                if (
+                    $remote !== null
+                    && $this->isOwnedByAuthenticatedUser($remote['user_id'] ?? null)
+                ) {
+                    $this->safeDeleteFromFirestore($missingId);
+                    $deletedCount++;
+                }
+            }
         }
 
         return response()->json(['message' => "Successfully deleted {$deletedCount} contacts"], 200);
@@ -410,7 +488,7 @@ class CrmController extends Controller
      */
     public function syncAll(): JsonResponse
     {
-        $crms = Crm::all();
+        $crms = $this->ownedCrmsQuery()->get();
         $syncedCount = 0;
 
         foreach ($crms as $crm) {
