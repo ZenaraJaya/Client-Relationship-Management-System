@@ -481,8 +481,8 @@ export default function CrmList({
   const fillerRowCount = Math.max(0, baselineRows - items.length)
 
   return (
-    <div style={{ width: '100%', overflowX: 'auto', overflowY: 'auto', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed' }}>
+    <div style={{ width: '100%', overflowX: 'visible', overflowY: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '12px', tableLayout: 'fixed', height: '60%' }}>
         <colgroup>
           <col style={{ width: '3%' }} />
           <col style={{ width: '4%' }} />
