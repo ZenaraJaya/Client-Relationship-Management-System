@@ -20,6 +20,8 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 
 RUN printf "#!/bin/sh\n\
 sed -i \"s/80/\${PORT:-10000}/g\" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf\n\
+export LOG_CHANNEL=stderr\n\
+export APP_DEBUG=true\n\
 php artisan migrate --force\n\
 (php artisan storage:link || true)\n\
 php artisan config:cache\n\
