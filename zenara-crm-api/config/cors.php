@@ -4,7 +4,7 @@ use Illuminate\Support\Str;
 
 $corsOrigins = array_values(array_filter(array_map(
     fn ($origin) => trim($origin),
-    explode(',', (string) env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000'))
+    explode(',', (string) env('CORS_ALLOWED_ORIGINS', 'https://zenaracrm.vercel.app,http://localhost:3000,http://127.0.0.1:3000'))
 )));
 
 $corsOriginPatterns = array_values(array_filter(array_map(
