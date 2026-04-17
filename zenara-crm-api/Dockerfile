@@ -15,6 +15,13 @@ RUN a2enmod rewrite
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+RUN mkdir -p storage/framework/cache/data \
+    && mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/testing \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache
+
 COPY . /var/www/html
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-grpc
 
