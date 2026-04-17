@@ -20,12 +20,12 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 
 RUN chmod -R 775 storage bootstrap/cache
 
-RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'sed -i "s/80/\${PORT:-80}/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf' >> /start.sh && \
-    echo 'php artisan migrate --force' >> /start.sh && \
-    echo '(php artisan storage:link || true)' >> /start.sh && \
-    echo 'php artisan config:cache' >> /start.sh && \
-    echo 'apache2-foreground' >> /start.sh && \
+RUN printf "#!/bin/sh\n\
+sed -i \"s/80/\${PORT:-10000}/g\" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf\n\
+php artisan migrate --force\n\
+(php artisan storage:link || true)\n\
+php artisan config:cache\n\
+apache2-foreground\n" > /start.sh && \
     chmod +x /start.sh
 
 CMD ["/start.sh"]
