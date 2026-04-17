@@ -16,4 +16,4 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD sh -c "php artisan migrate --force && php artisan db:seed --force && (php artisan storage:link || true) && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"
+CMD sh -c "php artisan migrate --force && (php artisan storage:link || true) && php artisan config:cache && php -d memory_limit=512M -S 0.0.0.0:${PORT:-10000} server.php"
