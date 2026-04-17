@@ -18,13 +18,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-grpc
 
-RUN chown -R www-data:www-data storage bootstrap/cache
-
 RUN printf "#!/bin/sh\n\
 sed -i \"s/80/\${PORT:-10000}/g\" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf\n\
 php artisan migrate --force\n\
 (php artisan storage:link || true)\n\
 php artisan config:cache\n\
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache\n\
 apache2-foreground\n" > /start.sh && \
     chmod +x /start.sh
 
