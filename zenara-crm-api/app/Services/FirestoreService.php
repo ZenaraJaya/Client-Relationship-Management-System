@@ -22,7 +22,19 @@ class FirestoreService
             return;
         }
 
-        $config = json_decode(file_get_contents($jsonPath), true) ?: [];
+        try {
+            $rawConfig = @file_get_contents($jsonPath);
+            if (!is_string($rawConfig) || trim($rawConfig) === '') {
+                Log::error("FirestoreService: Unable to read service account JSON at {$jsonPath}");
+                return;
+            }
+        } catch (\Throwable $e) {
+            Log::error("FirestoreService: Failed reading service account JSON: {$e->getMessage()}");
+            return;
+        }
+
+        $decodedConfig = json_decode($rawConfig, true);
+        $config = is_array($decodedConfig) ? $decodedConfig : [];
         $this->projectId = (string) (
             config('services.firebase.project_id')
             ?: ($config['project_id'] ?? '')
@@ -50,6 +62,11 @@ class FirestoreService
 
         if (!is_file($candidate)) {
             Log::error("FirestoreService: Service account JSON not found at {$candidate}");
+            return null;
+        }
+
+        if (!is_readable($candidate)) {
+            Log::error("FirestoreService: Service account JSON is not readable at {$candidate}");
             return null;
         }
 
